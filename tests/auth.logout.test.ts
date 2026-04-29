@@ -23,6 +23,16 @@ function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] }
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
+    userRole: "creator",
+    profilePicture: null,
+    bio: null,
+    subscriberCount: 0,
+    totalEarnings: "0",
+    revenueCatCustomerId: null,
+    subscriptionStatus: "inactive",
+    subscriptionExpiresAt: null,
+    stripeAccountId: null,
+    stripeConnectOnboarded: false,
   };
   
   const ctx: TrpcContext = {

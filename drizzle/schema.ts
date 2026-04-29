@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -20,9 +20,169 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  
+  // Big Starz specific fields
+  userRole: mysqlEnum("userRole", ["creator", "model", "artist", "producer"]),
+  profilePicture: varchar("profilePicture", { length: 512 }),
+  bio: text("bio"),
+  subscriberCount: int("subscriberCount").default(0).notNull(),
+  totalEarnings: varchar("totalEarnings", { length: 50 }).default("0").notNull(),
+  revenueCatCustomerId: varchar("revenueCatCustomerId", { length: 255 }),
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["active", "inactive", "cancelled"]).default("inactive"),
+  subscriptionExpiresAt: timestamp("subscriptionExpiresAt"),
+  stripeAccountId: varchar("stripeAccountId", { length: 255 }),
+  stripeConnectOnboarded: boolean("stripeConnectOnboarded").default(false),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Videos table (Cameo & Beautify Engine)
+ */
+export const videos = mysqlTable("videos", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  originalVideoUrl: varchar("originalVideoUrl", { length: 512 }).notNull(),
+  originalVideoKey: varchar("originalVideoKey", { length: 512 }).notNull(),
+  beautifiedVideoUrl: varchar("beautifiedVideoUrl", { length: 512 }),
+  beautifiedVideoKey: varchar("beautifiedVideoKey", { length: 512 }),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  tags: json("tags"),
+  visibility: mysqlEnum("visibility", ["private", "public"]).default("private"),
+  aiModel: mysqlEnum("aiModel", ["kling", "heygen"]).notNull(),
+  stylePreset: varchar("stylePreset", { length: 100 }),
+  resolution: varchar("resolution", { length: 50 }).default("1080p"),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
+  processingProgress: int("processingProgress").default(0),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Music table (Music & Lyric Studio)
+ */
+export const music = mysqlTable("music", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  instrumentalUrl: varchar("instrumentalUrl", { length: 512 }).notNull(),
+  instrumentalKey: varchar("instrumentalKey", { length: 512 }).notNull(),
+  generatedMusicUrl: varchar("generatedMusicUrl", { length: 512 }),
+  generatedMusicKey: varchar("generatedMusicKey", { length: 512 }),
+  title: varchar("title", { length: 255 }),
+  artist: varchar("artist", { length: 255 }),
+  genre: varchar("genre", { length: 100 }),
+  mood: varchar("mood", { length: 100 }),
+  lyrics: text("lyrics"),
+  lyricPrompt: text("lyricPrompt"),
+  lyricModel: mysqlEnum("lyricModel", ["openai", "anthropic"]).notNull(),
+  voiceModel: varchar("voiceModel", { length: 100 }).notNull(),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
+  processingProgress: int("processingProgress").default(0),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Castings table (Affiliate Modeling Feature)
+ */
+export const castings = mysqlTable("castings", {
+  id: int("id").autoincrement().primaryKey(),
+  brandName: varchar("brandName", { length: 255 }).notNull(),
+  productCategory: varchar("productCategory", { length: 255 }).notNull(),
+  briefDescription: text("briefDescription"),
+  fullBrief: text("fullBrief"),
+  brandGuidelines: text("brandGuidelines"),
+  requiredAttributes: json("requiredAttributes"),
+  compensation: varchar("compensation", { length: 50 }).notNull(),
+  compensationType: mysqlEnum("compensationType", ["flat_fee", "percentage"]).default("flat_fee"),
+  applicationDeadline: timestamp("applicationDeadline").notNull(),
+  shootDate: timestamp("shootDate"),
+  status: mysqlEnum("status", ["open", "in_review", "closed"]).default("open"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Casting Applications table
+ */
+export const castingApplications = mysqlTable("castingApplications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  castingId: int("castingId").notNull(),
+  portfolioVideoIds: json("portfolioVideoIds"),
+  answers: json("answers"),
+  availabilityConfirmed: boolean("availabilityConfirmed").default(false),
+  status: mysqlEnum("status", ["pending", "accepted", "rejected"]).default("pending"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Subscriber Tracking table (for 1k monetization gate)
+ */
+export const subscriberTracking = mysqlTable("subscriberTracking", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  currentSubscriberCount: int("currentSubscriberCount").default(0).notNull(),
+  totalSubscribersAllTime: int("totalSubscribersAllTime").default(0).notNull(),
+  hasReachedThousand: boolean("hasReachedThousand").default(false),
+  reachedThousandAt: timestamp("reachedThousandAt"),
+  castingFeesEnabled: boolean("castingFeesEnabled").default(false),
+  castingFeeAmount: varchar("castingFeeAmount", { length: 50 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Earnings Ledger table (Stripe payouts tracking)
+ */
+export const earningsLedger = mysqlTable("earningsLedger", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  transactionType: mysqlEnum("transactionType", ["casting_fee", "affiliate_commission", "refund"]).notNull(),
+  amount: varchar("amount", { length: 50 }).notNull(),
+  castingApplicationId: int("castingApplicationId"),
+  castingId: int("castingId"),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  stripeTransferId: varchar("stripeTransferId", { length: 255 }),
+  status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * RevenueCat Events table (for subscription analytics)
+ */
+export const revenueCatEvents = mysqlTable("revenueCatEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  productId: varchar("productId", { length: 255 }).notNull(),
+  revenueCatEventId: varchar("revenueCatEventId", { length: 255 }).unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Export types
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = typeof videos.$inferInsert;
+
+export type Music = typeof music.$inferSelect;
+export type InsertMusic = typeof music.$inferInsert;
+
+export type Casting = typeof castings.$inferSelect;
+export type InsertCasting = typeof castings.$inferInsert;
+
+export type CastingApplication = typeof castingApplications.$inferSelect;
+export type InsertCastingApplication = typeof castingApplications.$inferInsert;
+
+export type SubscriberTracking = typeof subscriberTracking.$inferSelect;
+export type InsertSubscriberTracking = typeof subscriberTracking.$inferInsert;
+
+export type EarningsLedger = typeof earningsLedger.$inferSelect;
+export type InsertEarningsLedger = typeof earningsLedger.$inferInsert;
+
+export type RevenueCatEvent = typeof revenueCatEvents.$inferSelect;
+export type InsertRevenueCatEvent = typeof revenueCatEvents.$inferInsert;

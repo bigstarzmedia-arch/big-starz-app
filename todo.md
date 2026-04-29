@@ -3,29 +3,29 @@
 ## Core Features
 
 ### Authentication & Onboarding
-- [ ] Implement email/phone sign-up with OAuth options
+- [x] Implement email/phone sign-up with OAuth options
 - [ ] Create profile setup flow (role selection: Creator, Model, Artist, Producer)
-- [ ] Integrate RevenueCat subscription paywall ($30/month)
-- [ ] Implement subscription entitlement gating for premium features
+- [x] Integrate RevenueCat subscription paywall ($30/month)
+- [x] Implement subscription entitlement gating for premium features
 
 ### Cameo & Beautify Engine (Kling & HeyGen API)
-- [ ] Create video upload component (camera/gallery picker)
+- [x] Create video upload component (camera/gallery picker)
 - [ ] Implement Kling API integration for video beautification
 - [ ] Implement HeyGen API integration for video beautification
-- [ ] Build beautify settings UI (model selection, style presets, resolution)
-- [ ] Create real-time progress tracking for video processing
+- [x] Build beautify settings UI (model selection, style presets, resolution)
+- [x] Create real-time progress tracking for video processing
 - [ ] Build video output gallery with download/share/delete options
 - [ ] Implement S3 file storage for beautified videos
 - [ ] Add video metadata management (title, description, tags, visibility)
 
 ### Music & Lyric Studio (OpenAI & ElevenLabs)
-- [ ] Create audio file upload component for instrumentals
+- [x] Create audio file upload component for instrumentals
 - [ ] Implement OpenAI GPT-4 integration for lyric generation
 - [ ] Implement Anthropic Claude integration as alternative lyric generator
-- [ ] Build lyric prompt input UI with real-time generation
-- [ ] Create inline lyric editing interface
+- [x] Build lyric prompt input UI with real-time generation
+- [x] Create inline lyric editing interface
 - [ ] Implement ElevenLabs TTS integration for voice synthesis
-- [ ] Build voice selection UI (multiple voice options)
+- [x] Build voice selection UI (multiple voice options)
 - [ ] Create music preview player (instrumental + generated vocals)
 - [ ] Implement export options (MP3 download, social share, library save)
 - [ ] Add music metadata management (title, artist, genre, mood, lyrics)
@@ -40,9 +40,9 @@
 - [ ] Create user portfolio management (beautified videos, photos)
 
 ### Subscriber & Monetization System (Supabase & Stripe)
-- [ ] Create Supabase table for user subscriber counts
-- [ ] Build subscriber tracking logic (real-time counter updates)
-- [ ] Implement 1k subscriber milestone detection
+- [x] Create Supabase table for user subscriber counts
+- [x] Build subscriber tracking logic (real-time counter updates)
+- [x] Implement 1k subscriber milestone detection
 - [ ] Create visual progress bar to 1k subscribers
 - [ ] Build "Enable Casting Fees" feature unlock at 1k subscribers
 - [ ] Implement Stripe account connection flow

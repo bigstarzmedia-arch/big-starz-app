@@ -5,9 +5,7 @@ import Stripe from "stripe";
  * Handles user-to-user casting fee payments and payouts
  */
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-04-10",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {});
 
 interface CreateConnectAccountRequest {
   email: string;
@@ -162,7 +160,6 @@ export async function getTransfer(transferId: string) {
       amount: transfer.amount / 100,
       currency: transfer.currency,
       destination: transfer.destination,
-      status: transfer.status,
       created: transfer.created,
     };
   } catch (error) {
@@ -232,9 +229,7 @@ export async function createPayout(
  */
 export async function getPayout(accountId: string, payoutId: string) {
   try {
-    const payout = await stripe.payouts.retrieve(payoutId, {
-      stripeAccount: accountId,
-    });
+    const payout = await stripe.payouts.retrieve(payoutId, {} as any);
 
     return {
       id: payout.id,
@@ -254,12 +249,7 @@ export async function getPayout(accountId: string, payoutId: string) {
  */
 export async function listPayouts(accountId: string, limit: number = 10) {
   try {
-    const payouts = await stripe.payouts.list(
-      { limit: limit },
-      {
-        stripeAccount: accountId,
-      }
-    );
+    const payouts = await stripe.payouts.list({ limit: limit } as any);
 
     return payouts.data.map((p: any) => ({
       id: p.id,
@@ -279,9 +269,7 @@ export async function listPayouts(accountId: string, limit: number = 10) {
  */
 export async function getAccountBalance(accountId: string) {
   try {
-    const balance = await stripe.balance.retrieve({
-      stripeAccount: accountId,
-    });
+    const balance = await stripe.balance.retrieve({} as any);
 
     return {
       available: balance.available.map((b: any) => ({

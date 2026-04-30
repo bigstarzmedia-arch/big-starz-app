@@ -13,6 +13,7 @@ import { Text, View, Pressable, FlatList, Image, Dimensions, ViewToken, Modal, R
 import { useState, useCallback, useRef } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import * as Haptics from "expo-haptics";
+import { ContentDownloadModal } from "@/components/content-download";
 
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
@@ -150,6 +151,8 @@ export default function VibeFeedScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [giftModalVisible, setGiftModalVisible] = useState(false);
   const [giftTarget, setGiftTarget] = useState<VideoItem | null>(null);
+  const [downloadModalVisible, setDownloadModalVisible] = useState(false);
+  const [downloadTarget, setDownloadTarget] = useState<{ id: string; title: string; type: "video" | "lyrics" | "image" | "audio"; size: string; url?: string; content?: string; createdAt: string } | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -197,6 +200,21 @@ export default function VibeFeedScreen() {
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+  };
+
+  const handleDownload = (item: VideoItem) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setDownloadTarget({
+      id: item.id,
+      title: item.title,
+      type: "video",
+      size: "24.8 MB",
+      url: item.thumbnail,
+      createdAt: new Date().toLocaleDateString(),
+    });
+    setDownloadModalVisible(true);
   };
 
   const onRefresh = useCallback(() => {
@@ -270,6 +288,12 @@ export default function VibeFeedScreen() {
           <Pressable onPress={() => handleShare(item)} style={{ alignItems: "center" }}>
             <Text style={{ fontSize: 24 }}>{"\u{1F4E4}"}</Text>
             <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "600", marginTop: 2 }}>{formatNumber(item.shares)}</Text>
+          </Pressable>
+
+          {/* Download */}
+          <Pressable onPress={() => handleDownload(item)} style={{ alignItems: "center" }}>
+            <Text style={{ fontSize: 24 }}>{"\u{2B07}\uFE0F"}</Text>
+            <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "600", marginTop: 2 }}>Save</Text>
           </Pressable>
 
           {/* Gift */}
@@ -399,6 +423,13 @@ export default function VibeFeedScreen() {
             </View>
           </Pressable>
         </Modal>
+
+        {/* Download Modal */}
+        <ContentDownloadModal
+          visible={downloadModalVisible}
+          onClose={() => setDownloadModalVisible(false)}
+          item={downloadTarget}
+        />
       </View>
     </ScreenContainer>
   );

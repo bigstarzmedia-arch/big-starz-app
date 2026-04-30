@@ -9,6 +9,10 @@ import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import { useSubscription } from "@/lib/subscription-context";
+import { TokenBalance } from "@/components/token-balance";
+import { SocialExportModal } from "@/components/social-export";
+import { DownloadButton } from "@/components/content-download";
 
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
@@ -34,11 +38,13 @@ const GENRES: Genre[] = [
 type StudioPhase = "genre" | "prompt" | "generating" | "result";
 
 export default function MusicStudioScreen() {
+  const { canAccessPremium, canGenerate, consumeToken, showPaywall } = useSubscription();
   const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
   const [phase, setPhase] = useState<StudioPhase>("genre");
   const [lyricPrompt, setLyricPrompt] = useState("");
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   const handleGenreSelect = (genre: Genre) => {
     setSelectedGenre(genre);
@@ -58,6 +64,15 @@ export default function MusicStudioScreen() {
 
   const handleGenerate = async () => {
     if (!lyricPrompt.trim()) return;
+    if (!canAccessPremium || !canGenerate) {
+      showPaywall();
+      return;
+    }
+    const tokenUsed = await consumeToken();
+    if (!tokenUsed) {
+      showPaywall();
+      return;
+    }
     setPhase("generating");
     setIsGenerating(true);
     if (Platform.OS !== "web") {
@@ -107,24 +122,28 @@ export default function MusicStudioScreen() {
           style={{
             paddingVertical: 12,
             paddingHorizontal: 20,
-            alignItems: "center",
             borderBottomWidth: 1,
             borderBottomColor: "rgba(255, 0, 127, 0.2)",
           }}
         >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: "#FFFFFF",
-              letterSpacing: 2,
-            }}
-          >
-            MUSIC STUDIO
-          </Text>
-          <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
-            AI LYRIC & BEAT ENGINE
-          </Text>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "800",
+                color: "#FFFFFF",
+                letterSpacing: 2,
+              }}
+            >
+              MUSIC STUDIO
+            </Text>
+            <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
+              AI LYRIC & BEAT ENGINE
+            </Text>
+          </View>
+          <View style={{ marginTop: 8 }}>
+            <TokenBalance />
+          </View>
         </View>
 
         <ScrollView
@@ -440,6 +459,46 @@ export default function MusicStudioScreen() {
                   </Text>
                 </Pressable>
               </View>
+
+              {/* Download & Share Buttons */}
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
+                <View style={{ flex: 1 }}>
+                  <DownloadButton
+                    title={`${selectedGenre?.label || ""} Song Lyrics`}
+                    type="lyrics"
+                    content={generatedLyrics}
+                    size="4 KB"
+                  />
+                </View>
+                <Pressable
+                  onPress={() => setShowExport(true)}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 242, 234, 0.12)",
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: "rgba(0, 242, 234, 0.3)",
+                    gap: 8,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Text style={{ fontSize: 14 }}>{"\u{1F680}"}</Text>
+                  <Text style={{ color: "#00F2EA", fontSize: 13, fontWeight: "700" }}>SHARE</Text>
+                </Pressable>
+              </View>
+
+              <SocialExportModal
+                visible={showExport}
+                onClose={() => setShowExport(false)}
+                contentTitle={`${selectedGenre?.label || ""} Song`}
+                contentType="lyrics"
+              />
             </View>
           )}
         </ScrollView>

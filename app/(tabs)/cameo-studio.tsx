@@ -9,6 +9,10 @@ import { useState, useEffect, useRef } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
+import { useSubscription } from "@/lib/subscription-context";
+import { TokenBalance } from "@/components/token-balance";
+import { DownloadButton } from "@/components/content-download";
+import { SocialExportModal } from "@/components/social-export";
 
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
@@ -32,7 +36,9 @@ const SCAN_STEPS: ScanInstruction[] = [
 
 export default function CameoStudioScreen() {
   const [permission, requestPermission] = useCameraPermissions();
+  const { canAccessPremium, canGenerate, consumeToken, showPaywall } = useSubscription();
   const [scanState, setScanState] = useState<ScanStep>("idle");
+  const [showExport, setShowExport] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [scanComplete, setScanComplete] = useState(false);
@@ -45,7 +51,21 @@ export default function CameoStudioScreen() {
     };
   }, []);
 
-  const startScan = () => {
+  const startScan = async () => {
+    if (!canAccessPremium) {
+      showPaywall();
+      return;
+    }
+    if (!canGenerate) {
+      showPaywall();
+      return;
+    }
+    // Consume 1 token for the scan
+    const success = await consumeToken();
+    if (!success) {
+      showPaywall();
+      return;
+    }
     setScanState("center");
     setCurrentStepIndex(0);
     setProgress(0);
@@ -153,17 +173,21 @@ export default function CameoStudioScreen() {
           style={{
             paddingVertical: 10,
             paddingHorizontal: 20,
-            alignItems: "center",
             borderBottomWidth: 1,
             borderBottomColor: "rgba(255, 0, 127, 0.2)",
           }}
         >
-          <Text style={{ fontSize: 18, fontWeight: "800", color: "#FFFFFF", letterSpacing: 2 }}>
-            CAMEO STUDIO
-          </Text>
-          <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
-            3D FACE MESH SCAN
-          </Text>
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#FFFFFF", letterSpacing: 2 }}>
+              CAMEO STUDIO
+            </Text>
+            <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
+              3D FACE MESH SCAN
+            </Text>
+          </View>
+          <View style={{ marginTop: 8 }}>
+            <TokenBalance />
+          </View>
         </View>
 
         {/* Camera Frame Area */}
@@ -425,44 +449,75 @@ export default function CameoStudioScreen() {
               </Pressable>
             )}
             {scanState === "complete" && (
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <Pressable
-                  onPress={resetScan}
-                  style={({ pressed }) => ({
-                    backgroundColor: "rgba(26, 26, 26, 0.8)",
-                    paddingHorizontal: 24,
-                    paddingVertical: 14,
-                    borderRadius: 24,
-                    borderWidth: 1,
-                    borderColor: "#333333",
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>RESCAN</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    // Navigate to voice clone (would use router.push in production)
-                  }}
-                  style={({ pressed }) => ({
-                    backgroundColor: "#00FF00",
-                    paddingHorizontal: 32,
-                    paddingVertical: 14,
-                    borderRadius: 24,
-                    shadowColor: "#00FF00",
-                    shadowOpacity: 0.5,
-                    shadowRadius: 12,
-                    elevation: 6,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
-                    GENERATE CAMEO
-                  </Text>
-                </Pressable>
+              <View style={{ gap: 12 }}>
+                <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
+                  <Pressable
+                    onPress={resetScan}
+                    style={({ pressed }) => ({
+                      backgroundColor: "rgba(26, 26, 26, 0.8)",
+                      paddingHorizontal: 24,
+                      paddingVertical: 14,
+                      borderRadius: 24,
+                      borderWidth: 1,
+                      borderColor: "#333333",
+                      transform: [{ scale: pressed ? 0.97 : 1 }],
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>RESCAN</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }}
+                    style={({ pressed }) => ({
+                      backgroundColor: "#00FF00",
+                      paddingHorizontal: 32,
+                      paddingVertical: 14,
+                      borderRadius: 24,
+                      shadowColor: "#00FF00",
+                      shadowOpacity: 0.5,
+                      shadowRadius: 12,
+                      elevation: 6,
+                      transform: [{ scale: pressed ? 0.97 : 1 }],
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
+                      GENERATE CAMEO
+                    </Text>
+                  </Pressable>
+                </View>
+                {/* Download & Share */}
+                <View style={{ flexDirection: "row", gap: 10, justifyContent: "center" }}>
+                  <DownloadButton title="3D Cameo Avatar" type="image" size="8.2 MB" />
+                  <Pressable
+                    onPress={() => setShowExport(true)}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(0, 242, 234, 0.12)",
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: "rgba(0, 242, 234, 0.3)",
+                      gap: 8,
+                      transform: [{ scale: pressed ? 0.97 : 1 }],
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: 14 }}>{"\u{1F680}"}</Text>
+                    <Text style={{ color: "#00F2EA", fontSize: 13, fontWeight: "700" }}>SHARE</Text>
+                  </Pressable>
+                </View>
+                <SocialExportModal
+                  visible={showExport}
+                  onClose={() => setShowExport(false)}
+                  contentTitle="3D Cameo Avatar"
+                  contentType="cameo"
+                />
               </View>
             )}
           </View>

@@ -147,3 +147,15 @@
 - [x] Ensure dark mode is consistent (no white flashes)
 - [x] Add "Following" / "For You" toggle on Vibe Feed header (TikTok-style)
 - [x] Polish tab bar with proper active/inactive states and labels
+
+## Paywall + Onboarding + Social Export (Current Sprint)
+- [ ] Build Subscription Paywall Gate ($30/month) that blocks all generation features until payment
+- [ ] Implement Starz Token economy (50 tokens/month, 1 generation = 1 token)
+- [ ] Add token balance tracking with AsyncStorage persistence
+- [ ] Build paywall modal UI with pricing, features list, and subscribe button
+- [ ] Gate Cameo Studio, Music Studio, and Video Generation behind paywall
+- [ ] Build Creator Onboarding Tutorial (3-step: Cameo Scan → Voice Clone → First Song)
+- [ ] Build Direct Social Export (TikTok/Instagram one-tap share with Big Starz watermark)
+- [ ] All AI calls use free APIs only: Pollinations.ai, OpenRouter free models, Hugging Face free inference
+
+- [x] Add content download feature (save generated videos, lyrics, cameo images to device)

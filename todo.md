@@ -100,6 +100,11 @@
 - [ ] Verify cameo-synthesis route is wired up
 - [ ] Show preview with Big Starz identity
 
+## Final Three Features (Phase 3)
+- [ ] Implement Push Notifications (Expo Notifications) for gifts, casting approvals, subscriber milestones
+- [ ] Build Creator Onboarding Tutorials (interactive 3-step: Cameo Scan → Voice Clone → First Music Generation)
+- [ ] Implement Direct Social Export (TikTok/Instagram one-tap with auto-captions and trending sounds)
+
 ## Known Issues & Bugs
 - [ ] TypeScript error in server/_core/storageProxy.ts (element type indexing)
 

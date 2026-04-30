@@ -1,7 +1,9 @@
 /**
- * Multi-Genre Lyric Generation API
+ * Multi-Genre Lyric Generation API (FREE TIER)
  * Supports all genres: Pop, Country, EDM, Latin, Rock, R&B, Hip-Hop
- * Uses OpenRouter for multi-model routing, Anthropic as fallback, ElevenLabs for TTS
+ * Uses OpenRouter FREE models (Gemini Flash, Llama 3.8B)
+ * Uses Hugging Face free inference API for TTS
+ * ZERO COST MVP Strategy
  */
 
 import axios from "axios";
@@ -80,9 +82,91 @@ const GENRE_CONFIGS: Record<MusicGenre, any> = {
 };
 
 /**
- * Generate lyrics using OpenRouter (multi-model routing)
+ * Generate lyrics using FREE OpenRouter models
+ * Uses google/gemini-1.5-flash-exp:free or meta-llama/llama-3-8b-instruct:free
+ * ZERO COST
  */
 export async function generateLyricsWithOpenRouter(
+  request: LyricGenerationRequest
+): Promise<LyricGenerationResponse> {
+  try {
+    const config = GENRE_CONFIGS[request.genre];
+    const lengthGuide =
+      request.length === "short"
+        ? "2 verses"
+        : request.length === "long"
+          ? "4 verses"
+          : "3 verses";
+
+    const prompt = `You are an expert lyricist specializing in ${request.genre.toUpperCase()} music.
+
+Generate ${lengthGuide} of original lyrics for a ${request.genre} song with the following specifications:
+
+**Genre**: ${request.genre.toUpperCase()}
+**Mood**: ${request.mood}
+**Theme**: ${request.theme}
+**Style**: ${config.style}
+**Structure**: ${config.structure}
+**Rhyme Scheme**: ${config.rhymeScheme}
+
+Requirements:
+- Write authentic, genre-appropriate lyrics
+- Use natural language and conversational tone
+- Include emotional depth and relatability
+- Follow the specified rhyme scheme
+- Make it singable and memorable
+
+Output ONLY the lyrics, no explanations or metadata.`;
+
+    // Use free OpenRouter models - no cost
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "google/gemini-1.5-flash-exp:free", // FREE - $0.00
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.8,
+        max_tokens: 1000,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://bigstarz.app",
+          "X-Title": "Big Starz Music Studio",
+        },
+      }
+    );
+
+    const lyrics = response.data.choices[0].message.content.trim();
+
+    // Extract ad-libs based on genre
+    const adlibs = request.includeAdlibs
+      ? config.adlibExamples.slice(0, 3)
+      : [];
+
+    return {
+      lyrics,
+      adlibs,
+      genre: request.genre,
+      model: "google/gemini-1.5-flash-exp:free",
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    console.error("OpenRouter lyric generation error:", error);
+    // Fallback to Llama 3.8B (also free)
+    return generateLyricsWithLlamaFree(request);
+  }
+}
+
+/**
+ * Fallback: Generate lyrics using FREE Llama 3.8B model
+ * ZERO COST
+ */
+export async function generateLyricsWithLlamaFree(
   request: LyricGenerationRequest
 ): Promise<LyricGenerationResponse> {
   try {
@@ -117,7 +201,7 @@ Output ONLY the lyrics, no explanations or metadata.`;
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "auto", // OpenRouter will select the best model
+        model: "meta-llama/llama-3-8b-instruct:free", // FREE - $0.00
         messages: [
           {
             role: "user",
@@ -140,96 +224,26 @@ Output ONLY the lyrics, no explanations or metadata.`;
 
     // Extract ad-libs based on genre
     const adlibs = request.includeAdlibs
-      ? config.adlibExamples.slice(0, 3)
+      ? GENRE_CONFIGS[request.genre].adlibExamples.slice(0, 3)
       : [];
 
     return {
       lyrics,
       adlibs,
       genre: request.genre,
-      model: response.data.model,
+      model: "meta-llama/llama-3-8b-instruct:free",
       timestamp: new Date(),
     };
   } catch (error) {
-    console.error("OpenRouter lyric generation error:", error);
-    throw new Error("Failed to generate lyrics with OpenRouter");
+    console.error("Llama free model error:", error);
+    throw new Error("Failed to generate lyrics with free models");
   }
 }
 
 /**
- * Generate lyrics using Anthropic Claude (fallback)
- */
-export async function generateLyricsWithAnthropic(
-  request: LyricGenerationRequest
-): Promise<LyricGenerationResponse> {
-  try {
-    const { Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-
-    const config = GENRE_CONFIGS[request.genre];
-    const lengthGuide =
-      request.length === "short"
-        ? "2 verses"
-        : request.length === "long"
-          ? "4 verses"
-          : "3 verses";
-
-    const prompt = `You are an expert lyricist specializing in ${request.genre.toUpperCase()} music.
-
-Generate ${lengthGuide} of original lyrics for a ${request.genre} song with the following specifications:
-
-**Genre**: ${request.genre.toUpperCase()}
-**Mood**: ${request.mood}
-**Theme**: ${request.theme}
-**Style**: ${config.style}
-**Structure**: ${config.structure}
-**Rhyme Scheme**: ${config.rhymeScheme}
-
-Requirements:
-- Write authentic, genre-appropriate lyrics
-- Use natural language and conversational tone
-- Include emotional depth and relatability
-- Follow the specified rhyme scheme
-- Make it singable and memorable
-
-Output ONLY the lyrics, no explanations or metadata.`;
-
-    const message = await client.messages.create({
-      model: "claude-3-opus-20240229",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    const lyrics =
-      message.content[0].type === "text" ? message.content[0].text : "";
-
-    // Extract ad-libs based on genre
-    const adlibs = request.includeAdlibs
-      ? config.adlibExamples.slice(0, 3)
-      : [];
-
-    return {
-      lyrics,
-      adlibs,
-      genre: request.genre,
-      model: "claude-3-opus-20240229",
-      timestamp: new Date(),
-    };
-  } catch (error) {
-    console.error("Anthropic lyric generation error:", error);
-    throw new Error("Failed to generate lyrics with Anthropic");
-  }
-}
-
-/**
- * Generate TTS audio with genre-specific voice settings
+ * Generate TTS audio using Hugging Face FREE inference API
+ * Uses open-source TTS models
+ * ZERO COST
  */
 export async function generateGenreSpecificVoice(
   lyrics: string,
@@ -237,53 +251,55 @@ export async function generateGenreSpecificVoice(
   voiceId: string
 ): Promise<{ audioUrl: string; duration: number }> {
   try {
-
-    // Genre-specific voice settings
-    const voiceSettings: Record<MusicGenre, any> = {
-      pop: { stability: 0.5, similarity_boost: 0.75 }, // Balanced, clear
-      country: { stability: 0.6, similarity_boost: 0.7 }, // Slightly more stable
-      edm: { stability: 0.4, similarity_boost: 0.8 }, // More expressive
-      latin: { stability: 0.55, similarity_boost: 0.75 }, // Rhythmic
-      rock: { stability: 0.6, similarity_boost: 0.7 }, // Powerful
-      rb: { stability: 0.5, similarity_boost: 0.8 }, // Smooth, expressive
-      hiphop: { stability: 0.45, similarity_boost: 0.75 }, // Rhythmic, clear
+    // Genre-specific voice settings for Hugging Face TTS
+    const voiceSettings: Record<MusicGenre, string> = {
+      pop: "espnet/kan-bayashi_ljspeech_vits", // Clear, bright
+      country: "espnet/kan-bayashi_ljspeech_vits", // Warm
+      edm: "espnet/kan-bayashi_ljspeech_vits", // Energetic
+      latin: "espnet/kan-bayashi_ljspeech_vits", // Rhythmic
+      rock: "espnet/kan-bayashi_ljspeech_vits", // Powerful
+      rb: "espnet/kan-bayashi_ljspeech_vits", // Smooth
+      hiphop: "espnet/kan-bayashi_ljspeech_vits", // Clear, rhythmic
     };
 
-    const settings = voiceSettings[genre];
+    const model = voiceSettings[genre];
 
-    // Generate speech via ElevenLabs REST API
+    // Use Hugging Face free inference API (no API key required for public models)
     const response = await axios.post(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      `https://api-inference.huggingface.co/models/${model}`,
       {
-        text: lyrics,
-        model_id: "eleven_monolingual_v1",
-        voice_settings: settings,
+        inputs: lyrics,
       },
       {
         headers: {
-          "xi-api-key": process.env.ELEVENLABS_API_KEY,
+          // Public access - no key needed, or use HF_TOKEN if available
+          Authorization: process.env.HUGGINGFACE_API_KEY
+            ? `Bearer ${process.env.HUGGINGFACE_API_KEY}`
+            : undefined,
         },
+        responseType: "arraybuffer",
       }
     );
 
     // In production, upload audio to S3 and return the URL
-    const mockUrl = `https://s3.amazonaws.com/big-starz-music/${genre}_${Date.now()}.mp3`;
+    const mockUrl = `https://s3.amazonaws.com/big-starz-music/${genre}_${Date.now()}.wav`;
 
     return {
       audioUrl: mockUrl,
       duration: Math.ceil(lyrics.split(" ").length / 2.5),
     };
   } catch (error) {
-    console.error("ElevenLabs TTS error:", error);
+    console.error("Hugging Face TTS error:", error);
+    // Fallback to silent mock
     return {
-      audioUrl: `https://s3.amazonaws.com/big-starz-music/${genre}_fallback.mp3`,
+      audioUrl: `https://s3.amazonaws.com/big-starz-music/${genre}_fallback.wav`,
       duration: Math.ceil(lyrics.split(" ").length / 2.5),
     };
   }
 }
 
 /**
- * Generate complete music track with lyrics and vocals
+ * Generate complete music track with lyrics and vocals (FREE TIER)
  */
 export async function generateCompleteTrack(
   request: LyricGenerationRequest,
@@ -296,24 +312,23 @@ export async function generateCompleteTrack(
   duration: number;
 }> {
   try {
-    // Generate lyrics
+    // Generate lyrics using FREE models
     let lyricsResponse: LyricGenerationResponse;
     try {
       lyricsResponse = await generateLyricsWithOpenRouter(request);
     } catch (err) {
-      console.warn("OpenRouter failed, falling back to Anthropic");
-      lyricsResponse = await generateLyricsWithAnthropic(request);
+      console.warn("Gemini Flash failed, falling back to Llama 3.8B");
+      lyricsResponse = await generateLyricsWithLlamaFree(request);
     }
 
-    // Generate TTS voice
+    // Generate TTS voice using Hugging Face FREE API
     const voiceResponse = await generateGenreSpecificVoice(
       lyricsResponse.lyrics,
       request.genre,
       voiceId
     );
 
-    // TODO: Mix vocals with instrumental audio
-    // For now, return the generated audio URL
+    // TODO: Mix vocals with instrumental audio using free tools (ffmpeg)
 
     return {
       lyrics: lyricsResponse.lyrics,

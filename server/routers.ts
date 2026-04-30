@@ -19,11 +19,11 @@ export const appRouter = router({
     }),
   }),
 
-  // Cameo & Beautify Engine
+  // Cameo & Beautify Engine (FREE TIER: Pollinations.ai + Hugging Face Stable Diffusion)
   videos: router({
     create: protectedProcedure
       .input(z.object({
-        aiModel: z.enum(["kling", "heygen"]),
+        aiModel: z.enum(["pollinations", "stable-diffusion", "text-to-video"]),
         stylePreset: z.string().optional(),
         resolution: z.string().optional(),
         title: z.string().optional(),
@@ -52,12 +52,12 @@ export const appRouter = router({
       .query(({ input }) => db.getVideoById(input.id)),
   }),
 
-  // Music & Lyric Studio
+  // Music & Lyric Studio (FREE TIER: OpenRouter Free Models + Hugging Face MusicGen)
   music: router({
     create: protectedProcedure
       .input(z.object({
-        lyricModel: z.enum(["openai", "anthropic"]),
-        voiceModel: z.string(),
+        lyricModel: z.enum(["gemini-flash-free", "llama-3.8b-free"]),
+        musicModel: z.enum(["musicgen-small", "audiogen", "beats"]),
         lyricPrompt: z.string(),
         title: z.string().optional(),
         artist: z.string().optional(),
@@ -70,7 +70,7 @@ export const appRouter = router({
         return db.createMusic({
           userId: ctx.user.id,
           lyricModel: input.lyricModel,
-          voiceModel: input.voiceModel,
+          voiceModel: input.musicModel,
           lyricPrompt: input.lyricPrompt,
           title: input.title,
           artist: input.artist,
@@ -121,7 +121,7 @@ export const appRouter = router({
     ),
   }),
 
-  // Subscriber & Monetization
+  // Subscriber & Monetization (1k Gate)
   subscribers: router({
     getTracking: protectedProcedure.query(({ ctx }) =>
       db.getSubscriberTracking(ctx.user.id)
@@ -145,7 +145,7 @@ export const appRouter = router({
     ),
   }),
 
-  // Subscription Management
+  // Subscription Management (RevenueCat)
   subscription: router({
     getStatus: protectedProcedure.query(({ ctx }) =>
       db.getUserSubscriptionStatus(ctx.user.id)
@@ -159,6 +159,29 @@ export const appRouter = router({
       .mutation(({ ctx, input }) =>
         db.updateUserSubscription(ctx.user.id, input.revenueCatCustomerId, input.status, input.expiresAt)
       ),
+  }),
+
+  // Free-Tier API Status & Models
+  freeTierStatus: router({
+    getAvailableModels: publicProcedure.query(() => ({
+      lyrics: {
+        models: ["google/gemini-1.5-flash-exp:free", "meta-llama/llama-3-8b-instruct:free"],
+        cost: "$0.00",
+        provider: "OpenRouter",
+      },
+      music: {
+        models: ["facebook/musicgen-small", "facebook/audiogen-medium"],
+        cost: "$0.00",
+        provider: "Hugging Face",
+      },
+      video: {
+        models: ["Pollinations.ai", "Stable Diffusion v1.5", "Text-to-Video MS 1.7B"],
+        cost: "$0.00",
+        provider: "Pollinations.ai + Hugging Face",
+      },
+      totalMonthlyCost: "$0.00",
+      status: "MVP Zero-Cost Mode Active",
+    })),
   }),
 });
 

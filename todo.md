@@ -17,6 +17,7 @@
 - [ ] Build video output gallery with download/share/delete options
 - [ ] Implement S3 file storage for beautified videos
 - [ ] Add video metadata management (title, description, tags, visibility)
+- [x] Wire STUDIO screen "Generate Video" button to real API mutations (FREE-TIER: Pollinations/Stable Diffusion)
 
 ### Music & Lyric Studio (OpenAI & ElevenLabs)
 - [x] Create audio file upload component for instrumentals
@@ -38,6 +39,7 @@
 - [ ] Build application status tracking (pending, accepted, rejected)
 - [ ] Implement in-app messaging system for casting director communication
 - [ ] Create user portfolio management (beautified videos, photos)
+- [x] Implement marketplace search & filtering for CAST screen (by genre, price, aesthetic tags)
 
 ### Subscriber & Monetization System (Supabase & Stripe)
 - [x] Create Supabase table for user subscriber counts
@@ -104,6 +106,7 @@
 - [ ] Implement Push Notifications (Expo Notifications) for gifts, casting approvals, subscriber milestones
 - [ ] Build Creator Onboarding Tutorials (interactive 3-step: Cameo Scan → Voice Clone → First Music Generation)
 - [ ] Implement Direct Social Export (TikTok/Instagram one-tap with auto-captions and trending sounds)
+- [x] Add real-time notification system for new casting offers, messages, and earnings milestones
 
 ## Known Issues & Bugs
 - [ ] TypeScript error in server/_core/storageProxy.ts (element type indexing)

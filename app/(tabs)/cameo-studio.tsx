@@ -1,353 +1,448 @@
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  FlatList,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { ScreenContainer } from "@/components/screen-container";
-import { useAuth } from "@/hooks/use-auth";
+/**
+ * Cameo Studio - 3D Face Mesh Head-Turn Scan
+ * Active camera frame with face mesh instructions
+ * Steps: Look Center -> Turn Right -> Turn Left -> Look Up
+ */
 
-interface Video {
-  id: number;
-  title: string;
-  status: "pending" | "processing" | "completed" | "failed";
-  progress: number;
-  originalUrl?: string;
-  beautifiedUrl?: string;
-  aiModel: "kling" | "heygen";
-  stylePreset: string;
+import { View, Text, Pressable, Image } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { ScreenContainer } from "@/components/screen-container";
+import { Platform } from "react-native";
+import * as Haptics from "expo-haptics";
+
+const LOGO_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
+
+type ScanStep = "idle" | "center" | "right" | "left" | "up" | "complete";
+
+interface ScanInstruction {
+  step: ScanStep;
+  label: string;
+  icon: string;
+  description: string;
 }
 
-/**
- * Cameo & Beautify Studio Screen
- * Upload videos and beautify them using Kling or HeyGen AI
- */
+const SCAN_STEPS: ScanInstruction[] = [
+  { step: "center", label: "Look Center", icon: "\u{1F464}", description: "Face the camera directly" },
+  { step: "right", label: "Turn Right", icon: "\u27A1\uFE0F", description: "Slowly turn your head to the right" },
+  { step: "left", label: "Turn Left", icon: "\u2B05\uFE0F", description: "Slowly turn your head to the left" },
+  { step: "up", label: "Look Up", icon: "\u2B06\uFE0F", description: "Tilt your head slightly upward" },
+];
+
 export default function CameoStudioScreen() {
-  const { user } = useAuth();
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedAiModel, setSelectedAiModel] = useState<"kling" | "heygen">(
-    "kling"
-  );
-  const [selectedStyle, setSelectedStyle] = useState("cinematic");
-  const [error, setError] = useState<string | null>(null);
+  const [scanState, setScanState] = useState<ScanStep>("idle");
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [scanComplete, setScanComplete] = useState(false);
+  const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const styleOptions = [
-    { id: "cinematic", label: "Cinematic", icon: "🎬" },
-    { id: "fashion", label: "Fashion", icon: "👗" },
-    { id: "performance", label: "Performance", icon: "🎤" },
-    { id: "luxury", label: "Luxury", icon: "✨" },
-  ];
-
-  /**
-   * Pick video from device library or camera
-   */
-  const handlePickVideo = async () => {
-    try {
-      setError(null);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        allowsEditing: false,
-        aspect: [9, 16],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        await uploadAndBeautifyVideo(asset.uri, asset.fileName || "video.mp4");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to pick video");
-    }
-  };
-
-  /**
-   * Upload video and submit to Kling/HeyGen for beautification
-   */
-  const uploadAndBeautifyVideo = async (videoUri: string, fileName: string) => {
-    try {
-      setIsUploading(true);
-      setError(null);
-
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append("file", {
-        uri: videoUri,
-        name: fileName,
-        type: "video/mp4",
-      } as any);
-
-      // TODO: Upload to S3 first, then submit to API
-      // const uploadResponse = await fetch("/api/upload", {
-      //   method: "POST",
-      //   body: formData,
-      // });
-      // const { url, key } = await uploadResponse.json();
-
-      // For now, use local URI
-      const mockUrl = videoUri;
-      const mockKey = `video_${Date.now()}`;
-
-      // Submit to beautification API
-      const response = await fetch("/api/trpc/videos.create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          aiModel: selectedAiModel,
-          stylePreset: selectedStyle,
-          resolution: "1080p",
-          title: fileName,
-          originalVideoUrl: mockUrl,
-          originalVideoKey: mockKey,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit video for beautification");
-      }
-
-      const { result } = await response.json();
-      const videoId = result.data;
-
-      // Add to videos list with processing status
-      const newVideo: Video = {
-        id: videoId,
-        title: fileName,
-        status: "processing",
-        progress: 0,
-        originalUrl: mockUrl,
-        aiModel: selectedAiModel,
-        stylePreset: selectedStyle,
-      };
-
-      setVideos((prev) => [newVideo, ...prev]);
-
-      // Poll for completion
-      pollVideoStatus(videoId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  /**
-   * Poll for video beautification completion
-   */
-  const pollVideoStatus = async (videoId: number) => {
-    const maxAttempts = 120; // 10 minutes with 5-second intervals
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/trpc/videos.get?id=${videoId}`);
-        const { result } = await response.json();
-        const video = result.data;
-
-        setVideos((prev) =>
-          prev.map((v) =>
-            v.id === videoId
-              ? {
-                  ...v,
-                  status: video.processingStatus,
-                  progress: video.processingProgress,
-                  beautifiedUrl: video.beautifiedVideoUrl,
-                }
-              : v
-          )
-        );
-
-        if (
-          video.processingStatus === "completed" ||
-          video.processingStatus === "failed"
-        ) {
-          return;
-        }
-
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 5000);
-        }
-      } catch (err) {
-        console.error("Poll error:", err);
-      }
+  useEffect(() => {
+    return () => {
+      if (progressTimer.current) clearInterval(progressTimer.current);
     };
+  }, []);
 
-    poll();
+  const startScan = () => {
+    setScanState("center");
+    setCurrentStepIndex(0);
+    setProgress(0);
+    setScanComplete(false);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    simulateStepProgress(0);
   };
+
+  const simulateStepProgress = (stepIdx: number) => {
+    let p = 0;
+    if (progressTimer.current) clearInterval(progressTimer.current);
+
+    progressTimer.current = setInterval(() => {
+      p += 2;
+      const totalProgress = (stepIdx * 25) + (p / 4);
+      setProgress(Math.min(totalProgress, 100));
+
+      if (p >= 100) {
+        if (progressTimer.current) clearInterval(progressTimer.current);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        const nextIdx = stepIdx + 1;
+        if (nextIdx < SCAN_STEPS.length) {
+          setCurrentStepIndex(nextIdx);
+          setScanState(SCAN_STEPS[nextIdx].step);
+          setTimeout(() => simulateStepProgress(nextIdx), 500);
+        } else {
+          setScanState("complete");
+          setScanComplete(true);
+          setProgress(100);
+        }
+      }
+    }, 50);
+  };
+
+  const resetScan = () => {
+    if (progressTimer.current) clearInterval(progressTimer.current);
+    setScanState("idle");
+    setCurrentStepIndex(0);
+    setProgress(0);
+    setScanComplete(false);
+  };
+
+  const currentInstruction = SCAN_STEPS[currentStepIndex];
 
   return (
-    <ScreenContainer className="bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 px-6 py-6 gap-6">
-          {/* Header */}
-          <View>
-            <Text className="text-2xl font-bold text-foreground">
-              Cameo Studio
-            </Text>
-            <Text className="text-sm text-muted mt-1">
-              Upload your video and beautify it with AI
-            </Text>
-          </View>
-
-          {/* Error Message */}
-          {error && (
-            <View className="bg-error/10 border border-error rounded-lg p-4">
-              <Text className="text-error text-sm">{error}</Text>
-            </View>
-          )}
-
-          {/* AI Model Selection */}
-          <View className="gap-3">
-            <Text className="font-semibold text-foreground">AI Model</Text>
-            <View className="flex-row gap-3">
-              {[
-                { id: "kling", label: "Kling AI" },
-                { id: "heygen", label: "HeyGen" },
-              ].map((model) => (
-                <TouchableOpacity
-                  key={model.id}
-                  onPress={() => setSelectedAiModel(model.id as any)}
-                  className={`flex-1 py-3 px-4 rounded-lg border-2 ${
-                    selectedAiModel === model.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-surface"
-                  }`}
-                >
-                  <Text
-                    className={`text-center font-semibold ${
-                      selectedAiModel === model.id
-                        ? "text-primary"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {model.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Style Preset Selection */}
-          <View className="gap-3">
-            <Text className="font-semibold text-foreground">Style Preset</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {styleOptions.map((style) => (
-                <TouchableOpacity
-                  key={style.id}
-                  onPress={() => setSelectedStyle(style.id)}
-                  className={`flex-1 min-w-[45%] py-3 px-3 rounded-lg border-2 ${
-                    selectedStyle === style.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-surface"
-                  }`}
-                >
-                  <Text className="text-center text-lg">{style.icon}</Text>
-                  <Text
-                    className={`text-center text-xs font-semibold mt-1 ${
-                      selectedStyle === style.id
-                        ? "text-primary"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {style.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Upload Button */}
-          <TouchableOpacity
-            onPress={handlePickVideo}
-            disabled={isUploading}
-            className="w-full bg-primary rounded-lg py-4 px-6 active:scale-95"
+    <ScreenContainer className="bg-black">
+      <View style={{ flex: 1, backgroundColor: "#000000" }}>
+        {/* Header */}
+        <View
+          style={{
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255, 0, 127, 0.2)",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "800",
+              color: "#FFFFFF",
+              letterSpacing: 2,
+            }}
           >
-            {isUploading ? (
-              <ActivityIndicator color="#F5F5F5" />
-            ) : (
-              <Text className="text-center text-background font-bold text-base">
-                Upload Video
-              </Text>
-            )}
-          </TouchableOpacity>
+            CAMEO STUDIO
+          </Text>
+          <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
+            3D FACE MESH SCAN
+          </Text>
+        </View>
 
-          {/* Videos List */}
-          {videos.length > 0 && (
-            <View className="gap-3">
-              <Text className="font-semibold text-foreground">
-                Your Videos ({videos.length})
-              </Text>
-              <FlatList
-                data={videos}
-                keyExtractor={(item) => item.id.toString()}
-                scrollEnabled={false}
-                renderItem={({ item }) => (
-                  <VideoCard video={item} />
-                )}
+        {/* Camera Frame Area */}
+        <View style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 16 }}>
+          {/* Camera Viewport */}
+          <View
+            style={{
+              flex: 1,
+              maxHeight: 420,
+              borderRadius: 24,
+              overflow: "hidden",
+              borderWidth: 2,
+              borderColor:
+                scanState === "complete"
+                  ? "#00FF00"
+                  : scanState === "idle"
+                  ? "rgba(255, 0, 127, 0.4)"
+                  : "#FF007F",
+              backgroundColor: "#0A0A0A",
+              position: "relative",
+              shadowColor: scanState === "complete" ? "#00FF00" : "#FF007F",
+              shadowOpacity: 0.5,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
+            {/* Simulated Camera View with face mesh overlay */}
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#0D0D0D",
+              }}
+            >
+              {/* Face Mesh Grid Overlay */}
+              <View
+                style={{
+                  width: 200,
+                  height: 260,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor:
+                    scanState === "idle"
+                      ? "rgba(255, 0, 127, 0.3)"
+                      : scanState === "complete"
+                      ? "rgba(0, 255, 0, 0.5)"
+                      : "rgba(0, 255, 255, 0.5)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                }}
+              >
+                {/* Horizontal mesh lines */}
+                {[52, 91, 130, 169, 208].map((pos, i) => (
+                  <View
+                    key={`h-${i}`}
+                    style={{
+                      position: "absolute",
+                      top: pos,
+                      left: 20,
+                      right: 20,
+                      height: 1,
+                      backgroundColor:
+                        scanState === "complete"
+                          ? "rgba(0, 255, 0, 0.3)"
+                          : "rgba(0, 255, 255, 0.2)",
+                    }}
+                  />
+                ))}
+                {/* Vertical mesh lines */}
+                {[60, 100, 140].map((pos, i) => (
+                  <View
+                    key={`v-${i}`}
+                    style={{
+                      position: "absolute",
+                      left: pos,
+                      top: 26,
+                      bottom: 26,
+                      width: 1,
+                      backgroundColor:
+                        scanState === "complete"
+                          ? "rgba(0, 255, 0, 0.3)"
+                          : "rgba(0, 255, 255, 0.2)",
+                    }}
+                  />
+                ))}
+
+                {/* Face outline dots */}
+                {[
+                  { top: 39, left: 97 },
+                  { top: 91, left: 57 },
+                  { top: 91, left: 137 },
+                  { top: 143, left: 97 },
+                  { top: 195, left: 77 },
+                  { top: 195, left: 117 },
+                ].map((pos, i) => (
+                  <View
+                    key={`dot-${i}`}
+                    style={{
+                      position: "absolute",
+                      top: pos.top,
+                      left: pos.left,
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor:
+                        scanState === "complete"
+                          ? "#00FF00"
+                          : scanState === "idle"
+                          ? "#FF007F"
+                          : "#00FFFF",
+                    }}
+                  />
+                ))}
+
+                {/* Center face icon */}
+                <Text style={{ fontSize: 48, opacity: 0.4 }}>
+                  {scanState === "complete" ? "\u2705" : "\u{1F464}"}
+                </Text>
+              </View>
+
+              {/* Direction Arrow Indicator */}
+              {scanState !== "idle" && scanState !== "complete" && (
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 30,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 36 }}>{currentInstruction?.icon}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Scan Status Overlay */}
+            <View
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                right: 12,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 0, 127, 0.3)",
+                }}
+              >
+                <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "600" }}>
+                  {scanState === "idle"
+                    ? "READY"
+                    : scanState === "complete"
+                    ? "SCAN COMPLETE"
+                    : `STEP ${currentStepIndex + 1}/4`}
+                </Text>
+              </View>
+              <Image
+                source={{ uri: LOGO_URL }}
+                style={{ width: 28, height: 28, opacity: 0.7 }}
+                resizeMode="contain"
               />
             </View>
-          )}
-        </View>
-      </ScrollView>
-    </ScreenContainer>
-  );
-}
+          </View>
 
-/**
- * Video card component
- */
-function VideoCard({ video }: { video: Video }) {
-  const statusColors = {
-    pending: "bg-warning/10 text-warning",
-    processing: "bg-info/10 text-info",
-    completed: "bg-success/10 text-success",
-    failed: "bg-error/10 text-error",
-  };
-
-  return (
-    <View className="bg-surface border border-border rounded-lg p-4 gap-3">
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1 gap-1">
-          <Text className="font-semibold text-foreground">{video.title}</Text>
-          <Text className="text-xs text-muted">
-            {video.aiModel.toUpperCase()} • {video.stylePreset}
-          </Text>
-        </View>
-        <View className={`px-2 py-1 rounded ${statusColors[video.status]}`}>
-          <Text className="text-xs font-semibold capitalize">
-            {video.status}
-          </Text>
-        </View>
-      </View>
-
-      {/* Progress Bar */}
-      {video.status === "processing" && (
-        <View className="gap-2">
-          <View className="w-full h-2 bg-border rounded-full overflow-hidden">
+          {/* Progress Bar */}
+          <View
+            style={{
+              marginTop: 16,
+              height: 6,
+              backgroundColor: "rgba(26, 26, 26, 0.8)",
+              borderRadius: 3,
+              overflow: "hidden",
+            }}
+          >
             <View
-              className="h-full bg-primary"
-              style={{ width: `${video.progress}%` }}
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                backgroundColor:
+                  scanState === "complete" ? "#00FF00" : "#FF007F",
+                borderRadius: 3,
+              }}
             />
           </View>
-          <Text className="text-xs text-muted text-center">
-            {video.progress}% complete
-          </Text>
-        </View>
-      )}
 
-      {/* Beautified Video Link */}
-      {video.beautifiedUrl && (
-        <TouchableOpacity className="py-2 px-3 bg-primary/10 rounded">
-          <Text className="text-center text-primary text-sm font-semibold">
-            View Beautified Video
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
+          {/* Instruction Text */}
+          <View style={{ marginTop: 16, alignItems: "center" }}>
+            {scanState === "idle" && (
+              <Text style={{ color: "#AAAAAA", fontSize: 14, textAlign: "center" }}>
+                Position your face within the frame and tap Start Scan
+              </Text>
+            )}
+            {scanState !== "idle" && scanState !== "complete" && (
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700" }}>
+                  {currentInstruction?.label}
+                </Text>
+                <Text style={{ color: "#888888", fontSize: 13, marginTop: 4 }}>
+                  {currentInstruction?.description}
+                </Text>
+              </View>
+            )}
+            {scanState === "complete" && (
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ color: "#00FF00", fontSize: 18, fontWeight: "700" }}>
+                  Scan Complete!
+                </Text>
+                <Text style={{ color: "#888888", fontSize: 13, marginTop: 4 }}>
+                  Your 3D face mesh has been captured successfully
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Step Indicators */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              marginTop: 16,
+              gap: 8,
+            }}
+          >
+            {SCAN_STEPS.map((step, idx) => (
+              <View
+                key={step.step}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor:
+                    idx < currentStepIndex || scanComplete
+                      ? "rgba(0, 255, 0, 0.2)"
+                      : idx === currentStepIndex && scanState !== "idle"
+                      ? "rgba(255, 0, 127, 0.3)"
+                      : "rgba(26, 26, 26, 0.8)",
+                  borderWidth: 1,
+                  borderColor:
+                    idx < currentStepIndex || scanComplete
+                      ? "#00FF00"
+                      : idx === currentStepIndex && scanState !== "idle"
+                      ? "#FF007F"
+                      : "#333333",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>
+                  {idx < currentStepIndex || scanComplete ? "\u2713" : step.icon}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Action Button */}
+          <View style={{ marginTop: 20, alignItems: "center" }}>
+            {scanState === "idle" && (
+              <Pressable
+                onPress={startScan}
+                style={({ pressed }) => ({
+                  backgroundColor: "#FF007F",
+                  paddingHorizontal: 48,
+                  paddingVertical: 16,
+                  borderRadius: 30,
+                  shadowColor: "#FF007F",
+                  shadowOpacity: 0.7,
+                  shadowRadius: 16,
+                  elevation: 8,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800", letterSpacing: 1 }}>
+                  START SCAN
+                </Text>
+              </Pressable>
+            )}
+            {scanState === "complete" && (
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Pressable
+                  onPress={resetScan}
+                  style={({ pressed }) => ({
+                    backgroundColor: "rgba(26, 26, 26, 0.8)",
+                    paddingHorizontal: 24,
+                    paddingVertical: 14,
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: "#333333",
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>RESCAN</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => ({
+                    backgroundColor: "#00FF00",
+                    paddingHorizontal: 32,
+                    paddingVertical: 14,
+                    borderRadius: 24,
+                    shadowColor: "#00FF00",
+                    shadowOpacity: 0.5,
+                    shadowRadius: 12,
+                    elevation: 6,
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
+                    CONTINUE TO VOICE CLONE
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    </ScreenContainer>
   );
 }

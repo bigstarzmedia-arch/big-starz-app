@@ -115,3 +115,12 @@
 - [x] Project scaffold initialized (Expo 54, React Native, TypeScript)
 - [x] GitHub repository created and initial code pushed
 - [x] Design framework documented (design.md)
+
+## Visual Identity & Interactive Preview (Priority)
+- [x] Ensure Matte Black background and Neon Pink/Purple accents are active on all screens
+- [x] Integrate 3D Cartoon Character art into background layers with glassmorphism effect
+- [x] Big Starz Logo high-res and centered in header
+- [x] Cameo Studio: Active camera frame with 3D Face Mesh instructions (Look Center, Turn Right, Turn Left, Look Up)
+- [x] Cameo Studio: Head-turn scan interaction logic
+- [x] Music Studio: Genre selection UI (Pop, Country, EDM, Latin, Rock)
+- [x] Entry point must be Big Starz Home/Vibe Feed

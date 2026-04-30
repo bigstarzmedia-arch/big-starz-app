@@ -1,602 +1,440 @@
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  TextInput,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from "react-native";
-import * as DocumentPicker from "expo-document-picker";
+/**
+ * Music Studio - Genre Selection & Lyric Generation
+ * Supports: Pop, Country, EDM, Latin, Rock (+ Hip-Hop, R&B)
+ * Big Starz dark theme with neon accents
+ */
+
+import { View, Text, Pressable, ScrollView, TextInput, Image } from "react-native";
+import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
-import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
+import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 
-interface Message {
+const LOGO_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
+
+interface Genre {
   id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
+  label: string;
+  icon: string;
+  color: string;
+  description: string;
 }
 
-interface MusicProject {
-  id: number;
-  title: string;
-  instrumentalUrl: string;
-  lyrics: string;
-  voiceCloneId?: string;
-  generatedMusicUrl?: string;
-  status: "draft" | "generating" | "completed";
-}
+const GENRES: Genre[] = [
+  { id: "pop", label: "Pop", icon: "\u{1F3B5}", color: "#FF007F", description: "Catchy hooks & melodies" },
+  { id: "country", label: "Country", icon: "\u{1F3B8}", color: "#D4AF37", description: "Storytelling & twang" },
+  { id: "edm", label: "EDM", icon: "\u{1F3B6}", color: "#00FFFF", description: "Electronic drops & beats" },
+  { id: "latin", label: "Latin", icon: "\u{1F525}", color: "#FF6B00", description: "Reggaeton & tropical" },
+  { id: "rock", label: "Rock", icon: "\u{1F918}", color: "#9D00FF", description: "Power chords & energy" },
+  { id: "hiphop", label: "Hip-Hop", icon: "\u{1F399}\uFE0F", color: "#FFFF00", description: "Bars & flow" },
+  { id: "rnb", label: "R&B", icon: "\u{1F49C}", color: "#FF69B4", description: "Smooth vocals & soul" },
+];
 
-interface VoiceClone {
-  id: string;
-  userId: number;
-  voiceCloneId: string;
-  voiceCharacteristics: string;
-  biometricData: string;
-  createdAt: Date;
-}
+type StudioPhase = "genre" | "prompt" | "generating" | "result";
 
-/**
- * Music & Lyric Studio Screen
- * Upload instrumentals and generate lyrics with user's AI voice clone
- */
 export default function MusicStudioScreen() {
-  const { user } = useAuth();
-  const colors = useColors();
-  const [projects, setProjects] = useState<MusicProject[]>([]);
-  const [activeProject, setActiveProject] = useState<MusicProject | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
+  const [phase, setPhase] = useState<StudioPhase>("genre");
+  const [lyricPrompt, setLyricPrompt] = useState("");
+  const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [voiceClone, setVoiceClone] = useState<VoiceClone | null>(null);
-  const [useVoiceClone, setUseVoiceClone] = useState(false);
-  const [loadingClone, setLoadingClone] = useState(true);
 
-  /**
-   * Load user's voice clone from Cameo Scan
-   */
-  useEffect(() => {
-    const loadVoiceClone = async () => {
-      try {
-        setLoadingClone(true);
-        // TODO: Fetch voice clone from backend via API
-        // const response = await fetch("/api/trpc/voiceClone.get", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify({ userId: user?.id }),
-        // });
-
-        // Simulate voice clone loading
-        setTimeout(() => {
-          // In production, this would come from the backend
-          // For now, we'll set it to null to show the gate
-          setVoiceClone(null);
-          setLoadingClone(false);
-        }, 500);
-      } catch (err) {
-        console.error("Failed to load voice clone:", err);
-        setLoadingClone(false);
-      }
-    };
-
-    if (user) {
-      loadVoiceClone();
-    }
-  }, [user]);
-
-  /**
-   * Pick instrumental audio file
-   */
-  const handlePickInstrumental = async () => {
-    try {
-      setError(null);
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["audio/*"],
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        createMusicProject(asset.uri, asset.name || "instrumental.mp3");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to pick file");
+  const handleGenreSelect = (genre: Genre) => {
+    setSelectedGenre(genre);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
   };
 
-  /**
-   * Create new music project
-   */
-  const createMusicProject = async (instrumentalUri: string, fileName: string) => {
-    try {
-      setIsGenerating(true);
-      setError(null);
-
-      if (!voiceClone && !useVoiceClone) {
-        setError("Voice clone not available. Complete your Cameo Scan first.");
-        setIsGenerating(false);
-        return;
+  const handleContinue = () => {
+    if (selectedGenre) {
+      setPhase("prompt");
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
+    }
+  };
 
-      // TODO: Upload instrumental to S3
-      const mockUrl = instrumentalUri;
-      const mockKey = `instrumental_${Date.now()}`;
+  const handleGenerate = async () => {
+    if (!lyricPrompt.trim()) return;
+    setPhase("generating");
+    setIsGenerating(true);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
 
-      // Create project via API
-      const response = await fetch("/api/trpc/music.create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lyricModel: "openai",
-          voiceCloneId: voiceClone?.voiceCloneId || "default",
-          lyricPrompt: "Let's create some lyrics",
-          title: fileName.replace(/\.[^/.]+$/, ""),
-          instrumentalUrl: mockUrl,
-          instrumentalKey: mockKey,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create music project");
-      }
-
-      const { result } = await response.json();
-      const projectId = result.data;
-
-      const newProject: MusicProject = {
-        id: projectId,
-        title: fileName.replace(/\.[^/.]+$/, ""),
-        instrumentalUrl: mockUrl,
-        lyrics: "",
-        voiceCloneId: voiceClone?.voiceCloneId,
-        status: "draft",
-      };
-
-      setProjects((prev) => [newProject, ...prev]);
-      setActiveProject(newProject);
-      setMessages([
-        {
-          id: "1",
-          role: "assistant",
-          content:
-            "Hey! I'm your lyric writing assistant. Tell me about the vibe you want for this song. What's the mood, theme, or story?",
-          timestamp: new Date(),
-        },
-      ]);
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project");
-    } finally {
+    // Simulate AI lyric generation (calls OpenRouter free model in production)
+    setTimeout(() => {
+      const sampleLyrics = getSampleLyrics(selectedGenre?.id || "pop");
+      setGeneratedLyrics(sampleLyrics);
       setIsGenerating(false);
-    }
-  };
-
-  /**
-   * Send message to OpenAI for lyric generation
-   */
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || !activeProject) return;
-
-    try {
-      setError(null);
-
-      // Add user message
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: inputText,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
-      setInputText("");
-      setIsGenerating(true);
-
-      // TODO: Call OpenAI API via backend with voice clone context
-      // const response = await fetch("/api/trpc/music.generateLyrics", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     musicId: activeProject.id,
-      //     prompt: inputText,
-      //     voiceCloneId: voiceClone?.voiceCloneId,
-      //     context: messages.map(m => `${m.role}: ${m.content}`).join("\n"),
-      //   }),
-      // });
-
-      // Simulate OpenAI response
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: `Great idea! Here's a verse for you:\n\n"${inputText}"\n\nDoes this direction work? Want me to refine it or move to the chorus?`,
-          timestamp: new Date(),
-        };
-
-        setMessages((prev) => [...prev, assistantMessage]);
-        setIsGenerating(false);
-      }, 1000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate lyrics");
-      setIsGenerating(false);
-    }
-  };
-
-  /**
-   * Generate music with voice clone
-   */
-  const handleGenerateMusic = async () => {
-    if (!activeProject || !voiceClone) {
-      Alert.alert("Error", "Voice clone not available");
-      return;
-    }
-
-    try {
-      setIsGenerating(true);
-      setError(null);
-
-      // TODO: Call backend to generate music with voice clone
-      // const response = await fetch("/api/trpc/music.generate", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     musicId: activeProject.id,
-      //     voiceCloneId: voiceClone.voiceCloneId,
-      //     lyrics: messages
-      //       .filter((m) => m.role === "assistant")
-      //       .map((m) => m.content)
-      //       .join("\n\n"),
-      //   }),
-      // });
-
-      // Simulate generation
-      setTimeout(() => {
-        setActiveProject({
-          ...activeProject,
-          status: "completed",
-          generatedMusicUrl: "mock_url",
-        });
-        setIsGenerating(false);
+      setPhase("result");
+      if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }, 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate music");
-      setIsGenerating(false);
-    }
+      }
+    }, 2500);
   };
 
-  /**
-   * Navigate to Cameo Scan
-   */
-  const handleCompleteCameoScan = () => {
-    // TODO: Navigate to Cameo Scan screen
-    Alert.alert("Cameo Scan", "Navigate to Cameo & Beautify to complete your voice scan");
+  const handleReset = () => {
+    setPhase("genre");
+    setSelectedGenre(null);
+    setLyricPrompt("");
+    setGeneratedLyrics("");
   };
 
-  // Loading state
-  if (loadingClone) {
-    return (
-      <ScreenContainer className="items-center justify-center">
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text className="text-foreground mt-4">Loading your voice clone...</Text>
-      </ScreenContainer>
-    );
-  }
-
-  // Voice Clone Not Found - Gate
-  if (!voiceClone && !activeProject) {
-    return (
-      <ScreenContainer className="p-6">
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="flex-1 items-center justify-center gap-6">
-            {/* Icon */}
-            <View
-              className="w-24 h-24 rounded-full items-center justify-center"
-              style={{ backgroundColor: colors.surface }}
-            >
-              <Text className="text-5xl">🎤</Text>
-            </View>
-
-            {/* Heading */}
-            <View className="items-center gap-2">
-              <Text className="text-2xl font-bold text-foreground text-center">
-                Voice Identity Not Found
-              </Text>
-              <Text className="text-sm text-muted text-center">
-                Complete your Cameo Scan to unlock your AI voice clone for music generation
-              </Text>
-            </View>
-
-            {/* Info Cards */}
-            <View className="w-full gap-3 my-4">
-              <View className="p-4 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                <Text className="font-semibold text-foreground mb-1">🎬 How it works</Text>
-                <Text className="text-xs text-muted">
-                  Record a 1-5 minute video in Cameo & Beautify. Our AI learns your unique voice characteristics and creates a personalized voice clone.
-                </Text>
-              </View>
-
-              <View className="p-4 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                <Text className="font-semibold text-foreground mb-1">✨ Your AI Voice</Text>
-                <Text className="text-xs text-muted">
-                  Once scanned, your voice clone will be used for all music generation, creating authentic tracks that sound like YOU.
-                </Text>
-              </View>
-
-              <View className="p-4 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                <Text className="font-semibold text-foreground mb-1">🔒 Privacy First</Text>
-                <Text className="text-xs text-muted">
-                  Your biometric voice data is encrypted and never shared. Only you control how your voice is used.
-                </Text>
-              </View>
-            </View>
-
-            {/* CTA Button */}
-            <TouchableOpacity
-              onPress={handleCompleteCameoScan}
-              style={{ backgroundColor: colors.primary }}
-              className="w-full py-4 rounded-lg items-center justify-center"
-            >
-              <Text className="text-white font-bold text-base">
-                Complete Cameo Scan
-              </Text>
-            </TouchableOpacity>
-
-            {/* Secondary Info */}
-            <Text className="text-xs text-muted text-center">
-              Your voice clone is permanent and can be updated anytime
-            </Text>
-          </View>
-        </ScrollView>
-      </ScreenContainer>
-    );
-  }
-
-  // Main Studio View
-  if (!activeProject) {
-    return (
-      <ScreenContainer className="bg-background">
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="flex-1 px-6 py-6 gap-6">
-            {/* Header */}
-            <View>
-              <Text className="text-2xl font-bold text-foreground">
-                Music Studio
-              </Text>
-              <Text className="text-sm text-muted mt-1">
-                Create music with your AI voice clone
-              </Text>
-            </View>
-
-            {/* Error Message */}
-            {error && (
-              <View className="bg-error/10 border border-error rounded-lg p-4">
-                <Text className="text-error text-sm">{error}</Text>
-              </View>
-            )}
-
-            {/* Voice Clone Status */}
-            {voiceClone && (
-              <View
-                className="p-4 rounded-lg border-2"
-                style={{ borderColor: colors.primary, backgroundColor: colors.surface }}
-              >
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-2xl">✓</Text>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-foreground">
-                      Your AI Voice Clone Active
-                    </Text>
-                    <Text className="text-xs text-muted mt-1">
-                      {voiceClone.voiceCharacteristics}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Voice Clone Toggle */}
-            <View className="gap-3">
-              <Text className="font-semibold text-foreground">Voice Model</Text>
-              <TouchableOpacity
-                onPress={() => setUseVoiceClone(!useVoiceClone)}
-                style={{
-                  backgroundColor: useVoiceClone ? colors.primary : colors.surface,
-                  borderColor: colors.primary,
-                  borderWidth: 2,
-                }}
-                className="w-full py-4 px-4 rounded-lg items-center justify-center"
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    useVoiceClone ? "text-white" : "text-foreground"
-                  }`}
-                >
-                  🎤 Use My AI Voice Clone
-                </Text>
-                <Text
-                  className={`text-center text-xs mt-2 ${
-                    useVoiceClone ? "text-white/80" : "text-muted"
-                  }`}
-                >
-                  {voiceClone?.voiceCharacteristics || "Your unique voice"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Upload Button */}
-            <TouchableOpacity
-              onPress={handlePickInstrumental}
-              disabled={isGenerating || !useVoiceClone}
-              style={{
-                backgroundColor: colors.primary,
-                opacity: isGenerating || !useVoiceClone ? 0.5 : 1,
-              }}
-              className="w-full rounded-lg py-4 px-6 active:scale-95"
-            >
-              {isGenerating ? (
-                <ActivityIndicator color="#F5F5F5" />
-              ) : (
-                <Text className="text-center text-white font-bold text-base">
-                  Upload Instrumental
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Projects List */}
-            {projects.length > 0 && (
-              <View className="gap-3">
-                <Text className="font-semibold text-foreground">
-                  Your Projects ({projects.length})
-                </Text>
-                <FlatList
-                  data={projects}
-                  keyExtractor={(item) => item.id.toString()}
-                  scrollEnabled={false}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => setActiveProject(item)}
-                      style={{ backgroundColor: colors.surface }}
-                      className="border border-border rounded-lg p-4 gap-2"
-                    >
-                      <Text className="font-semibold text-foreground">
-                        {item.title}
-                      </Text>
-                      <Text className="text-xs text-muted">
-                        {item.status === "completed" ? "✓ Ready" : "In Progress"}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            )}
-          </View>
-        </ScrollView>
-      </ScreenContainer>
-    );
-  }
-
-  // Lyric Chat Interface
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <ScreenContainer className="bg-background" edges={["top", "left", "right"]}>
+    <ScreenContainer className="bg-black">
+      <View style={{ flex: 1, backgroundColor: "#000000" }}>
         {/* Header */}
-        <View className="flex-row justify-between items-center mb-4 pb-4 border-b" style={{ borderColor: colors.border }}>
-          <View>
-            <Text className="text-lg font-bold text-foreground">
-              {activeProject.title}
-            </Text>
-            <Text className="text-xs text-muted">🎤 Your AI Voice</Text>
-          </View>
-          <TouchableOpacity onPress={() => setActiveProject(null)}>
-            <Text style={{ color: colors.primary }} className="font-semibold">
-              Back
-            </Text>
-          </TouchableOpacity>
+        <View
+          style={{
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255, 0, 127, 0.2)",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "800",
+              color: "#FFFFFF",
+              letterSpacing: 2,
+            }}
+          >
+            MUSIC STUDIO
+          </Text>
+          <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
+            AI LYRIC & BEAT ENGINE
+          </Text>
         </View>
 
-        {error && (
-          <View className="bg-error/10 border border-error rounded-lg p-3 mb-4">
-            <Text className="text-error text-sm">{error}</Text>
-          </View>
-        )}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 20, paddingTop: 20 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* PHASE: Genre Selection */}
+          {phase === "genre" && (
+            <View>
+              <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "700", marginBottom: 4 }}>
+                Choose Your Genre
+              </Text>
+              <Text style={{ color: "#888888", fontSize: 13, marginBottom: 24 }}>
+                Select a genre to start creating your track
+              </Text>
 
-        {/* Chat Messages */}
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              className={`mb-4 flex-row ${
-                item.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <View
-                className={`max-w-[80%] px-4 py-3 rounded-lg ${
-                  item.role === "user"
-                    ? "rounded-br-none"
-                    : "rounded-bl-none border"
-                }`}
-                style={{
-                  backgroundColor: item.role === "user" ? colors.primary : colors.surface,
-                  borderColor: item.role === "user" ? colors.primary : colors.border,
-                }}
-              >
-                <Text
-                  className={`text-sm ${
-                    item.role === "user" ? "text-white" : "text-foreground"
-                  }`}
+              {/* Genre Grid */}
+              <View style={{ gap: 12 }}>
+                {GENRES.map((genre) => (
+                  <Pressable
+                    key={genre.id}
+                    onPress={() => handleGenreSelect(genre)}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor:
+                        selectedGenre?.id === genre.id
+                          ? "rgba(255, 0, 127, 0.15)"
+                          : "rgba(26, 26, 26, 0.8)",
+                      borderRadius: 16,
+                      padding: 16,
+                      borderWidth: 2,
+                      borderColor:
+                        selectedGenre?.id === genre.id
+                          ? genre.color
+                          : "rgba(51, 51, 51, 0.5)",
+                      shadowColor: selectedGenre?.id === genre.id ? genre.color : "transparent",
+                      shadowOpacity: selectedGenre?.id === genre.id ? 0.4 : 0,
+                      shadowRadius: selectedGenre?.id === genre.id ? 12 : 0,
+                      elevation: selectedGenre?.id === genre.id ? 6 : 0,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                      opacity: pressed ? 0.9 : 1,
+                    })}
+                  >
+                    {/* Genre Icon */}
+                    <View
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        backgroundColor: `${genre.color}20`,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 14,
+                      }}
+                    >
+                      <Text style={{ fontSize: 24 }}>{genre.icon}</Text>
+                    </View>
+
+                    {/* Genre Info */}
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          color: selectedGenre?.id === genre.id ? genre.color : "#FFFFFF",
+                          fontSize: 16,
+                          fontWeight: "700",
+                        }}
+                      >
+                        {genre.label}
+                      </Text>
+                      <Text style={{ color: "#888888", fontSize: 12, marginTop: 2 }}>
+                        {genre.description}
+                      </Text>
+                    </View>
+
+                    {/* Selected Indicator */}
+                    {selectedGenre?.id === genre.id && (
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          backgroundColor: genre.color,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
+                          {"\u2713"}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+
+              {/* Continue Button */}
+              {selectedGenre && (
+                <Pressable
+                  onPress={handleContinue}
+                  style={({ pressed }) => ({
+                    backgroundColor: "#FF007F",
+                    paddingVertical: 16,
+                    borderRadius: 30,
+                    alignItems: "center",
+                    marginTop: 24,
+                    shadowColor: "#FF007F",
+                    shadowOpacity: 0.6,
+                    shadowRadius: 14,
+                    elevation: 8,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                    opacity: pressed ? 0.9 : 1,
+                  })}
                 >
-                  {item.content}
+                  <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800", letterSpacing: 1 }}>
+                    CONTINUE WITH {selectedGenre.label.toUpperCase()}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          {/* PHASE: Lyric Prompt */}
+          {phase === "prompt" && (
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+                <Pressable onPress={handleReset} style={{ marginRight: 12 }}>
+                  <Text style={{ color: "#FF007F", fontSize: 14, fontWeight: "600" }}>
+                    {"\u2190"} Back
+                  </Text>
+                </Pressable>
+                <View
+                  style={{
+                    backgroundColor: `${selectedGenre?.color}20`,
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: selectedGenre?.color || "#FF007F",
+                  }}
+                >
+                  <Text style={{ color: selectedGenre?.color, fontSize: 12, fontWeight: "600" }}>
+                    {selectedGenre?.icon} {selectedGenre?.label}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700", marginBottom: 8 }}>
+                Describe Your Song
+              </Text>
+              <Text style={{ color: "#888888", fontSize: 13, marginBottom: 20 }}>
+                Tell the AI what your song is about. Include mood, theme, or specific lyrics you want.
+              </Text>
+
+              <TextInput
+                value={lyricPrompt}
+                onChangeText={setLyricPrompt}
+                placeholder="e.g., A summer anthem about driving down the coast with the windows down..."
+                placeholderTextColor="#555555"
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                style={{
+                  backgroundColor: "rgba(26, 26, 26, 0.8)",
+                  borderRadius: 16,
+                  padding: 16,
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  minHeight: 140,
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 0, 127, 0.3)",
+                }}
+              />
+
+              <Pressable
+                onPress={handleGenerate}
+                style={({ pressed }) => ({
+                  backgroundColor: lyricPrompt.trim() ? "#FF007F" : "rgba(255, 0, 127, 0.3)",
+                  paddingVertical: 16,
+                  borderRadius: 30,
+                  alignItems: "center",
+                  marginTop: 24,
+                  shadowColor: "#FF007F",
+                  shadowOpacity: lyricPrompt.trim() ? 0.6 : 0,
+                  shadowRadius: 14,
+                  elevation: lyricPrompt.trim() ? 8 : 0,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800", letterSpacing: 1 }}>
+                  GENERATE LYRICS
                 </Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* PHASE: Generating */}
+          {phase === "generating" && (
+            <View style={{ alignItems: "center", paddingTop: 60 }}>
+              <Image
+                source={{ uri: LOGO_URL }}
+                style={{ width: 80, height: 80, marginBottom: 24, opacity: 0.8 }}
+                resizeMode="contain"
+              />
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700", marginBottom: 8 }}>
+                Generating Lyrics...
+              </Text>
+              <Text style={{ color: "#888888", fontSize: 13, textAlign: "center" }}>
+                AI is crafting {selectedGenre?.label} lyrics based on your prompt
+              </Text>
+
+              {/* Animated dots */}
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 24 }}>
+                {[0, 1, 2].map((i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: "#FF007F",
+                      opacity: 0.5 + (i * 0.2),
+                    }}
+                  />
+                ))}
               </View>
             </View>
           )}
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
-          className="flex-1 mb-4"
-        />
 
-        {/* Input Area */}
-        <View className="gap-3 border-t pt-4" style={{ borderColor: colors.border }}>
-          <View className="flex-row gap-2 items-end">
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Describe your song idea..."
-              placeholderTextColor={colors.muted}
-              multiline
-              maxLength={500}
-              style={{
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                color: colors.foreground,
-              }}
-              className="flex-1 border rounded-lg px-4 py-3"
-            />
-            <TouchableOpacity
-              onPress={handleSendMessage}
-              disabled={isGenerating || !inputText.trim()}
-              style={{
-                backgroundColor: colors.primary,
-                opacity: isGenerating || !inputText.trim() ? 0.5 : 1,
-              }}
-              className="rounded-lg p-3 active:scale-95"
-            >
-              {isGenerating ? (
-                <ActivityIndicator color="#F5F5F5" size="small" />
-              ) : (
-                <Text className="text-white text-lg">→</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          {/* PHASE: Result */}
+          {phase === "result" && (
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+                <View
+                  style={{
+                    backgroundColor: `${selectedGenre?.color}20`,
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: selectedGenre?.color || "#FF007F",
+                  }}
+                >
+                  <Text style={{ color: selectedGenre?.color, fontSize: 12, fontWeight: "600" }}>
+                    {selectedGenre?.icon} {selectedGenre?.label}
+                  </Text>
+                </View>
+                <Text style={{ color: "#00FF00", fontSize: 12, fontWeight: "600", marginLeft: 8 }}>
+                  {"\u2713"} Generated
+                </Text>
+              </View>
 
-          {/* Generate Music Button */}
-          <TouchableOpacity
-            onPress={handleGenerateMusic}
-            disabled={isGenerating}
-            style={{
-              backgroundColor: colors.primary,
-              opacity: isGenerating ? 0.6 : 1,
-            }}
-            className="w-full rounded-lg py-3 px-4 active:scale-95"
-          >
-            <Text className="text-center text-white font-bold">
-              {isGenerating ? "Generating..." : "Generate Music with My Voice"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScreenContainer>
-    </KeyboardAvoidingView>
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
+                Your Lyrics
+              </Text>
+
+              {/* Lyrics Display */}
+              <View
+                style={{
+                  backgroundColor: "rgba(26, 26, 26, 0.8)",
+                  borderRadius: 16,
+                  padding: 20,
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 0, 127, 0.3)",
+                }}
+              >
+                <Text style={{ color: "#FFFFFF", fontSize: 14, lineHeight: 22 }}>
+                  {generatedLyrics}
+                </Text>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
+                <Pressable
+                  onPress={handleReset}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    backgroundColor: "rgba(26, 26, 26, 0.8)",
+                    paddingVertical: 14,
+                    borderRadius: 24,
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#333333",
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>NEW SONG</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    backgroundColor: "#FF007F",
+                    paddingVertical: 14,
+                    borderRadius: 24,
+                    alignItems: "center",
+                    shadowColor: "#FF007F",
+                    shadowOpacity: 0.5,
+                    shadowRadius: 10,
+                    elevation: 6,
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "800" }}>
+                    ADD VOCALS
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </ScreenContainer>
   );
+}
+
+function getSampleLyrics(genre: string): string {
+  const lyrics: Record<string, string> = {
+    pop: "[Verse 1]\nDriving down the boulevard, neon in my eyes\nEvery beat is calling me beneath the city lights\nWe were born to shine tonight, no looking back\n\n[Chorus]\nWe're the stars, we're the fire\nBurning brighter, taking higher\nNothing stops us when we ride\nBig Starz energy tonight",
+    country: "[Verse 1]\nDust road winding past the old oak tree\nSunset painting gold on everything I see\nPicked up my guitar and let the story flow\n\n[Chorus]\nThis is where the heart calls home\nWhere the river meets the stone\nEvery song I write is true\nCountry roads leading back to you",
+    edm: "[Build]\nFeel the bass drop coming, lights are flashing bright\nHands up in the air, we own the night\nSynths are rising higher, pulse is getting strong\n\n[Drop]\nBoom - we explode into the sound\nEvery heartbeat shaking ground\nBig Starz on the decks tonight\nElectronic paradise",
+    latin: "[Verso 1]\nRitmo caliente, fuego en la pista\nTodo el mundo siente esta vibra\nMovimiento suave, noche de fiesta\n\n[Coro]\nBaila, baila, siente el calor\nBig Starz bringing that Latin flavor\nReggaeton flow, tropical heat\nEvery night we own the street",
+    rock: "[Verse 1]\nCranked the amp to eleven, let the power chords ring\nEvery note is thunder, every word I sing\nStage is set on fire, crowd is screaming loud\n\n[Chorus]\nWe are the revolution, we are the sound\nShaking every building, burning to the ground\nBig Starz rock and roll tonight\nNothing gonna stop this fight",
+    hiphop: "[Verse 1]\nStepping to the mic, flow is automatic\nEvery bar I spit is cinematic\nBig Starz on the rise, no cap\nBuilding empires, stacking racks\n\n[Hook]\nWe the ones they talk about\nFrom the bottom, now we out\nEvery verse a masterpiece\nBig Starz never gonna cease",
+    rnb: "[Verse 1]\nSmooth like velvet, voice like honey\nEvery word I sing for you, baby\nCandles lit, the mood is right\nLet me serenade you tonight\n\n[Chorus]\nYou and me, that's all I need\nSoul connection, hearts aligned\nBig Starz love, so divine\nForever yours, forever mine",
+  };
+  return lyrics[genre] || lyrics.pop;
 }

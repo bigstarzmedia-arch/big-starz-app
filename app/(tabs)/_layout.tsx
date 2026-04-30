@@ -15,15 +15,16 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.tint,
+        tabBarActiveTintColor: "#FF007F",
+        tabBarInactiveTintColor: "#888888",
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
           paddingTop: 8,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
+          backgroundColor: "#000000",
+          borderTopColor: "#333333",
           borderTopWidth: 0.5,
         },
       }}
@@ -31,10 +32,51 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Vibe",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="cameo-studio"
+        options={{
+          title: "Cameo",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="music-studio"
+        options={{
+          title: "Music",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="music.note" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="affiliate-hub"
+        options={{
+          title: "Cast",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="wallet-screen"
+        options={{
+          title: "Wallet",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+        }}
+      />
+      {/* Hidden screens - not shown in tab bar */}
+      <Tabs.Screen name="vibe-screen" options={{ href: null }} />
+      <Tabs.Screen name="cast-screen" options={{ href: null }} />
+      <Tabs.Screen name="chat-screen" options={{ href: null }} />
+      <Tabs.Screen name="studio-screen" options={{ href: null }} />
+      <Tabs.Screen name="vibe-live" options={{ href: null }} />
+      <Tabs.Screen name="creator-analytics" options={{ href: null }} />
+      <Tabs.Screen name="earnings-dashboard" options={{ href: null }} />
+      <Tabs.Screen name="payout-settings" options={{ href: null }} />
+      <Tabs.Screen name="profile-settings" options={{ href: null }} />
+      <Tabs.Screen name="subscription-check" options={{ href: null }} />
+      <Tabs.Screen name="casting-detail" options={{ href: null }} />
+      <Tabs.Screen name="music-studio-luxury" options={{ href: null }} />
     </Tabs>
   );
 }

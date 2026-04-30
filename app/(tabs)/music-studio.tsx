@@ -64,16 +64,32 @@ export default function MusicStudioScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
-    // Simulate AI lyric generation (calls OpenRouter free model in production)
-    setTimeout(() => {
-      const sampleLyrics = getSampleLyrics(selectedGenre?.id || "pop");
-      setGeneratedLyrics(sampleLyrics);
+    try {
+      // Call Pollinations free AI text API for real lyric generation
+      const genreLabel = selectedGenre?.label || "Pop";
+      const prompt = `Write original ${genreLabel} song lyrics based on this description: ${lyricPrompt}. Include verse and chorus labels. Style: ${selectedGenre?.description || "catchy hooks"}. Output ONLY the lyrics, no explanations.`;
+      const response = await fetch(
+        `https://text.pollinations.ai/${encodeURIComponent(prompt)}`
+      );
+
+      if (response.ok) {
+        const lyrics = await response.text();
+        setGeneratedLyrics(lyrics.trim());
+      } else {
+        // Fallback to sample lyrics if API fails
+        setGeneratedLyrics(getSampleLyrics(selectedGenre?.id || "pop"));
+      }
+    } catch (err) {
+      console.error("Lyric generation error:", err);
+      // Fallback to sample lyrics
+      setGeneratedLyrics(getSampleLyrics(selectedGenre?.id || "pop"));
+    } finally {
       setIsGenerating(false);
       setPhase("result");
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-    }, 2500);
+    }
   };
 
   const handleReset = () => {

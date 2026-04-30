@@ -1,13 +1,13 @@
 /**
- * Cameo Studio - 3D Face Mesh Head-Turn Scan
- * Active camera frame with face mesh instructions
+ * Cameo Studio - Real Camera + 3D Face Mesh Head-Turn Scan
+ * Uses expo-camera for live camera preview
  * Steps: Look Center -> Turn Right -> Turn Left -> Look Up
  */
 
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, Platform } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import { ScreenContainer } from "@/components/screen-container";
-import { Platform } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 
 const LOGO_URL =
@@ -20,21 +20,24 @@ interface ScanInstruction {
   label: string;
   icon: string;
   description: string;
+  arrow: string;
 }
 
 const SCAN_STEPS: ScanInstruction[] = [
-  { step: "center", label: "Look Center", icon: "\u{1F464}", description: "Face the camera directly" },
-  { step: "right", label: "Turn Right", icon: "\u27A1\uFE0F", description: "Slowly turn your head to the right" },
-  { step: "left", label: "Turn Left", icon: "\u2B05\uFE0F", description: "Slowly turn your head to the left" },
-  { step: "up", label: "Look Up", icon: "\u2B06\uFE0F", description: "Tilt your head slightly upward" },
+  { step: "center", label: "Look Center", icon: "\u{1F464}", description: "Face the camera directly", arrow: "\u{1F7E2}" },
+  { step: "right", label: "Turn Right", icon: "\u27A1\uFE0F", description: "Slowly turn your head to the right", arrow: "\u27A1\uFE0F" },
+  { step: "left", label: "Turn Left", icon: "\u2B05\uFE0F", description: "Slowly turn your head to the left", arrow: "\u2B05\uFE0F" },
+  { step: "up", label: "Look Up", icon: "\u2B06\uFE0F", description: "Tilt your head slightly upward", arrow: "\u2B06\uFE0F" },
 ];
 
 export default function CameoStudioScreen() {
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanState, setScanState] = useState<ScanStep>("idle");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [scanComplete, setScanComplete] = useState(false);
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
     return () => {
@@ -92,27 +95,70 @@ export default function CameoStudioScreen() {
 
   const currentInstruction = SCAN_STEPS[currentStepIndex];
 
+  // Permission not yet determined
+  if (!permission) {
+    return (
+      <ScreenContainer className="bg-black">
+        <View style={{ flex: 1, backgroundColor: "#000000", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ color: "#888888", fontSize: 14 }}>Loading camera...</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  // Permission not granted
+  if (!permission.granted) {
+    return (
+      <ScreenContainer className="bg-black">
+        <View style={{ flex: 1, backgroundColor: "#000000", alignItems: "center", justifyContent: "center", padding: 40 }}>
+          <Image
+            source={{ uri: LOGO_URL }}
+            style={{ width: 80, height: 80, marginBottom: 24 }}
+            resizeMode="contain"
+          />
+          <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "800", textAlign: "center", marginBottom: 12 }}>
+            Camera Access Required
+          </Text>
+          <Text style={{ color: "#888888", fontSize: 14, textAlign: "center", marginBottom: 32, lineHeight: 20 }}>
+            Big Starz needs camera access to perform the 3D Face Mesh scan for your Cameo avatar synthesis.
+          </Text>
+          <Pressable
+            onPress={requestPermission}
+            style={({ pressed }) => ({
+              backgroundColor: "#FF007F",
+              paddingHorizontal: 40,
+              paddingVertical: 16,
+              borderRadius: 30,
+              shadowColor: "#FF007F",
+              shadowOpacity: 0.7,
+              shadowRadius: 16,
+              elevation: 8,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800", letterSpacing: 1 }}>
+              ENABLE CAMERA
+            </Text>
+          </Pressable>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer className="bg-black">
       <View style={{ flex: 1, backgroundColor: "#000000" }}>
         {/* Header */}
         <View
           style={{
-            paddingVertical: 12,
+            paddingVertical: 10,
             paddingHorizontal: 20,
             alignItems: "center",
             borderBottomWidth: 1,
             borderBottomColor: "rgba(255, 0, 127, 0.2)",
           }}
         >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: "#FFFFFF",
-              letterSpacing: 2,
-            }}
-          >
+          <Text style={{ fontSize: 18, fontWeight: "800", color: "#FFFFFF", letterSpacing: 2 }}>
             CAMEO STUDIO
           </Text>
           <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
@@ -121,12 +167,12 @@ export default function CameoStudioScreen() {
         </View>
 
         {/* Camera Frame Area */}
-        <View style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 16 }}>
-          {/* Camera Viewport */}
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 12 }}>
+          {/* Live Camera Viewport */}
           <View
             style={{
               flex: 1,
-              maxHeight: 420,
+              maxHeight: 400,
               borderRadius: 24,
               overflow: "hidden",
               borderWidth: 2,
@@ -136,7 +182,6 @@ export default function CameoStudioScreen() {
                   : scanState === "idle"
                   ? "rgba(255, 0, 127, 0.4)"
                   : "#FF007F",
-              backgroundColor: "#0A0A0A",
               position: "relative",
               shadowColor: scanState === "complete" ? "#00FF00" : "#FF007F",
               shadowOpacity: 0.5,
@@ -144,117 +189,91 @@ export default function CameoStudioScreen() {
               elevation: 10,
             }}
           >
-            {/* Simulated Camera View with face mesh overlay */}
+            {/* Real Camera Feed */}
+            <CameraView
+              ref={cameraRef}
+              style={{ flex: 1 }}
+              facing="front"
+              mirror={true}
+            />
+
+            {/* Face Mesh Overlay (on top of camera) */}
             <View
               style={{
-                flex: 1,
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#0D0D0D",
               }}
             >
-              {/* Face Mesh Grid Overlay */}
+              {/* Face oval guide */}
               <View
                 style={{
-                  width: 200,
-                  height: 260,
-                  borderRadius: 100,
-                  borderWidth: 1,
+                  width: 180,
+                  height: 240,
+                  borderRadius: 90,
+                  borderWidth: 2,
                   borderColor:
                     scanState === "idle"
-                      ? "rgba(255, 0, 127, 0.3)"
+                      ? "rgba(255, 0, 127, 0.4)"
                       : scanState === "complete"
-                      ? "rgba(0, 255, 0, 0.5)"
-                      : "rgba(0, 255, 255, 0.5)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative",
+                      ? "rgba(0, 255, 0, 0.6)"
+                      : "rgba(0, 255, 255, 0.6)",
+                  borderStyle: "dashed",
                 }}
-              >
-                {/* Horizontal mesh lines */}
-                {[52, 91, 130, 169, 208].map((pos, i) => (
-                  <View
-                    key={`h-${i}`}
-                    style={{
-                      position: "absolute",
-                      top: pos,
-                      left: 20,
-                      right: 20,
-                      height: 1,
-                      backgroundColor:
-                        scanState === "complete"
-                          ? "rgba(0, 255, 0, 0.3)"
-                          : "rgba(0, 255, 255, 0.2)",
-                    }}
-                  />
-                ))}
-                {/* Vertical mesh lines */}
-                {[60, 100, 140].map((pos, i) => (
-                  <View
-                    key={`v-${i}`}
-                    style={{
-                      position: "absolute",
-                      left: pos,
-                      top: 26,
-                      bottom: 26,
-                      width: 1,
-                      backgroundColor:
-                        scanState === "complete"
-                          ? "rgba(0, 255, 0, 0.3)"
-                          : "rgba(0, 255, 255, 0.2)",
-                    }}
-                  />
-                ))}
+              />
 
-                {/* Face outline dots */}
-                {[
-                  { top: 39, left: 97 },
-                  { top: 91, left: 57 },
-                  { top: 91, left: 137 },
-                  { top: 143, left: 97 },
-                  { top: 195, left: 77 },
-                  { top: 195, left: 117 },
-                ].map((pos, i) => (
-                  <View
-                    key={`dot-${i}`}
-                    style={{
-                      position: "absolute",
-                      top: pos.top,
-                      left: pos.left,
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor:
-                        scanState === "complete"
-                          ? "#00FF00"
-                          : scanState === "idle"
-                          ? "#FF007F"
-                          : "#00FFFF",
-                    }}
-                  />
-                ))}
-
-                {/* Center face icon */}
-                <Text style={{ fontSize: 48, opacity: 0.4 }}>
-                  {scanState === "complete" ? "\u2705" : "\u{1F464}"}
-                </Text>
-              </View>
-
-              {/* Direction Arrow Indicator */}
+              {/* Mesh grid lines */}
               {scanState !== "idle" && scanState !== "complete" && (
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 30,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ fontSize: 36 }}>{currentInstruction?.icon}</Text>
+                <>
+                  {[0.25, 0.4, 0.55, 0.7].map((ratio, i) => (
+                    <View
+                      key={`h-${i}`}
+                      style={{
+                        position: "absolute",
+                        top: `${ratio * 100}%` as unknown as number,
+                        left: "25%",
+                        right: "25%",
+                        height: 1,
+                        backgroundColor: "rgba(0, 255, 255, 0.3)",
+                      }}
+                    />
+                  ))}
+                  {[0.35, 0.5, 0.65].map((ratio, i) => (
+                    <View
+                      key={`v-${i}`}
+                      style={{
+                        position: "absolute",
+                        left: `${ratio * 100}%` as unknown as number,
+                        top: "20%",
+                        bottom: "20%",
+                        width: 1,
+                        backgroundColor: "rgba(0, 255, 255, 0.3)",
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Direction Arrow */}
+              {scanState !== "idle" && scanState !== "complete" && (
+                <View style={{ position: "absolute", bottom: 20 }}>
+                  <Text style={{ fontSize: 40 }}>{currentInstruction?.arrow}</Text>
+                </View>
+              )}
+
+              {/* Complete checkmark */}
+              {scanState === "complete" && (
+                <View style={{ position: "absolute" }}>
+                  <Text style={{ fontSize: 60 }}>{"\u2705"}</Text>
                 </View>
               )}
             </View>
 
-            {/* Scan Status Overlay */}
+            {/* Top Status Bar */}
             <View
               style={{
                 position: "absolute",
@@ -278,24 +297,32 @@ export default function CameoStudioScreen() {
               >
                 <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "600" }}>
                   {scanState === "idle"
-                    ? "READY"
+                    ? "\u{1F534} READY"
                     : scanState === "complete"
-                    ? "SCAN COMPLETE"
-                    : `STEP ${currentStepIndex + 1}/4`}
+                    ? "\u{1F7E2} SCAN COMPLETE"
+                    : `\u{1F7E1} STEP ${currentStepIndex + 1}/4`}
                 </Text>
               </View>
-              <Image
-                source={{ uri: LOGO_URL }}
-                style={{ width: 28, height: 28, opacity: 0.7 }}
-                resizeMode="contain"
-              />
+              <View
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#FF0000", marginRight: 4 }} />
+                <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "600" }}>REC</Text>
+              </View>
             </View>
           </View>
 
           {/* Progress Bar */}
           <View
             style={{
-              marginTop: 16,
+              marginTop: 12,
               height: 6,
               backgroundColor: "rgba(26, 26, 26, 0.8)",
               borderRadius: 3,
@@ -306,23 +333,22 @@ export default function CameoStudioScreen() {
               style={{
                 width: `${progress}%`,
                 height: "100%",
-                backgroundColor:
-                  scanState === "complete" ? "#00FF00" : "#FF007F",
+                backgroundColor: scanState === "complete" ? "#00FF00" : "#FF007F",
                 borderRadius: 3,
               }}
             />
           </View>
 
           {/* Instruction Text */}
-          <View style={{ marginTop: 16, alignItems: "center" }}>
+          <View style={{ marginTop: 12, alignItems: "center", minHeight: 50 }}>
             {scanState === "idle" && (
               <Text style={{ color: "#AAAAAA", fontSize: 14, textAlign: "center" }}>
-                Position your face within the frame and tap Start Scan
+                Position your face within the oval and tap Start Scan
               </Text>
             )}
             {scanState !== "idle" && scanState !== "complete" && (
               <View style={{ alignItems: "center" }}>
-                <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "700" }}>
+                <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "700" }}>
                   {currentInstruction?.label}
                 </Text>
                 <Text style={{ color: "#888888", fontSize: 13, marginTop: 4 }}>
@@ -343,14 +369,7 @@ export default function CameoStudioScreen() {
           </View>
 
           {/* Step Indicators */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              marginTop: 16,
-              gap: 8,
-            }}
-          >
+          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 12, gap: 8 }}>
             {SCAN_STEPS.map((step, idx) => (
               <View
                 key={step.step}
@@ -383,7 +402,7 @@ export default function CameoStudioScreen() {
           </View>
 
           {/* Action Button */}
-          <View style={{ marginTop: 20, alignItems: "center" }}>
+          <View style={{ marginTop: 16, alignItems: "center", paddingBottom: 10 }}>
             {scanState === "idle" && (
               <Pressable
                 onPress={startScan}
@@ -435,7 +454,7 @@ export default function CameoStudioScreen() {
                   })}
                 >
                   <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
-                    CONTINUE TO VOICE CLONE
+                    VOICE CLONE
                   </Text>
                 </Pressable>
               </View>

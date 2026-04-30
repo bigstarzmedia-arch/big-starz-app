@@ -86,6 +86,14 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     [
+      "expo-camera",
+      {
+        "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for face scanning.",
+        "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
+        "recordAudioAndroid": true
+      }
+    ],
+    [
       "expo-audio",
       {
         microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",

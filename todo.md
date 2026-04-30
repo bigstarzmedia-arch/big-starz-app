@@ -124,3 +124,10 @@
 - [x] Cameo Studio: Head-turn scan interaction logic
 - [x] Music Studio: Genre selection UI (Pop, Country, EDM, Latin, Rock)
 - [x] Entry point must be Big Starz Home/Vibe Feed
+
+## TikTok/Sora App Transformation (Priority)
+- [x] Wire Cameo to real expo-camera with face mesh scan instructions
+- [x] Connect Music Studio to free AI (Pollinations AI) for real lyric generation
+- [x] Build Wallet/Earnings tab with full dashboard (balance, transactions, payout)
+- [x] Make Vibe Feed TikTok-style with full-screen swipeable video cards
+- [x] Ensure app is testable via Expo Go QR code on real device

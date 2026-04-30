@@ -1,18 +1,21 @@
 /**
- * WALLET Screen - Monetization Hub
- * Total Earnings, 1k subscriber progress bar, Cash Out button, transactions ledger
+ * WALLET Screen - Creator Earnings Dashboard
+ * TikTok-style monetization hub with Big Starz dark theme
+ * Total Earnings, 1k subscriber progress, transactions, cash out
  */
 
-import { ScrollView, View, Text, Pressable, FlatList } from "react-native";
+import { ScrollView, View, Text, Pressable, FlatList, Image } from "react-native";
 import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
-import { BigStarzHeader } from "@/components/big-starz-header";
-import { BigStarzBottomNav } from "@/components/big-starz-bottom-nav";
-import { useColors } from "@/hooks/use-colors";
+import { Platform } from "react-native";
+import * as Haptics from "expo-haptics";
+
+const LOGO_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/big-starz-logo-MNPkwqFDvjz997BmgkJDyA.webp";
 
 interface Transaction {
   id: string;
-  type: "gift" | "casting" | "payout" | "topup";
+  type: "gift" | "casting" | "payout" | "topup" | "music";
   description: string;
   amount: number;
   date: string;
@@ -20,289 +23,268 @@ interface Transaction {
 }
 
 const TRANSACTIONS: Transaction[] = [
-  {
-    id: "1",
-    type: "gift",
-    description: "Platinum Record Gift",
-    amount: 50,
-    date: "Today",
-    status: "completed",
-  },
-  {
-    id: "2",
-    type: "casting",
-    description: "Casting Fee - Luna Starz",
-    amount: 150,
-    date: "Yesterday",
-    status: "completed",
-  },
-  {
-    id: "3",
-    type: "payout",
-    description: "Stripe Payout",
-    amount: -2400,
-    date: "2 days ago",
-    status: "completed",
-  },
-  {
-    id: "4",
-    type: "topup",
-    description: "Starz Token Top-Up (100 tokens)",
-    amount: -49.99,
-    date: "3 days ago",
-    status: "completed",
-  },
+  { id: "1", type: "gift", description: "Platinum Record Gift from @NeonDreams", amount: 50, date: "2 min ago", status: "completed" },
+  { id: "2", type: "casting", description: "Casting Fee - Gucci Campaign", amount: 150, date: "1 hour ago", status: "completed" },
+  { id: "3", type: "music", description: "Music Stream Revenue", amount: 23.50, date: "3 hours ago", status: "completed" },
+  { id: "4", type: "gift", description: "Diamond Star Gift from @CyberVibe", amount: 100, date: "Yesterday", status: "completed" },
+  { id: "5", type: "payout", description: "Stripe Payout to Bank", amount: -2400, date: "2 days ago", status: "completed" },
+  { id: "6", type: "topup", description: "Starz Token Purchase (100 tokens)", amount: -49.99, date: "3 days ago", status: "pending" },
+  { id: "7", type: "casting", description: "Casting Fee - Nike Collab", amount: 300, date: "4 days ago", status: "completed" },
+  { id: "8", type: "music", description: "Beat License Sale", amount: 75, date: "5 days ago", status: "completed" },
+];
+
+const QUICK_STATS = [
+  { label: "This Week", value: "$847.50", color: "#00FF00" },
+  { label: "This Month", value: "$3,247", color: "#FF007F" },
+  { label: "Pending", value: "$150", color: "#FFD700" },
 ];
 
 export default function WalletScreen() {
-  const colors = useColors();
-  const [activeTab, setActiveTab] = useState<"vibe" | "studio" | "cast" | "chat" | "wallet">("wallet");
-
-  const totalEarnings = 3847.50;
+  const totalEarnings = 12847.50;
   const currentSubscribers = 847;
-  const subscriberProgress = (currentSubscribers / 1000) * 100;
+  const subscriberGoal = 1000;
+  const subscriberProgress = (currentSubscribers / subscriberGoal) * 100;
+
+  const getTypeIcon = (type: Transaction["type"]) => {
+    switch (type) {
+      case "gift": return "\u{1F381}";
+      case "casting": return "\u{1F3AC}";
+      case "payout": return "\u{1F4B8}";
+      case "topup": return "\u2B50";
+      case "music": return "\u{1F3B5}";
+    }
+  };
+
+  const getTypeLabel = (type: Transaction["type"]) => {
+    switch (type) {
+      case "gift": return "Gift Received";
+      case "casting": return "Casting Fee";
+      case "payout": return "Payout";
+      case "topup": return "Token Purchase";
+      case "music": return "Music Revenue";
+    }
+  };
+
+  const handleCashOut = () => {
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <BigStarzHeader />
-
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Total Earnings Card */}
+    <ScreenContainer className="bg-black">
+      <View style={{ flex: 1, backgroundColor: "#000000" }}>
+        {/* Header */}
         <View
           style={{
-            marginHorizontal: 16,
-            marginVertical: 16,
-            backgroundColor: colors.surface,
-            borderRadius: 12,
-            padding: 20,
-            borderWidth: 2,
-            borderColor: colors.accent1,
-            shadowColor: colors.accent1,
-            shadowOpacity: 0.6,
-            shadowRadius: 8,
-            elevation: 5,
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255, 0, 127, 0.2)",
           }}
         >
-          <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 8 }}>
-            TOTAL EARNINGS
+          <Text style={{ fontSize: 18, fontWeight: "800", color: "#FFFFFF", letterSpacing: 2 }}>
+            WALLET
           </Text>
-          <Text
-            style={{
-              fontSize: 36,
-              fontWeight: "bold",
-              color: colors.accent1,
-              marginBottom: 4,
-            }}
-          >
-            ${totalEarnings.toFixed(2)}
-          </Text>
-          <Text style={{ fontSize: 11, color: colors.muted }}>
-            Available for withdrawal
+          <Text style={{ fontSize: 11, color: "#FF007F", marginTop: 2, letterSpacing: 1 }}>
+            CREATOR EARNINGS
           </Text>
         </View>
 
-        {/* 1k Subscriber Progress */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Total Earnings Card */}
           <View
             style={{
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              padding: 16,
+              marginHorizontal: 16,
+              marginTop: 16,
+              backgroundColor: "rgba(26, 26, 26, 0.8)",
+              borderRadius: 20,
+              padding: 24,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: "rgba(255, 0, 127, 0.3)",
+              shadowColor: "#FF007F",
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              elevation: 8,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: "bold", color: colors.foreground }}>
-                🎯 MONETIZATION PROGRESS
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={{ fontSize: 12, color: "#888888", letterSpacing: 1 }}>TOTAL EARNINGS</Text>
+              <Image source={{ uri: LOGO_URL }} style={{ width: 28, height: 28 }} resizeMode="contain" />
+            </View>
+            <Text style={{ fontSize: 42, fontWeight: "900", color: "#FFFFFF", marginTop: 8 }}>
+              ${totalEarnings.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </Text>
+            <Text style={{ fontSize: 12, color: "#00FF00", marginTop: 4 }}>
+              {"\u2191"} +$847.50 this week
+            </Text>
+
+            {/* Quick Stats */}
+            <View style={{ flexDirection: "row", marginTop: 20, gap: 12 }}>
+              {QUICK_STATS.map((stat) => (
+                <View
+                  key={stat.label}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    borderRadius: 12,
+                    padding: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 10, color: "#888888", marginBottom: 4 }}>{stat.label}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: stat.color }}>{stat.value}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* 1k Subscriber Progress */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginTop: 16,
+              backgroundColor: "rgba(26, 26, 26, 0.8)",
+              borderRadius: 16,
+              padding: 16,
+              borderWidth: 1,
+              borderColor: "rgba(157, 0, 255, 0.3)",
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#FFFFFF", letterSpacing: 1 }}>
+                {"\u{1F3AF}"} MONETIZATION GATE
               </Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "bold",
-                  color: colors.accent2,
-                }}
-              >
-                {currentSubscribers} / 1,000
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#9D00FF" }}>
+                {currentSubscribers.toLocaleString()} / {subscriberGoal.toLocaleString()}
               </Text>
             </View>
 
             {/* Progress Bar */}
-            <View
-              style={{
-                width: "100%",
-                height: 12,
-                backgroundColor: colors.background,
-                borderRadius: 6,
-                overflow: "hidden",
-                marginBottom: 12,
-              }}
-            >
+            <View style={{ height: 8, backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: 4, overflow: "hidden" }}>
               <View
                 style={{
                   width: `${subscriberProgress}%`,
                   height: "100%",
-                  backgroundColor: colors.accent2,
-                  borderRadius: 6,
+                  backgroundColor: "#9D00FF",
+                  borderRadius: 4,
                 }}
               />
             </View>
 
-            {/* Progress Text */}
-            <Text style={{ fontSize: 11, color: colors.muted }}>
-              {subscriberProgress.toFixed(1)}% to unlock casting fees
+            <Text style={{ fontSize: 11, color: "#888888", marginTop: 8 }}>
+              {subscriberProgress < 100
+                ? `${Math.ceil(subscriberGoal - currentSubscribers)} more subscribers to unlock casting fees`
+                : "Casting fees unlocked!"}
             </Text>
-
-            {/* Unlock Info */}
-            {subscriberProgress < 100 ? (
-              <View
-                style={{
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border,
-                }}
-              >
-                <Text style={{ fontSize: 10, color: colors.muted }}>
-                  📌 Reach 1,000 subscribers to charge casting fees and unlock Elite status
-                </Text>
-              </View>
-            ) : (
-              <View
-                style={{
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.success,
-                  paddingHorizontal: 8,
-                  paddingVertical: 8,
-                  backgroundColor: `${colors.success}20`,
-                  borderRadius: 6,
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "bold", color: colors.success }}>
-                  ✅ Congratulations! You've unlocked casting fees!
-                </Text>
-              </View>
-            )}
           </View>
-        </View>
 
-        {/* Cash Out Button */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
-          <Pressable
-            style={{
-              width: "100%",
-              paddingVertical: 16,
-              borderRadius: 8,
-              backgroundColor: colors.primary,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: colors.primary,
-              shadowOpacity: 0.6,
-              shadowRadius: 8,
-              elevation: 5,
-            }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: "bold", color: colors.background }}>
-              💳 CASH OUT VIA STRIPE
+          {/* Cash Out Button */}
+          <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+            <Pressable
+              onPress={handleCashOut}
+              style={({ pressed }) => ({
+                backgroundColor: "#FF007F",
+                paddingVertical: 16,
+                borderRadius: 30,
+                alignItems: "center",
+                shadowColor: "#FF007F",
+                shadowOpacity: 0.6,
+                shadowRadius: 14,
+                elevation: 8,
+                transform: [{ scale: pressed ? 0.97 : 1 }],
+                opacity: pressed ? 0.9 : 1,
+              })}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800", letterSpacing: 1 }}>
+                {"\u{1F4B3}"} CASH OUT VIA STRIPE
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Recent Transactions */}
+          <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF", marginBottom: 14, letterSpacing: 1 }}>
+              RECENT ACTIVITY
             </Text>
-          </Pressable>
-        </View>
 
-        {/* Recent Transactions */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
-          <Text style={{ fontSize: 12, fontWeight: "bold", color: colors.foreground, marginBottom: 12 }}>
-            📊 RECENT TRANSACTIONS
-          </Text>
-
-          <FlatList
-            scrollEnabled={false}
-            data={TRANSACTIONS}
-            renderItem={({ item }) => (
+            {TRANSACTIONS.map((item) => (
               <View
+                key={item.id}
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
                   alignItems: "center",
-                  paddingVertical: 12,
+                  paddingVertical: 14,
                   borderBottomWidth: 1,
-                  borderBottomColor: colors.border,
+                  borderBottomColor: "rgba(51, 51, 51, 0.5)",
                 }}
               >
-                {/* Left Side - Type & Description */}
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "bold",
-                      color: colors.foreground,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {item.type === "gift"
-                      ? "🎁 Gift Received"
-                      : item.type === "casting"
-                      ? "🎬 Casting Fee"
-                      : item.type === "payout"
-                      ? "💸 Payout"
-                      : "⭐ Token Top-Up"}
-                  </Text>
-                  <Text style={{ fontSize: 10, color: colors.muted }}>
-                    {item.description}
-                  </Text>
-                  <Text style={{ fontSize: 9, color: colors.muted, marginTop: 2 }}>
-                    {item.date}
-                  </Text>
+                {/* Icon */}
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: "rgba(26, 26, 26, 0.8)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 18 }}>{getTypeIcon(item.type)}</Text>
                 </View>
 
-                {/* Right Side - Amount & Status */}
+                {/* Info */}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#FFFFFF", marginBottom: 2 }}>
+                    {getTypeLabel(item.type)}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "#888888" }} numberOfLines={1}>
+                    {item.description}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: "#555555", marginTop: 2 }}>{item.date}</Text>
+                </View>
+
+                {/* Amount */}
                 <View style={{ alignItems: "flex-end" }}>
                   <Text
                     style={{
-                      fontSize: 12,
-                      fontWeight: "bold",
-                      color:
-                        item.amount > 0
-                          ? colors.success
-                          : item.amount < 0
-                          ? colors.muted
-                          : colors.foreground,
-                      marginBottom: 4,
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: item.amount > 0 ? "#00FF00" : "#888888",
                     }}
                   >
                     {item.amount > 0 ? "+" : ""}${Math.abs(item.amount).toFixed(2)}
                   </Text>
                   <View
                     style={{
+                      marginTop: 4,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: 4,
                       backgroundColor:
                         item.status === "completed"
-                          ? `${colors.success}20`
+                          ? "rgba(0, 255, 0, 0.1)"
                           : item.status === "pending"
-                          ? `${colors.warning}20`
-                          : `${colors.error}20`,
+                          ? "rgba(255, 215, 0, 0.1)"
+                          : "rgba(255, 0, 0, 0.1)",
                     }}
                   >
                     <Text
                       style={{
-                        fontSize: 8,
-                        fontWeight: "bold",
+                        fontSize: 9,
+                        fontWeight: "600",
                         color:
                           item.status === "completed"
-                            ? colors.success
+                            ? "#00FF00"
                             : item.status === "pending"
-                            ? colors.warning
-                            : colors.error,
+                            ? "#FFD700"
+                            : "#FF4444",
                       }}
                     >
                       {item.status.toUpperCase()}
@@ -310,14 +292,10 @@ export default function WalletScreen() {
                   </View>
                 </View>
               </View>
-            )}
-            keyExtractor={(item) => item.id}
-          />
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <BigStarzBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-    </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    </ScreenContainer>
   );
 }

@@ -410,12 +410,17 @@ export default function MusicStudioScreen() {
                     alignItems: "center",
                     borderWidth: 1,
                     borderColor: "#333333",
-                    opacity: pressed ? 0.8 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                    opacity: pressed ? 0.9 : 1,
                   })}
                 >
                   <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>NEW SONG</Text>
                 </Pressable>
                 <Pressable
+                  onPress={() => {
+                    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    // In production: triggers ElevenLabs/Hume voice synthesis on the generated lyrics
+                  }}
                   style={({ pressed }) => ({
                     flex: 1,
                     backgroundColor: "#FF007F",
@@ -426,7 +431,8 @@ export default function MusicStudioScreen() {
                     shadowOpacity: 0.5,
                     shadowRadius: 10,
                     elevation: 6,
-                    opacity: pressed ? 0.8 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                    opacity: pressed ? 0.9 : 1,
                   })}
                 >
                   <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "800" }}>

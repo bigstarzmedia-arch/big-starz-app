@@ -131,3 +131,19 @@
 - [x] Build Wallet/Earnings tab with full dashboard (balance, transactions, payout)
 - [x] Make Vibe Feed TikTok-style with full-screen swipeable video cards
 - [x] Ensure app is testable via Expo Go QR code on real device
+
+## Polish & Final Integrations (Current Sprint)
+- [x] Add Wallet as 5th tab in tab bar
+- [x] Integrate Pollinations.ai free image generation for AI video thumbnails in Vibe Feed
+- [x] Wire "ADD VOCALS" button in Music Studio to ElevenLabs TTS (or free Hume MCP)
+- [x] Fix Cameo Studio "GENERATE CAMEO" button to produce real AI output (Pollinations image)
+- [x] Add smooth press animations (scale 0.97) to all interactive elements consistently
+- [x] Add loading shimmer/skeleton states for feed items
+- [x] Ensure all screens have consistent header styling
+- [x] Add pull-to-refresh on Vibe Feed
+- [x] Wire Gift button to show gift selection modal
+- [x] Wire Share button to native share sheet
+- [x] Add Big Starz watermark overlay on all generated content
+- [x] Ensure dark mode is consistent (no white flashes)
+- [x] Add "Following" / "For You" toggle on Vibe Feed header (TikTok-style)
+- [x] Polish tab bar with proper active/inactive states and labels

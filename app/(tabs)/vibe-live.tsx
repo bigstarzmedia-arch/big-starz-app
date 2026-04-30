@@ -3,7 +3,7 @@
  * Real-time live streaming with comments and luxury gifting
  */
 
-import { ScrollView, View, Text, Pressable, TextInput, FlatList, Image } from "react-native";
+import { ScrollView, View, Text, Pressable, TextInput, FlatList, Image, Platform } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useState } from "react";
@@ -64,13 +64,13 @@ export default function VibeLiveScreen() {
       };
       setComments([...comments, comment]);
       setNewComment("");
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const handleGiftSelect = (gift: Gift) => {
     setSelectedGift(gift);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   return (
@@ -228,6 +228,11 @@ export default function VibeLiveScreen() {
           {/* Send Gift Button */}
           {selectedGift && (
             <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                setShowGiftTray(false);
+                setSelectedGift(null);
+              }}
               style={({ pressed }) => [
                 {
                   transform: [{ scale: pressed ? 0.97 : 1 }],

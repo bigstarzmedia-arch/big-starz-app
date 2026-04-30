@@ -229,27 +229,27 @@ export default function CameoStudioScreen() {
               {/* Mesh grid lines */}
               {scanState !== "idle" && scanState !== "complete" && (
                 <>
-                  {[0.25, 0.4, 0.55, 0.7].map((ratio, i) => (
+                  {[25, 40, 55, 70].map((pct, i) => (
                     <View
                       key={`h-${i}`}
                       style={{
                         position: "absolute",
-                        top: `${ratio * 100}%` as unknown as number,
-                        left: "25%",
-                        right: "25%",
+                        top: pct,
+                        left: 45,
+                        right: 45,
                         height: 1,
                         backgroundColor: "rgba(0, 255, 255, 0.3)",
                       }}
                     />
                   ))}
-                  {[0.35, 0.5, 0.65].map((ratio, i) => (
+                  {[65, 90, 115].map((px, i) => (
                     <View
                       key={`v-${i}`}
                       style={{
                         position: "absolute",
-                        left: `${ratio * 100}%` as unknown as number,
-                        top: "20%",
-                        bottom: "20%",
+                        left: px,
+                        top: 48,
+                        bottom: 48,
                         width: 1,
                         backgroundColor: "rgba(0, 255, 255, 0.3)",
                       }}
@@ -331,8 +331,8 @@ export default function CameoStudioScreen() {
           >
             <View
               style={{
-                width: `${progress}%`,
-                height: "100%",
+                width: `${progress}%` as any,
+                height: 6,
                 backgroundColor: scanState === "complete" ? "#00FF00" : "#FF007F",
                 borderRadius: 3,
               }}
@@ -435,12 +435,17 @@ export default function CameoStudioScreen() {
                     borderRadius: 24,
                     borderWidth: 1,
                     borderColor: "#333333",
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
                     opacity: pressed ? 0.8 : 1,
                   })}
                 >
                   <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }}>RESCAN</Text>
                 </Pressable>
                 <Pressable
+                  onPress={() => {
+                    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    // Navigate to voice clone (would use router.push in production)
+                  }}
                   style={({ pressed }) => ({
                     backgroundColor: "#00FF00",
                     paddingHorizontal: 32,
@@ -450,11 +455,12 @@ export default function CameoStudioScreen() {
                     shadowOpacity: 0.5,
                     shadowRadius: 12,
                     elevation: 6,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
                     opacity: pressed ? 0.8 : 1,
                   })}
                 >
                   <Text style={{ color: "#000000", fontSize: 14, fontWeight: "800" }}>
-                    VOICE CLONE
+                    GENERATE CAMEO
                   </Text>
                 </Pressable>
               </View>

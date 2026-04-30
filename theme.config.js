@@ -1,22 +1,30 @@
 /** @type {const} */
 const themeColors = {
-  // Big Starz Vibrant Gradient Colors
-  primary: { light: '#FF1493', dark: '#FF1493' }, // Hot Pink
-  accent1: { light: '#0080FF', dark: '#0080FF' }, // Electric Blue
-  accent2: { light: '#00FF00', dark: '#00FF00' }, // Neon Green
-  accent3: { light: '#FFFF00', dark: '#FFFF00' }, // Bright Yellow
+  // Elite Luxury Lounge - Deep Obsidian Base
+  primary: { light: '#FF007F', dark: '#FF007F' }, // Neon Hyper-Pink
+  accent1: { light: '#9D00FF', dark: '#9D00FF' }, // Electric Purple
+  accent2: { light: '#FF007F', dark: '#FF007F' }, // Neon Pink (secondary)
+  accent3: { light: '#D4AF37', dark: '#D4AF37' }, // Metallic Gold (Elite only)
   
-  // Neutral Colors
-  background: { light: '#ffffff', dark: '#0A0A0A' }, // Deep black for dark mode
-  surface: { light: '#f5f5f5', dark: '#1a1a1a' },
-  foreground: { light: '#11181C', dark: '#ECEDEE' },
-  muted: { light: '#687076', dark: '#9BA1A6' },
-  border: { light: '#E5E7EB', dark: '#334155' },
+  // Luxury Base & Surfaces
+  background: { light: '#0B0B0B', dark: '#0B0B0B' }, // Deep Obsidian/Matte Black
+  surface: { light: '#1a1a1a', dark: '#1a1a1a' }, // Slightly lighter obsidian for cards
+  surfaceGlass: { light: 'rgba(26, 26, 26, 0.7)', dark: 'rgba(26, 26, 26, 0.7)' }, // Frosted glass
   
-  // Status Colors
-  success: { light: '#22C55E', dark: '#4ADE80' },
-  warning: { light: '#F59E0B', dark: '#FBBF24' },
-  error: { light: '#EF4444', dark: '#F87171' },
+  // Text & Foreground
+  foreground: { light: '#FFFFFF', dark: '#FFFFFF' }, // Pure white for contrast
+  muted: { light: '#B0B0B0', dark: '#B0B0B0' }, // Silver-gray for secondary text
+  border: { light: '#2a2a2a', dark: '#2a2a2a' }, // Subtle dark borders
+  
+  // Status Colors (Luxury Adjusted)
+  success: { light: '#00FF88', dark: '#00FF88' }, // Neon Green (success)
+  warning: { light: '#FFB700', dark: '#FFB700' }, // Gold-Orange (warning)
+  error: { light: '#FF0055', dark: '#FF0055' }, // Neon Red (error)
+  
+  // Neon Glow Effects
+  glowPink: { light: '#FF007F', dark: '#FF007F' },
+  glowPurple: { light: '#9D00FF', dark: '#9D00FF' },
+  glowGold: { light: '#D4AF37', dark: '#D4AF37' },
 };
 
 module.exports = { themeColors };

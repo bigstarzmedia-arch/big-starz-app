@@ -89,6 +89,17 @@
 - [ ] Test on iOS and Android devices
 - [ ] Prepare app for App Store and Google Play submission
 
+## Total Entry Point Overwrite (CRITICAL)
+- [ ] Implement MediaPipe Beautify backend (skin-smoothing, studio lighting filters)
+- [ ] Implement Cameo biometric bridge (Head-Turn Scan, Voice Clone routes)
+- [ ] Remove generic template from index.tsx
+- [ ] Apply Matte Black background globally
+- [ ] Apply neon glassmorphism to all components
+- [ ] Fix navigation bar with real icons (Star, Mic, etc.)
+- [ ] Build live Vibe Feed with active Beautify filter
+- [ ] Verify cameo-synthesis route is wired up
+- [ ] Show preview with Big Starz identity
+
 ## Known Issues & Bugs
 - [ ] TypeScript error in server/_core/storageProxy.ts (element type indexing)
 

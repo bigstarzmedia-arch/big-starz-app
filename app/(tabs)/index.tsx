@@ -1,48 +1,178 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+/**
+ * Big Starz Vibe Feed - Main Entry Point
+ * Elite Luxury Lounge aesthetic with Matte Black background and neon effects
+ */
 
+import { ScrollView, Text, View, Pressable, FlatList, Image } from "react-native";
+import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 
-/**
- * Home Screen - NativeWind Example
- *
- * This template uses NativeWind (Tailwind CSS for React Native).
- * You can use familiar Tailwind classes directly in className props.
- *
- * Key patterns:
- * - Use `className` instead of `style` for most styling
- * - Theme colors: use tokens directly (bg-background, text-foreground, bg-primary, etc.); no dark: prefix needed
- * - Responsive: standard Tailwind breakpoints work on web
- * - Custom colors defined in tailwind.config.js
- */
-export default function HomeScreen() {
+interface VideoFeed {
+  id: string;
+  creatorName: string;
+  title: string;
+  isLive: boolean;
+  viewerCount: number;
+  likes: number;
+  beautifyFilter: string;
+}
+
+const MOCK_FEED: VideoFeed[] = [
+  {
+    id: "1",
+    creatorName: "Luna Starz",
+    title: "New AI-Generated Music Video",
+    isLive: true,
+    viewerCount: 2847,
+    likes: 1203,
+    beautifyFilter: "full-luxury",
+  },
+  {
+    id: "2",
+    creatorName: "Neon Dreams",
+    title: "Cameo Scan Complete - Voice Clone Ready",
+    isLive: false,
+    viewerCount: 5234,
+    likes: 2891,
+    beautifyFilter: "studio-lighting",
+  },
+];
+
+export default function VibeFeedScreen() {
+  const [selectedVideo, setSelectedVideo] = useState<VideoFeed | null>(null);
+
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Welcome</Text>
-            <Text className="text-base text-muted text-center">
-              Edit app/(tabs)/index.tsx to get started
-            </Text>
-          </View>
-
-          {/* Example Card */}
-          <View className="w-full max-w-sm self-center bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">NativeWind Ready</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              Use Tailwind CSS classes directly in your React Native components.
-            </Text>
-          </View>
-
-          {/* Example Button */}
-          <View className="items-center">
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full active:opacity-80">
-              <Text className="text-background font-semibold">Get Started</Text>
-            </TouchableOpacity>
-          </View>
+    <ScreenContainer className="bg-black">
+      <View className="flex-1 bg-black">
+        {/* Header */}
+        <View className="px-4 py-3 border-b border-gray-800 mb-4">
+          <Text className="text-3xl font-bold text-white">
+            Big Starz
+          </Text>
+          <Text className="text-xs text-gray-400 mt-1">Elite Luxury Lounge</Text>
         </View>
-      </ScrollView>
+
+        {/* Vibe Feed */}
+        <FlatList
+          data={MOCK_FEED}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View className="mb-6 px-4">
+              <Pressable
+                onPress={() => setSelectedVideo(item)}
+                style={{
+                  backgroundColor: "rgba(26, 26, 26, 0.7)",
+                  borderWidth: 1,
+                  borderColor: item.isLive ? "rgba(255, 0, 127, 0.4)" : "rgba(157, 0, 255, 0.2)",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                }}
+                className="mb-4"
+              >
+                {/* Video Thumbnail */}
+                <View className="relative h-96 bg-gray-900">
+                  <View className="w-full h-full bg-gradient-to-br from-purple-900 to-pink-900" />
+
+                  {/* Live Badge */}
+                  {item.isLive && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 12,
+                        right: 12,
+                        backgroundColor: "#FF007F",
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 20,
+                      }}
+                    >
+                      <Text className="text-white text-xs font-bold">● LIVE</Text>
+                    </View>
+                  )}
+
+                  {/* Beautify Filter Badge */}
+                  {item.beautifyFilter !== "none" && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        bottom: 12,
+                        left: 12,
+                        backgroundColor: "rgba(212, 175, 55, 0.8)",
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: "#D4AF37",
+                      }}
+                    >
+                      <Text className="text-xs font-semibold text-white">✨ {item.beautifyFilter.replace("-", " ")}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Video Info */}
+                <View className="p-4">
+                  <Text className="text-white font-bold text-base mb-3">{item.title}</Text>
+                  <Text className="text-gray-400 text-sm mb-3">by {item.creatorName}</Text>
+
+                  {/* Engagement Stats */}
+                  <View className="flex-row justify-between mb-4">
+                    <View className="items-center">
+                      <Text className="text-pink-500 font-bold text-lg">♥</Text>
+                      <Text className="text-gray-300 text-xs mt-1">{item.likes}</Text>
+                    </View>
+                    <View className="items-center">
+                      <Text className="text-purple-400 font-bold text-lg">👁</Text>
+                      <Text className="text-gray-300 text-xs mt-1">{item.viewerCount}</Text>
+                    </View>
+                    <View className="items-center">
+                      <Text className="text-yellow-400 font-bold text-lg">🎁</Text>
+                      <Text className="text-gray-300 text-xs mt-1">Gift</Text>
+                    </View>
+                    <View className="items-center">
+                      <Text className="text-blue-400 font-bold text-lg">⭐</Text>
+                      <Text className="text-gray-300 text-xs mt-1">Share</Text>
+                    </View>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <View className="flex-row gap-2">
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#FF007F",
+                        paddingVertical: 12,
+                        borderRadius: 12,
+                        alignItems: "center",
+                      }}
+                      className="active:opacity-80"
+                    >
+                      <Text className="text-white font-bold">🔴 GO LIVE</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        backgroundColor: "rgba(212, 175, 55, 0.9)",
+                        paddingVertical: 12,
+                        borderRadius: 12,
+                        alignItems: "center",
+                        borderWidth: 1,
+                        borderColor: "#D4AF37",
+                      }}
+                      className="active:opacity-80"
+                    >
+                      <Text className="text-white font-bold">🎁 GIFT</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
+          )}
+          scrollEnabled={true}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      </View>
     </ScreenContainer>
   );
 }

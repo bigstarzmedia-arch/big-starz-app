@@ -1,6 +1,6 @@
 /**
  * Music Studio - Genre Selection & Lyric Generation
- * Supports: Pop, Country, EDM, Latin, Rock (+ Hip-Hop, R&B)
+ * Supports: Rap, R&B, Pop, Country, EDM, Latin, Rock (7 genres)
  * Big Starz dark theme with neon accents
  */
 
@@ -26,13 +26,13 @@ interface Genre {
 }
 
 const GENRES: Genre[] = [
-  { id: "pop", label: "Pop", icon: "\u{1F3B5}", color: "#FF007F", description: "Catchy hooks & melodies" },
+  { id: "rap", label: "Rap", icon: "\u{1F3A4}", color: "#FF007F", description: "Hard bars & street flow" },
+  { id: "rnb", label: "R&B", icon: "\u{1F49C}", color: "#FF69B4", description: "Smooth vocals & soul" },
+  { id: "pop", label: "Pop", icon: "\u{1F3B5}", color: "#FF00FF", description: "Catchy hooks & melodies" },
   { id: "country", label: "Country", icon: "\u{1F3B8}", color: "#D4AF37", description: "Storytelling & twang" },
   { id: "edm", label: "EDM", icon: "\u{1F3B6}", color: "#00FFFF", description: "Electronic drops & beats" },
   { id: "latin", label: "Latin", icon: "\u{1F525}", color: "#FF6B00", description: "Reggaeton & tropical" },
   { id: "rock", label: "Rock", icon: "\u{1F918}", color: "#9D00FF", description: "Power chords & energy" },
-  { id: "hiphop", label: "Hip-Hop", icon: "\u{1F399}\uFE0F", color: "#FFFF00", description: "Bars & flow" },
-  { id: "rnb", label: "R&B", icon: "\u{1F49C}", color: "#FF69B4", description: "Smooth vocals & soul" },
 ];
 
 type StudioPhase = "genre" | "prompt" | "generating" | "result";

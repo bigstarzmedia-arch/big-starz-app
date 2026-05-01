@@ -9,7 +9,7 @@ type IconMapping = Record<SymbolViewProps["name"], ComponentProps<typeof Materia
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
+ * SF Symbols to Material Icons mappings.
  */
 const MAPPING = {
   "house.fill": "home",
@@ -21,6 +21,11 @@ const MAPPING = {
   "music.note": "music-note",
   "person.2.fill": "people",
   "creditcard.fill": "account-balance-wallet",
+  "mic.fill": "mic",
+  "waveform": "graphic-eq",
+  "play.fill": "play-arrow",
+  "heart.fill": "favorite",
+  "square.and.arrow.up": "share",
 } as IconMapping;
 
 /**

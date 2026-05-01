@@ -1,31 +1,26 @@
-# Final Polish Audit - Apr 30, 2026
+# Tab Bar Fix Audit - Apr 30, 2026
 
-## Preview Screenshot - VERIFIED
-- Matte Black background: ACTIVE (#000000)
-- Big Starz Logo: HIGH-RES, CENTERED in header
-- Neon Pink (#FF007F) accents: LIVE badge, play button, tab bar active
-- TikTok-style full-screen swipeable video feed: WORKING
-- For You / Following toggle: WORKING
-- Right-side action bar (like, comment, share, gift): WORKING
-- Creator info at bottom: WORKING
-- Beautify filter + token badges: VISIBLE
-- 5-tab navigation: Vibe, Cameo, Music, Cast, Wallet
-- Page dots for feed position: VISIBLE
+## User Requests
+1. Fix "X-Box" broken square icons → Replace with real icons
+2. "Star" for Music Studio, "Mic" for Vibe Live
+3. Remove duplicate "music-stu" tab
+4. Deep Obsidian (#0B0B0B) globally
+5. 7 genres: Rap, R&B, Pop, Country, EDM, Latin, Rock
+6. Cameo 3D Face Mesh + Voice Clone 1-5 count active
 
-## Polish Fixes Applied
-- ✅ Removed stray console.log from theme-provider.tsx
-- ✅ Exposed ALL theme tokens via CSS variables (accent1/2/3, glow colors, surfaceGlass)
-- ✅ Updated theme.config.d.ts with all token declarations
-- ✅ Fixed dead-end gift send button in vibe-live.tsx
-- ✅ Fixed ADD VOCALS button in music-studio.tsx (added onPress + press feedback)
-- ✅ Added consistent press scale feedback to NEW SONG button
-- ✅ Fixed TypeScript percentage string issues in cameo-studio.tsx
-- ✅ Rewrote affiliate-hub.tsx (CAST) to remove legacy BigStarzHeader/BigStarzBottomNav
-- ✅ Added Platform.OS checks for all Haptics calls to prevent web crashes
-- ✅ Wallet tab confirmed as 5th tab in navigation
+## Current Tab Layout
+- index → Vibe (star.fill → "star")
+- cameo-studio → Cameo (camera.fill → "camera-alt")
+- music-studio → Music (music.note → "music-note")
+- affiliate-hub → Cast (person.2.fill → "people")
+- wallet-screen → Wallet (creditcard.fill → "account-balance-wallet")
 
-## Health Status
-- TypeScript: 0 errors
-- LSP: No errors
-- Dependencies: OK
-- Dev server: Running
+## Issue: The user may be seeing the Wallet tab as a broken icon
+- "creditcard.fill" maps to "account-balance-wallet" which IS a valid MaterialIcons name
+- Possible issue: 5th tab overflows on small screens
+
+## Fix Plan
+1. Change tab bar background from #000000 to #0B0B0B (Deep Obsidian)
+2. Add "mic" icon mapping
+3. Ensure all 5 tabs render with proper icons
+4. Add "Rap" genre to music-studio.tsx (currently has Pop, Country, EDM, Latin, Rock, Hip-Hop, R&B)

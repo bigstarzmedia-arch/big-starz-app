@@ -7,7 +7,7 @@ const themeColors = {
   accent3: { light: '#D4AF37', dark: '#D4AF37' }, // Metallic Gold (Elite only)
   
   // Dark Mode Base & Surfaces
-  background: { light: '#000000', dark: '#000000' }, // True Black
+  background: { light: '#0B0B0B', dark: '#0B0B0B' }, // Deep Obsidian
   surface: { light: '#1a1a1a', dark: '#1a1a1a' }, // Dark Charcoal for cards
   surfaceGlass: { light: 'rgba(26, 26, 26, 0.7)', dark: 'rgba(26, 26, 26, 0.7)' }, // Frosted glass
   

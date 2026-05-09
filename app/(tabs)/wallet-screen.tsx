@@ -7,6 +7,7 @@
 import { ScrollView, View, Text, Pressable, FlatList, Image } from "react-native";
 import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
+import { GlassmorphismBg } from "@/components/glassmorphism-bg";
 import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 
@@ -44,6 +45,8 @@ export default function WalletScreen() {
   const currentSubscribers = 847;
   const subscriberGoal = 1000;
   const subscriberProgress = (currentSubscribers / subscriberGoal) * 100;
+  const isEliteStatus = totalEarnings >= 5000;
+  const [stripeConnected] = useState(true);
 
   const getTypeIcon = (type: Transaction["type"]) => {
     switch (type) {
@@ -69,11 +72,17 @@ export default function WalletScreen() {
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+    if (stripeConnected) {
+      console.log("Initiating Stripe payout...");
+    }
   };
 
+  const vectorBgImage = require("@/assets/images/icon.png");
+
   return (
-    <ScreenContainer className="bg-black">
-      <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <GlassmorphismBg imageSource={vectorBgImage} opacity={0.15}>
+      <ScreenContainer className="bg-transparent">
+        <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
         {/* Header */}
         <View
           style={{
@@ -295,7 +304,8 @@ export default function WalletScreen() {
             ))}
           </View>
         </ScrollView>
-      </View>
-    </ScreenContainer>
+        </View>
+      </ScreenContainer>
+    </GlassmorphismBg>
   );
 }

@@ -159,3 +159,13 @@
 - [ ] All AI calls use free APIs only: Pollinations.ai, OpenRouter free models, Hugging Face free inference
 
 - [x] Add content download feature (save generated videos, lyrics, cameo images to device)
+
+
+## Vector Images 2 Integration (Glassmorphism Aesthetic - Version 1.0.2)
+- [ ] Integrate Vector Images 2 as background layers on Vibe Feed and Music Studio
+- [ ] Apply 25% opacity + 20px Gaussian blur to vector backgrounds
+- [ ] Add neon pink glow effect to all action buttons
+- [ ] Center Big Starz logo on all screen headers
+- [ ] Replace generic backgrounds with matte black obsidian skin globally
+- [ ] Verify glassmorphism effect renders correctly on preview
+- [ ] Save Version 1.0.2 checkpoint for APK build

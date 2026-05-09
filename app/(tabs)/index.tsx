@@ -12,6 +12,7 @@
 import { Text, View, Pressable, FlatList, Image, Dimensions, ViewToken, Modal, RefreshControl, Share, Platform } from "react-native";
 import { useState, useCallback, useRef } from "react";
 import { ScreenContainer } from "@/components/screen-container";
+import { GlassmorphismBg } from "@/components/glassmorphism-bg";
 import * as Haptics from "expo-haptics";
 import { ContentDownloadModal } from "@/components/content-download";
 
@@ -331,9 +332,12 @@ export default function VibeFeedScreen() {
     );
   };
 
+  const vectorBgImage = require("@/assets/images/icon.png");
+
   return (
-    <ScreenContainer className="bg-black" edges={["left", "right"]}>
-      <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <GlassmorphismBg imageSource={vectorBgImage} opacity={0.15}>
+      <ScreenContainer className="bg-transparent" edges={["left", "right"]}>
+        <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
         {/* Floating Header with For You / Following */}
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10, paddingTop: 8, paddingBottom: 10, paddingHorizontal: 16, backgroundColor: "rgba(0,0,0,0.6)" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
@@ -430,7 +434,8 @@ export default function VibeFeedScreen() {
           onClose={() => setDownloadModalVisible(false)}
           item={downloadTarget}
         />
-      </View>
-    </ScreenContainer>
+        </View>
+      </ScreenContainer>
+    </GlassmorphismBg>
   );
 }

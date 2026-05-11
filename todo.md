@@ -169,3 +169,46 @@
 - [ ] Replace generic backgrounds with matte black obsidian skin globally
 - [ ] Verify glassmorphism effect renders correctly on preview
 - [ ] Save Version 1.0.2 checkpoint for APK build
+
+
+## COMPLETE FRONTEND OVERHAUL (v1.0.3 - FINAL PUBLISH BUILD)
+
+### Phase 1: Global Theme & Bottom Navigation
+- [ ] Update theme.config.js: Deep Obsidian (#000000), Neon Pink (#FF0055), Electric Cyan (#00FFFF), Neon Yellow (#FFFF00)
+- [ ] Rebuild bottom navigation bar with 5 tabs: Vibe (Play), Studio (Camera), Cast (People), Chat (Bubble), Wallet (Wallet)
+- [ ] Create global header: "BIG" (white) + "STARZ" (Neon Pink), Search icon, Notification Bell (pink badge)
+- [ ] Fix all z-index and flexbox issues to prevent overlaps
+- [ ] Ensure bottom nav is persistent and functional across all screens
+
+### Phase 2: VIBE Screen
+- [ ] Build TikTok/Reels vertical scrolling feed
+- [ ] Add horizontal "Featured Artists" row (NeonVex, CosmicVibe, GlitchQueen with circular pink avatars)
+- [ ] Add filter pills: All, Rap, R&B, Trending, New
+- [ ] Ensure scrollable if content exceeds screen height
+
+### Phase 3: STUDIO Screen
+- [ ] Build sleek dashboard with 3 action cards: "Photo to Video", "Go Live", "Beat Studio"
+- [ ] Add "Cameo Scan" section with large pink "Upload Photo" button
+- [ ] Add checkmarks: "Face clearly visible", "Good lighting", "Full body preferred"
+
+### Phase 4: CAST Screen
+- [ ] Remove all Affiliate Modeling/brand campaigns
+- [ ] Build 2-column talent grid (#1A1A1A cards, rounded edges)
+- [ ] Add dummy data: Quicy ($150, Rap/Management), Boom ($100, Production), Blaze ($50, Rap), Luna ($75, R&B)
+- [ ] Include star ratings and tags for each talent
+
+### Phase 5: CHAT Screen
+- [ ] Build "GLOBAL CHAT" list view
+- [ ] Add "Online Now" avatars with green status dots
+- [ ] Add message list: NeonVex, SkyLuxe, GlitchQueen with sample messages
+
+### Phase 6: Verification & Testing
+- [ ] Fix all overlapping layout issues
+- [ ] Ensure all screens are scrollable
+- [ ] Compile code with 0 TypeScript errors
+- [ ] Run full test suite (target: 300+ tests passing)
+
+### Phase 7: Final Publish
+- [ ] Save checkpoint
+- [ ] Launch live preview
+- [ ] Ready for APK build

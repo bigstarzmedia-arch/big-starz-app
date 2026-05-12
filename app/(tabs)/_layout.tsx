@@ -79,19 +79,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* ── Hidden screens (not shown in tab bar) ── */}
-      <Tabs.Screen name="vibe-screen" options={{ href: null }} />
-      <Tabs.Screen name="cast-screen" options={{ href: null }} />
-      <Tabs.Screen name="chat-screen" options={{ href: null }} />
-      <Tabs.Screen name="studio-screen" options={{ href: null }} />
-      <Tabs.Screen name="vibe-live" options={{ href: null }} />
-      <Tabs.Screen name="creator-analytics" options={{ href: null }} />
-      <Tabs.Screen name="earnings-dashboard" options={{ href: null }} />
-      <Tabs.Screen name="payout-settings" options={{ href: null }} />
-      <Tabs.Screen name="profile-settings" options={{ href: null }} />
-      <Tabs.Screen name="subscription-check" options={{ href: null }} />
-      <Tabs.Screen name="casting-detail" options={{ href: null }} />
-      <Tabs.Screen name="music-studio-luxury" options={{ href: null }} />
+
     </Tabs>
   );
 }

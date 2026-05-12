@@ -1,145 +1,110 @@
-import { View, Text, FlatList, Pressable } from 'react-native';
-import { useColors } from '@/hooks/use-colors';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
-import { GlobalHeader } from '@/components/global-header';
-import { MaterialIcons } from '@expo/vector-icons';
 
 const TALENT_DATA = [
-  {
-    id: '1',
-    name: 'Quicy',
-    genre: 'Rap/Management',
-    tags: ['Executive', 'Urban'],
-    price: 150,
-    rating: 5.0,
-    avatar: '👑',
-  },
-  {
-    id: '2',
-    name: 'Boom',
-    genre: 'Music Production',
-    tags: ['Beats', 'Studio'],
-    price: 100,
-    rating: 4.9,
-    avatar: '🎛️',
-  },
-  {
-    id: '3',
-    name: 'Blaze',
-    genre: 'Street • Rap',
-    tags: ['Aggressive'],
-    price: 50,
-    rating: 4.8,
-    avatar: '🔥',
-  },
-  {
-    id: '4',
-    name: 'Luna',
-    genre: 'Ethereal • R&B',
-    tags: ['Dreamy'],
-    price: 75,
-    rating: 4.9,
-    avatar: '🌙',
-  },
+  { id: '1', name: 'Quicy', genre: 'Rap/Management', tags: ['Executive', 'Urban'], price: 150, rating: 5.0, avatar: '👑' },
+  { id: '2', name: 'Boom', genre: 'Music Production', tags: ['Beats', 'Studio'], price: 100, rating: 4.9, avatar: '🎛️' },
+  { id: '3', name: 'Blaze', genre: 'Street Rap', tags: ['Aggressive'], price: 50, rating: 4.8, avatar: '🔥' },
+  { id: '4', name: 'Luna', genre: 'Ethereal R&B', tags: ['Dreamy'], price: 75, rating: 4.9, avatar: '🌙' },
 ];
 
 export default function CastScreen() {
-  const colors = useColors();
-
   const renderTalentCard = ({ item }: { item: typeof TALENT_DATA[0] }) => (
-    <Pressable
-      style={({ pressed }) => ({
+    <TouchableOpacity
+      style={{
         flex: 0.5,
-        marginHorizontal: 8,
-        marginVertical: 8,
+        margin: 8,
         backgroundColor: '#1A1A1A',
-        borderRadius: 12,
-        padding: 12,
-        opacity: pressed ? 0.8 : 1,
-      })}
+        borderRadius: 16,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#333',
+      }}
     >
       {/* Avatar */}
       <View
         style={{
           width: '100%',
           height: 120,
-          backgroundColor: colors.background,
-          borderRadius: 8,
+          backgroundColor: '#000',
           justifyContent: 'center',
           alignItems: 'center',
-          marginBottom: 12,
-          borderWidth: 1,
-          borderColor: colors.border,
+          borderBottomWidth: 1,
+          borderBottomColor: '#333',
         }}
       >
         <Text style={{ fontSize: 48 }}>{item.avatar}</Text>
       </View>
 
-      {/* Name & Genre */}
-      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
-        {item.name}
-      </Text>
-      <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>
-        {item.genre}
-      </Text>
-
-      {/* Tags */}
-      <View style={{ flexDirection: 'row', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
-        {item.tags.map((tag, idx) => (
-          <View
-            key={idx}
-            style={{
-              backgroundColor: colors.background,
-              borderRadius: 4,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderWidth: 1,
-              borderColor: colors.primary,
-            }}
-          >
-            <Text style={{ fontSize: 9, color: colors.primary, fontWeight: '600' }}>
-              {tag}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Price & Rating */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: 12,
-          paddingTop: 12,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-        }}
-      >
-        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>
-          ${item.price}
+      {/* Info */}
+      <View style={{ padding: 12 }}>
+        <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>
+          {item.name}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <MaterialIcons name="star" size={14} color={colors.accent2} />
-          <Text style={{ fontSize: 12, color: colors.foreground, fontWeight: '600' }}>
-            {item.rating}
+        <Text style={{ fontSize: 11, color: '#CCC', marginTop: 4 }}>
+          {item.genre}
+        </Text>
+
+        {/* Tags */}
+        <View style={{ flexDirection: 'row', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
+          {item.tags.map((tag, idx) => (
+            <View
+              key={idx}
+              style={{
+                backgroundColor: '#FF0055',
+                borderRadius: 6,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ fontSize: 9, color: '#FFF', fontWeight: 'bold' }}>
+                {tag}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Price & Rating */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: '#333',
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FF0055' }}>
+            ${item.price}
+          </Text>
+          <Text style={{ fontSize: 12, color: '#FFD700', fontWeight: 'bold' }}>
+            ⭐ {item.rating}
           </Text>
         </View>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 
   return (
-    <ScreenContainer className="flex-1 bg-black" edges={['top', 'left', 'right']}>
-      <GlobalHeader />
+    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+      {/* Header */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF' }}>
+          <Text>BIG</Text>
+          <Text style={{ color: '#FF0055' }}>STARZ</Text>
+        </Text>
+        <Text style={{ color: '#CCC', fontSize: 14, marginTop: 4 }}>Talent</Text>
+      </View>
 
       <FlatList
         data={TALENT_DATA}
         keyExtractor={(item) => item.id}
         renderItem={renderTalentCard}
         numColumns={2}
-        columnWrapperStyle={{ paddingHorizontal: 8 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 8, paddingBottom: 100 }}
+        scrollEnabled={true}
         showsVerticalScrollIndicator={false}
       />
     </ScreenContainer>

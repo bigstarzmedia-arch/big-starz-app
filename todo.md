@@ -212,3 +212,14 @@
 - [ ] Save checkpoint
 - [ ] Launch live preview
 - [ ] Ready for APK build
+
+
+## UI REDESIGN - CARTOONY & MINIMAL (v1.0.4)
+- [ ] Remove all duplicate buttons and clutter
+- [ ] Add cartoon vector backgrounds to all screens
+- [ ] Redesign with big, simple buttons (minimal UI like TikTok/Sora)
+- [ ] Rebuild VIBE as full-screen TikTok-style feed with minimal overlays
+- [ ] Rebuild STUDIO with big buttons: Photo to Video, Go Live, Concert Mode
+- [ ] Rebuild CAST as TikTok-style talent roster with minimal UI
+- [ ] Clean up CHAT and WALLET, remove unnecessary elements
+- [ ] Test for overlaps and duplicate UI elements

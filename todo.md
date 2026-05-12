@@ -223,3 +223,11 @@
 - [ ] Rebuild CAST as TikTok-style talent roster with minimal UI
 - [ ] Clean up CHAT and WALLET, remove unnecessary elements
 - [ ] Test for overlaps and duplicate UI elements
+
+
+## THREE-TIER SUBSCRIPTION MODEL (v1.0.5)
+- [ ] Wire Sora API to free tier for video generation
+- [ ] Update paywall modal to show 3 tiers: Free (Sora), Mid ($30/month - Kling/HeyGen), Elite ($99/month - priority)
+- [ ] Route video generation based on tier (free→Sora, mid→Kling, elite→HeyGen)
+- [ ] Add tier indicator to user profile/dashboard
+- [ ] Implement tier-based feature gates (free: 5 videos/month, mid: 50/month, elite: unlimited)

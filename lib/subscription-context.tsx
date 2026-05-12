@@ -1,9 +1,9 @@
 /**
- * Subscription & Token Economy Context
+ * Subscription & Token Economy Context - THREE-TIER MODEL
  * 
- * Enforces the $30/month paywall before ANY generation features are accessible.
- * Manages the Starz Token economy (50 tokens/month, 1 generation = 1 token).
- * Uses AsyncStorage for persistence. In production, this would sync with RevenueCat.
+ * Free Tier: Uses Sora API, 5 videos/month
+ * Mid Tier ($30/month): Uses Kling API, 50 videos/month
+ * Elite Tier ($99/month): Uses HeyGen API, unlimited videos, priority processing
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -14,9 +14,11 @@ const STORAGE_KEYS = {
   TOKEN_BALANCE: "@bigstarz/token_balance",
   SUBSCRIPTION_DATE: "@bigstarz/subscription_date",
   TOTAL_GENERATIONS: "@bigstarz/total_generations",
+  SUBSCRIPTION_TIER: "@bigstarz/subscription_tier",
 };
 
-export type SubscriptionTier = "free" | "starz_pro";
+export type SubscriptionTier = "free" | "starz_pro" | "starz_elite";
+export type VideoAPI = "sora" | "kling" | "heygen";
 
 export interface SubscriptionState {
   tier: SubscriptionTier;
@@ -26,83 +28,86 @@ export interface SubscriptionState {
   subscriptionDate: string | null;
   renewalDate: string | null;
   totalGenerations: number;
+  monthlyGenerationLimit: number;
+  videoGenerationAPI: VideoAPI;
 }
 
 export interface SubscriptionContextValue {
   state: SubscriptionState;
-  /** Returns true if user has active subscription */
   canAccessPremium: boolean;
-  /** Returns true if user has tokens remaining */
   canGenerate: boolean;
-  /** Consume 1 token for a generation. Returns false if no tokens. */
   consumeToken: () => Promise<boolean>;
-  /** Simulate subscription purchase (in production: RevenueCat) */
-  subscribe: () => Promise<void>;
-  /** Simulate token top-up purchase */
+  subscribe: (tier: "starz_pro" | "starz_elite") => Promise<void>;
   purchaseTopUp: (amount: number) => Promise<void>;
-  /** Cancel subscription */
   cancelSubscription: () => Promise<void>;
-  /** Show paywall */
   showPaywall: () => void;
-  /** Hide paywall */
   hidePaywall: () => void;
-  /** Whether paywall modal is visible */
   paywallVisible: boolean;
+  tiers: Array<{ id: string; name: string; price: number; monthlyLimit: number; api: VideoAPI; features: string[] }>;
+  getVideoAPI: () => VideoAPI;
 }
 
-const DEFAULT_STATE: SubscriptionState = {
+const initialState: SubscriptionState = {
   tier: "free",
   isSubscribed: false,
-  tokenBalance: 0,
-  maxTokens: 50,
+  tokenBalance: 5,
+  maxTokens: 5,
   subscriptionDate: null,
   renewalDate: null,
   totalGenerations: 0,
+  monthlyGenerationLimit: 5,
+  videoGenerationAPI: "sora",
 };
 
-const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
+const TIER_CONFIG = {
+  free: { maxTokens: 5, limit: 5, api: "sora" as VideoAPI, price: 0 },
+  starz_pro: { maxTokens: 50, limit: 50, api: "kling" as VideoAPI, price: 30 },
+  starz_elite: { maxTokens: 999, limit: 999, api: "heygen" as VideoAPI, price: 99 },
+};
+
+const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<SubscriptionState>(DEFAULT_STATE);
+  const [state, setState] = useState<SubscriptionState>(initialState);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
-  // Load persisted state on mount
+  // Load subscription state from storage on mount
   useEffect(() => {
-    (async () => {
+    const loadState = async () => {
       try {
-        const [status, balance, date, generations] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_STATUS),
-          AsyncStorage.getItem(STORAGE_KEYS.TOKEN_BALANCE),
-          AsyncStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_DATE),
-          AsyncStorage.getItem(STORAGE_KEYS.TOTAL_GENERATIONS),
-        ]);
+        const tier = (await AsyncStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_TIER)) as SubscriptionTier | null;
+        const tokenBalance = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN_BALANCE);
+        const subscriptionDate = await AsyncStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_DATE);
+        const totalGenerations = await AsyncStorage.getItem(STORAGE_KEYS.TOTAL_GENERATIONS);
 
-        if (status === "starz_pro" && date) {
-          const subDate = new Date(date);
-          const renewDate = new Date(subDate);
-          renewDate.setMonth(renewDate.getMonth() + 1);
-
-          setState({
-            tier: "starz_pro",
-            isSubscribed: true,
-            tokenBalance: balance ? parseInt(balance, 10) : 50,
-            maxTokens: 50,
-            subscriptionDate: date,
-            renewalDate: renewDate.toISOString(),
-            totalGenerations: generations ? parseInt(generations, 10) : 0,
-          });
+        if (tier) {
+          const config = TIER_CONFIG[tier];
+          setState((prev) => ({
+            ...prev,
+            tier,
+            isSubscribed: tier !== "free",
+            tokenBalance: tokenBalance ? parseInt(tokenBalance) : config.maxTokens,
+            maxTokens: config.maxTokens,
+            monthlyGenerationLimit: config.limit,
+            videoGenerationAPI: config.api,
+            subscriptionDate,
+            totalGenerations: totalGenerations ? parseInt(totalGenerations) : 0,
+          }));
         }
-      } catch (e) {
-        // Silently fail, use defaults
+      } catch (error) {
+        console.error("Failed to load subscription state:", error);
       }
-    })();
+    };
+
+    loadState();
   }, []);
 
-  const canAccessPremium = state.isSubscribed;
-  const canGenerate = state.isSubscribed && state.tokenBalance > 0;
+  const canAccessPremium = useMemo(() => state.isSubscribed, [state.isSubscribed]);
 
-  const consumeToken = useCallback(async (): Promise<boolean> => {
-    if (!state.isSubscribed || state.tokenBalance <= 0) return false;
+  const canGenerate = useMemo(() => state.tokenBalance > 0, [state.tokenBalance]);
+
+  const consumeToken = useCallback(async () => {
+    if (!canGenerate) return false;
 
     const newBalance = state.tokenBalance - 1;
     const newGenerations = state.totalGenerations + 1;
@@ -117,76 +122,115 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     await AsyncStorage.setItem(STORAGE_KEYS.TOTAL_GENERATIONS, newGenerations.toString());
 
     return true;
-  }, [state.isSubscribed, state.tokenBalance, state.totalGenerations]);
+  }, [canGenerate, state.tokenBalance, state.totalGenerations]);
 
-  const subscribe = useCallback(async () => {
-    // In production: RevenueCat purchase flow
-    // For now: simulate successful subscription
-    const now = new Date().toISOString();
-    const renewDate = new Date();
-    renewDate.setMonth(renewDate.getMonth() + 1);
+  const subscribe = useCallback(async (tier: "starz_pro" | "starz_elite" = "starz_pro") => {
+    const config = TIER_CONFIG[tier];
 
-    const newState: SubscriptionState = {
-      tier: "starz_pro",
+    setState((prev) => ({
+      ...prev,
+      tier,
       isSubscribed: true,
-      tokenBalance: 50,
-      maxTokens: 50,
-      subscriptionDate: now,
-      renewalDate: renewDate.toISOString(),
-      totalGenerations: state.totalGenerations,
-    };
+      tokenBalance: config.maxTokens,
+      maxTokens: config.maxTokens,
+      monthlyGenerationLimit: config.limit,
+      videoGenerationAPI: config.api,
+      subscriptionDate: new Date().toISOString(),
+      renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    }));
 
-    setState(newState);
-    setPaywallVisible(false);
-
-    await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_STATUS, "starz_pro");
-    await AsyncStorage.setItem(STORAGE_KEYS.TOKEN_BALANCE, "50");
-    await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_DATE, now);
-  }, [state.totalGenerations]);
+    await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_TIER, tier);
+    await AsyncStorage.setItem(STORAGE_KEYS.TOKEN_BALANCE, config.maxTokens.toString());
+    await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_DATE, new Date().toISOString());
+  }, []);
 
   const purchaseTopUp = useCallback(async (amount: number) => {
-    if (!state.isSubscribed) return;
-
     const newBalance = state.tokenBalance + amount;
-    setState((prev) => ({ ...prev, tokenBalance: newBalance }));
+
+    setState((prev) => ({
+      ...prev,
+      tokenBalance: newBalance,
+    }));
+
     await AsyncStorage.setItem(STORAGE_KEYS.TOKEN_BALANCE, newBalance.toString());
-  }, [state.isSubscribed, state.tokenBalance]);
+  }, [state.tokenBalance]);
 
   const cancelSubscription = useCallback(async () => {
-    setState(DEFAULT_STATE);
-    await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+    setState((prev) => ({
+      ...prev,
+      tier: "free",
+      isSubscribed: false,
+      tokenBalance: 5,
+      maxTokens: 5,
+      monthlyGenerationLimit: 5,
+      videoGenerationAPI: "sora",
+      subscriptionDate: null,
+      renewalDate: null,
+    }));
+
+    await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_TIER, "free");
+    await AsyncStorage.setItem(STORAGE_KEYS.TOKEN_BALANCE, "5");
   }, []);
 
   const showPaywall = useCallback(() => setPaywallVisible(true), []);
   const hidePaywall = useCallback(() => setPaywallVisible(false), []);
 
-  const value = useMemo(
-    () => ({
-      state,
-      canAccessPremium,
-      canGenerate,
-      consumeToken,
-      subscribe,
-      purchaseTopUp,
-      cancelSubscription,
-      showPaywall,
-      hidePaywall,
-      paywallVisible,
-    }),
-    [state, canAccessPremium, canGenerate, consumeToken, subscribe, purchaseTopUp, cancelSubscription, showPaywall, hidePaywall, paywallVisible]
+  const getVideoAPI = useCallback((): VideoAPI => {
+    return state.videoGenerationAPI;
+  }, [state.videoGenerationAPI]);
+
+  const tiers = useMemo(
+    () => [
+      {
+        id: "free",
+        name: "Free",
+        price: 0,
+        monthlyLimit: 5,
+        api: "sora" as VideoAPI,
+        features: ["Sora AI video generation", "5 videos/month", "Basic editing", "Download videos"],
+      },
+      {
+        id: "starz_pro",
+        name: "Starz Pro",
+        price: 30,
+        monthlyLimit: 50,
+        api: "kling" as VideoAPI,
+        features: ["Kling AI video generation", "50 videos/month", "Advanced editing", "Priority processing", "Download & share"],
+      },
+      {
+        id: "starz_elite",
+        name: "Starz Elite",
+        price: 99,
+        monthlyLimit: 999,
+        api: "heygen" as VideoAPI,
+        features: ["HeyGen AI video generation", "Unlimited videos", "Advanced editing", "Priority processing", "Download & share", "Analytics dashboard"],
+      },
+    ],
+    []
   );
 
-  return (
-    <SubscriptionContext.Provider value={value}>
-      {children}
-    </SubscriptionContext.Provider>
-  );
+  const value: SubscriptionContextValue = {
+    state,
+    canAccessPremium,
+    canGenerate,
+    consumeToken,
+    subscribe,
+    purchaseTopUp,
+    cancelSubscription,
+    showPaywall,
+    hidePaywall,
+    paywallVisible,
+    tiers,
+    getVideoAPI,
+  };
+
+  return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
 }
 
-export function useSubscription(): SubscriptionContextValue {
-  const ctx = useContext(SubscriptionContext);
-  if (!ctx) {
+export function useSubscription() {
+  const context = useContext(SubscriptionContext);
+  if (!context) {
     throw new Error("useSubscription must be used within SubscriptionProvider");
   }
-  return ctx;
+  return context;
 }

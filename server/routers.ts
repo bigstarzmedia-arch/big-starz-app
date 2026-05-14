@@ -175,13 +175,102 @@ export const appRouter = router({
         provider: "Hugging Face",
       },
       video: {
-        models: ["Pollinations.ai", "Stable Diffusion v1.5", "Text-to-Video MS 1.7B"],
+        models: ["Pollinations.ai", "Stable Diffusion v1.5", "Text-to-Video MS 1.7B", "Sora"],
         cost: "$0.00",
-        provider: "Pollinations.ai + Hugging Face",
+        provider: "Pollinations.ai + Hugging Face + Sora",
       },
       totalMonthlyCost: "$0.00",
       status: "MVP Zero-Cost Mode Active",
     })),
+  }),
+
+  // Messaging (Real-time Chat)
+  messages: router({
+    send: protectedProcedure
+      .input(z.object({
+        recipientId: z.number(),
+        content: z.string().min(1).max(5000),
+      }))
+      .mutation(({ ctx, input }) => {
+        return db.sendMessage(ctx.user.id, input.recipientId, input.content);
+      }),
+    
+    list: protectedProcedure.query(({ ctx }) => {
+      return db.getConversations(ctx.user.id);
+    }),
+    
+    getThread: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+      }))
+      .query(({ ctx, input }) => {
+        return db.getMessages(ctx.user.id, input.userId);
+      }),
+    
+    markAsRead: protectedProcedure
+      .input(z.object({
+        senderId: z.number(),
+      }))
+      .mutation(({ ctx, input }) => {
+        return db.markMessagesAsRead(ctx.user.id, input.senderId);
+      }),
+  }),
+
+  // Face Clones (Video Synthesis)
+  faceClones: router({
+    upload: protectedProcedure
+      .input(z.object({
+        faceImageUrl: z.string().url(),
+        faceImageKey: z.string(),
+      }))
+      .mutation(({ ctx, input }) => {
+        return db.uploadFaceClone(ctx.user.id, input.faceImageUrl, input.faceImageKey);
+      }),
+    
+    list: protectedProcedure.query(({ ctx }) => {
+      return db.getUserFaceClones(ctx.user.id);
+    }),
+    
+    setDefault: protectedProcedure
+      .input(z.object({
+        faceCloneId: z.number(),
+      }))
+      .mutation(({ ctx, input }) => {
+        return db.setDefaultFaceClone(ctx.user.id, input.faceCloneId);
+      }),
+  }),
+
+  // Video Generation (Sora API)
+  videoGeneration: router({
+    generateWithSora: protectedProcedure
+      .input(z.object({
+        prompt: z.string().min(10).max(1000),
+      }))
+      .mutation(({ ctx, input }) => {
+        return db.createVideoGeneration(ctx.user.id, input.prompt);
+      }),
+    
+    list: protectedProcedure.query(({ ctx }) => {
+      return db.getUserVideoGenerations(ctx.user.id);
+    }),
+    
+    updateStatus: protectedProcedure
+      .input(z.object({
+        videoGenId: z.number(),
+        status: z.enum(["pending", "processing", "completed", "failed"]),
+        outputUrl: z.string().optional(),
+        outputKey: z.string().optional(),
+        error: z.string().optional(),
+      }))
+      .mutation(({ input }) => {
+        return db.updateVideoGenerationStatus(
+          input.videoGenId,
+          input.status,
+          input.outputUrl,
+          input.outputKey,
+          input.error
+        );
+      }),
   }),
 });
 

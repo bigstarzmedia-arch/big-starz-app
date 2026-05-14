@@ -371,3 +371,179 @@ export async function getUserSubscriptionStatus(userId: number) {
     customerId: user.revenueCatCustomerId,
   } : null;
 }
+
+
+/**
+ * Message Functions (Real-time Chat)
+ */
+export async function sendMessage(senderId: number, recipientId: number, content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Import at function level to avoid circular deps
+  const { messages, conversations } = await import("../drizzle/schema");
+  const { eq, or, and } = await import("drizzle-orm");
+  
+  // Insert message
+  await db.insert(messages).values({
+    senderId,
+    recipientId,
+    content,
+    isRead: false,
+  });
+  
+  // Update or create conversation
+  const existingConv = await db.select().from(conversations).where(
+    or(
+      and(eq(conversations.userId1, senderId), eq(conversations.userId2, recipientId)),
+      and(eq(conversations.userId1, recipientId), eq(conversations.userId2, senderId))
+    )
+  ).limit(1);
+  
+  if (existingConv.length > 0) {
+    await db.update(conversations).set({
+      lastMessageAt: new Date(),
+    }).where(eq(conversations.id, existingConv[0].id));
+  } else {
+    await db.insert(conversations).values({
+      userId1: Math.min(senderId, recipientId),
+      userId2: Math.max(senderId, recipientId),
+      lastMessageAt: new Date(),
+    });
+  }
+}
+
+export async function getConversations(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { conversations } = await import("../drizzle/schema");
+  const { or, eq } = await import("drizzle-orm");
+  
+  return db.select().from(conversations).where(
+    or(eq(conversations.userId1, userId), eq(conversations.userId2, userId))
+  ).orderBy((t) => t.lastMessageAt || t.createdAt);
+}
+
+export async function getMessages(userId1: number, userId2: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { messages } = await import("../drizzle/schema");
+  const { or, and, eq } = await import("drizzle-orm");
+  
+  return db.select().from(messages).where(
+    or(
+      and(eq(messages.senderId, userId1), eq(messages.recipientId, userId2)),
+      and(eq(messages.senderId, userId2), eq(messages.recipientId, userId1))
+    )
+  ).orderBy((t) => t.createdAt);
+}
+
+export async function markMessagesAsRead(userId: number, senderId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { messages } = await import("../drizzle/schema");
+  const { and, eq } = await import("drizzle-orm");
+  
+  await db.update(messages).set({
+    isRead: true,
+  }).where(
+    and(eq(messages.recipientId, userId), eq(messages.senderId, senderId))
+  );
+}
+
+/**
+ * Face Clone Functions
+ */
+export async function uploadFaceClone(userId: number, faceImageUrl: string, faceImageKey: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { faceClones } = await import("../drizzle/schema");
+  
+  // If this is the first face clone, make it default
+  const existing = await db.select().from(faceClones).where(eq(faceClones.userId, userId)).limit(1);
+  const isDefault = existing.length === 0;
+  
+  await db.insert(faceClones).values({
+    userId,
+    faceImageUrl,
+    faceImageKey,
+    isDefault,
+    processingStatus: "completed",
+  });
+}
+
+export async function getUserFaceClones(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { faceClones } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return db.select().from(faceClones).where(eq(faceClones.userId, userId));
+}
+
+export async function setDefaultFaceClone(userId: number, faceCloneId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { faceClones } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+  
+  // Unset all defaults for this user
+  await db.update(faceClones).set({
+    isDefault: false,
+  }).where(eq(faceClones.userId, userId));
+  
+  // Set the new default
+  await db.update(faceClones).set({
+    isDefault: true,
+  }).where(and(eq(faceClones.id, faceCloneId), eq(faceClones.userId, userId)));
+}
+
+/**
+ * Video Generation Functions (Sora API)
+ */
+export async function createVideoGeneration(userId: number, prompt: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { videoGenerations } = await import("../drizzle/schema");
+  
+  await db.insert(videoGenerations).values({
+    userId,
+    prompt,
+    processingStatus: "pending",
+  });
+  
+  const result = await db.select().from(videoGenerations).orderBy((t) => t.id).limit(1);
+  return result.length > 0 ? result[0].id : 0;
+}
+
+export async function updateVideoGenerationStatus(videoGenId: number, status: string, outputUrl?: string, outputKey?: string, error?: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { videoGenerations } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  await db.update(videoGenerations).set({
+    processingStatus: status as any,
+    outputVideoUrl: outputUrl,
+    outputVideoKey: outputKey,
+    processingError: error,
+  }).where(eq(videoGenerations.id, videoGenId));
+}
+
+export async function getUserVideoGenerations(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { videoGenerations } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return db.select().from(videoGenerations).where(eq(videoGenerations.userId, userId));
+}

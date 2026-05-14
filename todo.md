@@ -225,9 +225,89 @@
 - [ ] Test for overlaps and duplicate UI elements
 
 
-## THREE-TIER SUBSCRIPTION MODEL (v1.0.5)
-- [ ] Wire Sora API to free tier for video generation
-- [ ] Update paywall modal to show 3 tiers: Free (Sora), Mid ($30/month - Kling/HeyGen), Elite ($99/month - priority)
-- [ ] Route video generation based on tier (free→Sora, mid→Kling, elite→HeyGen)
-- [ ] Add tier indicator to user profile/dashboard
-- [ ] Implement tier-based feature gates (free: 5 videos/month, mid: 50/month, elite: unlimited)
+## COMPLETE REBUILD - AI VIDEO CREATION + SOCIAL NETWORKING (v2.0.0)
+
+### Phase 1: Core Navigation & Architecture
+- [x] Redesign tab navigation: Feed (Vibe), Create (+), Chat, Profile, Wallet
+- [x] Update _layout.tsx with new tab structure and icons
+- [x] Create Create screen with plus button UI (modal for video generation options)
+- [x] Build new Chat screen with real-time messaging UI
+- [x] Rebuild Profile screen with creator stats and portfolio
+- [ ] Implement Supabase real-time subscriptions for messaging
+
+### Phase 2: AI Video Generation (Sora + Premium APIs)
+- [ ] Integrate Sora API for free tier video generation
+- [ ] Build video prompt input UI (text-to-video generation)
+- [ ] Implement HeyGen API for paid tier (face clone videos)
+- [ ] Implement Kling API for paid tier (video beautification)
+- [ ] Create video generation progress tracking UI
+- [ ] Build video output gallery with preview, download, share
+- [ ] Implement S3 storage for generated videos
+- [ ] Add video metadata (title, description, tags, visibility)
+- [ ] Implement tier-based rate limiting (Free: 5/mo, Pro: 50/mo, Elite: unlimited)
+
+### Phase 3: Face Clone Upload & Synthesis
+- [ ] Build face upload component (camera/gallery picker)
+- [ ] Implement face detection and validation (MediaPipe)
+- [ ] Create face clone storage in Supabase
+- [ ] Wire HeyGen API to use uploaded face for video synthesis
+- [ ] Build face clone management UI (view, delete, set default)
+- [ ] Implement video preview with face clone applied
+- [ ] Add quality indicators and tips for best results
+
+### Phase 4: Real-Time Messaging System
+- [ ] Create Supabase messages table (sender, recipient, content, timestamp)
+- [ ] Build chat list UI (conversations with last message preview)
+- [ ] Build chat detail UI (message thread with real-time updates)
+- [ ] Implement message input with send button
+- [ ] Add typing indicators
+- [ ] Implement read receipts
+- [ ] Add notification badges for unread messages
+- [ ] Create group chat functionality (optional for v2.0)
+
+### Phase 5: Creator Profiles & Discovery
+- [ ] Build creator profile screen (avatar, bio, follower count, videos)
+- [ ] Implement follow/unfollow functionality
+- [ ] Create creator discovery UI (trending creators, search)
+- [ ] Build portfolio gallery (user's generated videos)
+- [ ] Add creator stats dashboard (views, likes, followers, earnings)
+- [ ] Implement creator verification badge logic
+- [ ] Build "Following" feed (videos from followed creators)
+- [ ] Add trending/For You algorithm (tag-based filtering)
+
+### Phase 6: Subscription & Monetization
+- [ ] Update paywall with 3 tiers: Free (Sora), Pro ($30/mo), Elite ($99/mo)
+- [ ] Integrate RevenueCat for subscription management
+- [ ] Implement tier-based feature gates (video generation limits)
+- [ ] Add tier indicator to profile and dashboard
+- [ ] Create earnings dashboard (views, likes, creator fund payouts)
+- [ ] Implement Stripe Connect for creator payouts
+- [ ] Add subscription status screen (current plan, renewal date, manage)
+
+### Phase 7: Testing & Deployment
+- [ ] Test video generation on free tier (Sora)
+- [ ] Test video generation on paid tiers (HeyGen, Kling)
+- [ ] Test face clone upload and synthesis
+- [ ] Test real-time messaging (send, receive, read receipts)
+- [ ] Test creator profiles and follow/unfollow
+- [ ] Test subscription tier gating
+- [ ] Test on iOS and Android via Expo Go
+- [ ] Performance optimization (video loading, messaging latency)
+- [ ] Generate APK and prepare for app store submission
+
+### Phase 8: Launch Preparation
+- [ ] Create checkpoint for v2.0.0
+- [ ] Prepare app store listings (screenshots, description)
+- [ ] Set up analytics (PostHog integration)
+- [ ] Configure error tracking (Sentry)
+- [ ] Test payment processing (Stripe + RevenueCat)
+- [ ] Prepare launch marketing materials
+- [ ] Final QA on physical devices
+- [ ] Deploy to production
+
+## THREE-TIER SUBSCRIPTION MODEL (v1.0.5) - DEPRECATED
+- [x] Wire Sora API to free tier for video generation
+- [x] Update paywall modal to show 3 tiers: Free (Sora), Mid ($30/month - Kling/HeyGen), Elite ($99/month - priority)
+- [x] Route video generation based on tier (free→Sora, mid→Kling, elite→HeyGen)
+- [x] Add tier indicator to user profile/dashboard
+- [x] Implement tier-based feature gates (free: 5 videos/month, mid: 50/month, elite: unlimited)

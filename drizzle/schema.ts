@@ -51,7 +51,7 @@ export const videos = mysqlTable("videos", {
   description: text("description"),
   tags: json("tags"),
   visibility: mysqlEnum("visibility", ["private", "public"]).default("private"),
-  aiModel: mysqlEnum("aiModel", ["kling", "heygen", "pollinations", "stable-diffusion", "text-to-video"]).notNull(),
+  aiModel: mysqlEnum("aiModel", ["kling", "heygen", "pollinations", "stable-diffusion", "text-to-video", "sora"]).notNull(),
   stylePreset: varchar("stylePreset", { length: 100 }),
   resolution: varchar("resolution", { length: 50 }).default("1080p"),
   processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
@@ -77,7 +77,7 @@ export const music = mysqlTable("music", {
   mood: varchar("mood", { length: 100 }),
   lyrics: text("lyrics"),
   lyricPrompt: text("lyricPrompt"),
-  lyricModel: mysqlEnum("lyricModel", ["openai", "anthropic", "gemini-flash-free", "llama-3.8b-free"]).notNull(),
+  lyricModel: mysqlEnum("lyricModel", ["openai", "anthropic", "gemini-flash-free", "llama-3.8b-free", "sora"]).notNull(),
   voiceModel: varchar("voiceModel", { length: 100 }).notNull(),
   processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
   processingProgress: int("processingProgress").default(0),
@@ -186,3 +186,71 @@ export type InsertEarningsLedger = typeof earningsLedger.$inferInsert;
 
 export type RevenueCatEvent = typeof revenueCatEvents.$inferSelect;
 export type InsertRevenueCatEvent = typeof revenueCatEvents.$inferInsert;
+
+/**
+ * Messages table (Real-time chat)
+ */
+export const messages = mysqlTable("messages", {
+  id: int("id").autoincrement().primaryKey(),
+  senderId: int("senderId").notNull(),
+  recipientId: int("recipientId").notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+
+/**
+ * Conversations table (Chat list)
+ */
+export const conversations = mysqlTable("conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId1: int("userId1").notNull(),
+  userId2: int("userId2").notNull(),
+  lastMessageId: int("lastMessageId"),
+  lastMessageAt: timestamp("lastMessageAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+
+/**
+ * Face Clones table (Face upload for video synthesis)
+ */
+export const faceClones = mysqlTable("faceClones", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  faceImageUrl: varchar("faceImageUrl", { length: 512 }).notNull(),
+  faceImageKey: varchar("faceImageKey", { length: 512 }).notNull(),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FaceClone = typeof faceClones.$inferSelect;
+export type InsertFaceClone = typeof faceClones.$inferInsert;
+
+/**
+ * Video Generations table (Sora API job tracking)
+ */
+export const videoGenerations = mysqlTable("videoGenerations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  prompt: text("prompt").notNull(),
+  soraJobId: varchar("soraJobId", { length: 255 }),
+  outputVideoUrl: varchar("outputVideoUrl", { length: 512 }),
+  outputVideoKey: varchar("outputVideoKey", { length: 512 }),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processing", "completed", "failed"]).default("pending"),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VideoGeneration = typeof videoGenerations.$inferSelect;
+export type InsertVideoGeneration = typeof videoGenerations.$inferInsert;

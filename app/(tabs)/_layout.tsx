@@ -34,45 +34,45 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* VIBE FEED - Star icon */}
+      {/* VIBE FEED - Play icon */}
       <Tabs.Screen
         name="index"
         options={{
           title: "Vibe",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="star.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="play.circle.fill" color={color} />,
         }}
       />
 
-      {/* CAMEO STUDIO - Camera icon */}
+      {/* CREATE STUDIO - Plus icon (centered) */}
       <Tabs.Screen
-        name="cameo-studio"
+        name="create"
         options={{
-          title: "Cameo",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="camera.fill" color={color} />,
+          title: "Create",
+          tabBarIcon: ({ color }) => <IconSymbol size={32} name="plus.circle.fill" color={color} />,
         }}
       />
 
-      {/* MUSIC STUDIO - Music note icon */}
+      {/* CHAT - Message bubble icon */}
       <Tabs.Screen
-        name="music-studio"
+        name="chat"
         options={{
-          title: "Music",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
+          title: "Chat",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="bubble.right.fill" color={color} />,
         }}
       />
 
-      {/* CAST / AFFILIATE HUB - People icon */}
+      {/* PROFILE - Person icon */}
       <Tabs.Screen
-        name="affiliate-hub"
+        name="profile"
         options={{
-          title: "Cast",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.2.fill" color={color} />,
+          title: "Profile",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
         }}
       />
 
       {/* WALLET - Wallet icon */}
       <Tabs.Screen
-        name="wallet-screen"
+        name="wallet"
         options={{
           title: "Wallet",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="creditcard.fill" color={color} />,

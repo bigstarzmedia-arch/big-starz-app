@@ -60,17 +60,7 @@ export default function ProfileScreen() {
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Header */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF' }}>
-              <Text>PROFILE</Text>
-            </Text>
-            <TouchableOpacity>
-              <Text style={{ fontSize: 20, color: '#FF0055' }}>⚙️</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+
 
         {/* Profile Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>

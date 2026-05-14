@@ -104,24 +104,21 @@ export default function VibeScreen() {
           </View>
         </View>
 
-        {/* Right Action Bar (Minimal) */}
-        <View style={{ position: 'absolute', right: 12, bottom: 100, gap: 20, alignItems: 'center' }}>
+        {/* Right Action Bar (Icons Only) */}
+        <View style={{ position: 'absolute', right: 12, bottom: 100, gap: 24, alignItems: 'center' }}>
           {/* Like Button */}
-          <TouchableOpacity onPress={() => toggleLike(item.id)} style={{ alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => toggleLike(item.id)}>
             <Text style={{ fontSize: 32 }}>{isLiked ? '❤️' : '🤍'}</Text>
-            <Text style={{ color: '#FFF', fontSize: 10, marginTop: 4, fontWeight: 'bold' }}>Like</Text>
           </TouchableOpacity>
 
           {/* Comment Button */}
-          <TouchableOpacity style={{ alignItems: 'center' }}>
+          <TouchableOpacity>
             <Text style={{ fontSize: 32 }}>💬</Text>
-            <Text style={{ color: '#FFF', fontSize: 10, marginTop: 4, fontWeight: 'bold' }}>Chat</Text>
           </TouchableOpacity>
 
           {/* Share Button */}
-          <TouchableOpacity style={{ alignItems: 'center' }}>
+          <TouchableOpacity>
             <Text style={{ fontSize: 32 }}>📤</Text>
-            <Text style={{ color: '#FFF', fontSize: 10, marginTop: 4, fontWeight: 'bold' }}>Share</Text>
           </TouchableOpacity>
         </View>
       </View>

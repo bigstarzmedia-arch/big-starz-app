@@ -63,12 +63,7 @@ export default function WalletScreen() {
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Header */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF' }}>
-            <Text>WALLET</Text>
-          </Text>
-        </View>
+
 
         {/* Balance Card */}
         <View
@@ -87,31 +82,17 @@ export default function WalletScreen() {
           <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FF0055' }}>
             ${WALLET.balance.toFixed(2)}
           </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              onPress={handleWithdraw}
-              style={{
-                flex: 1,
-                backgroundColor: '#FF0055',
-                paddingVertical: 10,
-                borderRadius: 8,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Withdraw</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: '#333',
-                paddingVertical: 10,
-                borderRadius: 8,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>History</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={handleWithdraw}
+            style={{
+              backgroundColor: '#FF0055',
+              paddingVertical: 12,
+              borderRadius: 8,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Withdraw</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stats Grid */}

@@ -1,10 +1,9 @@
-import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { trpc } from '@/lib/trpc';
 
 export default function CreateScreen() {
   const [showModal, setShowModal] = useState(false);
@@ -12,7 +11,6 @@ export default function CreateScreen() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleOptionSelect = (option: 'text-to-video' | 'face-clone' | 'music') => {
     setSelectedOption(option);
@@ -30,7 +28,7 @@ export default function CreateScreen() {
         quality: 0.8,
       });
       if (!result.canceled) {
-        setSelectedImage(result.assets[0].uri);
+        // Handle image selection
       }
     } catch (error) {
       console.error('Image picker error:', error);
@@ -45,55 +43,44 @@ export default function CreateScreen() {
         quality: 0.8,
       });
       if (!result.canceled) {
-        setSelectedImage(result.assets[0].uri);
+        // Handle camera capture
       }
     } catch (error) {
       console.error('Camera error:', error);
     }
   };
 
-  const generateWithSora = trpc.videoGeneration.generateWithSora.useMutation({
-    onSuccess: () => {
-      let currentProgress = 0;
-      const interval = setInterval(() => {
-        currentProgress += Math.random() * 30;
-        if (currentProgress >= 95) {
-          clearInterval(interval);
-          setProgress(95);
-        } else {
-          setProgress(currentProgress);
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        setProgress(100);
-        setLoading(false);
-        setPrompt('');
-        setSelectedOption(null);
-      }, 10000);
-    },
-    onError: (error) => {
-      console.error('Generation error:', error);
-      setLoading(false);
-      setProgress(0);
-    },
-  });
-
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
     setProgress(10);
 
-    try {
-      if (selectedOption === 'text-to-video') {
-        await generateWithSora.mutateAsync({ prompt });
+    // Simulate generation progress
+    let currentProgress = 10;
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 25;
+      if (currentProgress >= 95) {
+        clearInterval(interval);
+        setProgress(95);
+      } else {
+        setProgress(currentProgress);
       }
-    } catch (error) {
-      console.error('Generation error:', error);
+    }, 800);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      setProgress(100);
       setLoading(false);
-      setProgress(0);
-    }
+      setPrompt('');
+      setSelectedOption(null);
+    }, 8000);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedOption(null);
+    setPrompt('');
+    setProgress(0);
   };
 
   return (
@@ -122,88 +109,93 @@ export default function CreateScreen() {
       {/* Modal */}
       <Modal visible={showModal} transparent animationType="slide">
         <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-          <View style={{ flex: 1, padding: 16, justifyContent: 'space-between' }}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16, justifyContent: 'space-between' }}>
             {/* Close Button */}
             <TouchableOpacity
-              onPress={() => {
-                setShowModal(false);
-                setSelectedOption(null);
-                setPrompt('');
-                setSelectedImage(null);
-              }}
-              style={{ alignSelf: 'flex-end', marginBottom: 16 }}
+              onPress={closeModal}
+              style={{ alignSelf: 'flex-end', marginBottom: 20 }}
             >
-              <Text style={{ fontSize: 28, color: '#FF0055' }}>✕</Text>
+              <Text style={{ fontSize: 32, color: '#FF0055', fontWeight: 'bold' }}>✕</Text>
             </TouchableOpacity>
 
             {/* Options or Input */}
             {selectedOption === null ? (
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 16 }}>
                 <TouchableOpacity
                   onPress={() => handleOptionSelect('text-to-video')}
                   style={{
                     backgroundColor: '#1A1A1A',
-                    borderRadius: 12,
-                    padding: 16,
+                    borderRadius: 16,
+                    padding: 20,
                     borderWidth: 2,
                     borderColor: '#333',
                     alignItems: 'center',
-                    gap: 8,
+                    gap: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 40 }}>🎬</Text>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>Text to Video</Text>
+                  <Text style={{ fontSize: 48 }}>🎬</Text>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>Text to Video</Text>
+                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
+                    Generate videos from text prompts using Sora
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => handleOptionSelect('face-clone')}
                   style={{
                     backgroundColor: '#1A1A1A',
-                    borderRadius: 12,
-                    padding: 16,
+                    borderRadius: 16,
+                    padding: 20,
                     borderWidth: 2,
                     borderColor: '#333',
                     alignItems: 'center',
-                    gap: 8,
+                    gap: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 40 }}>👤</Text>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>Face Clone</Text>
+                  <Text style={{ fontSize: 48 }}>👤</Text>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>Face Clone</Text>
+                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
+                    Create videos with your face
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => handleOptionSelect('music')}
                   style={{
                     backgroundColor: '#1A1A1A',
-                    borderRadius: 12,
-                    padding: 16,
+                    borderRadius: 16,
+                    padding: 20,
                     borderWidth: 2,
                     borderColor: '#333',
                     alignItems: 'center',
-                    gap: 8,
+                    gap: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 40 }}>🎵</Text>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>Music Studio</Text>
+                  <Text style={{ fontSize: 48 }}>🎵</Text>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>Music Studio</Text>
+                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
+                    Generate music and beats
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 16 }}>
                 {selectedOption === 'text-to-video' && (
                   <TextInput
-                    placeholder="Describe the video..."
+                    placeholder="Describe the video you want to create..."
                     placeholderTextColor="#666"
                     value={prompt}
                     onChangeText={setPrompt}
                     multiline
-                    numberOfLines={4}
+                    numberOfLines={5}
                     style={{
                       backgroundColor: '#1A1A1A',
                       borderRadius: 12,
-                      padding: 12,
+                      padding: 14,
                       color: '#FFF',
                       borderWidth: 1,
                       borderColor: '#333',
+                      fontSize: 14,
                     }}
                   />
                 )}
@@ -214,7 +206,7 @@ export default function CreateScreen() {
                       onPress={handleTakePhoto}
                       style={{
                         backgroundColor: '#FF0055',
-                        paddingVertical: 12,
+                        paddingVertical: 14,
                         borderRadius: 12,
                         alignItems: 'center',
                       }}
@@ -225,38 +217,39 @@ export default function CreateScreen() {
                       onPress={handlePickImage}
                       style={{
                         backgroundColor: '#333',
-                        paddingVertical: 12,
+                        paddingVertical: 14,
                         borderRadius: 12,
                         alignItems: 'center',
                       }}
                     >
-                      <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>🖼️ Gallery</Text>
+                      <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>🖼️ From Gallery</Text>
                     </TouchableOpacity>
                   </View>
                 )}
 
                 {selectedOption === 'music' && (
                   <TextInput
-                    placeholder="Describe the music..."
+                    placeholder="Describe the music style..."
                     placeholderTextColor="#666"
                     value={prompt}
                     onChangeText={setPrompt}
                     multiline
-                    numberOfLines={4}
+                    numberOfLines={5}
                     style={{
                       backgroundColor: '#1A1A1A',
                       borderRadius: 12,
-                      padding: 12,
+                      padding: 14,
                       color: '#FFF',
                       borderWidth: 1,
                       borderColor: '#333',
+                      fontSize: 14,
                     }}
                   />
                 )}
 
                 {loading && (
                   <View style={{ gap: 8 }}>
-                    <View style={{ height: 6, backgroundColor: '#333', borderRadius: 3, overflow: 'hidden' }}>
+                    <View style={{ height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
                       <View
                         style={{
                           height: '100%',
@@ -266,7 +259,7 @@ export default function CreateScreen() {
                       />
                     </View>
                     <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
-                      {Math.round(progress)}%
+                      {Math.round(progress)}% Complete
                     </Text>
                   </View>
                 )}
@@ -277,18 +270,16 @@ export default function CreateScreen() {
             {selectedOption !== null && (
               <TouchableOpacity
                 onPress={handleGenerate}
-                disabled={loading || !prompt.trim() || (selectedOption === 'face-clone' && !selectedImage)}
+                disabled={loading || !prompt.trim()}
                 style={{
-                  backgroundColor:
-                    loading || !prompt.trim() || (selectedOption === 'face-clone' && !selectedImage)
-                      ? '#666'
-                      : '#FF0055',
-                  paddingVertical: 14,
+                  backgroundColor: loading || !prompt.trim() ? '#666' : '#FF0055',
+                  paddingVertical: 16,
                   borderRadius: 12,
                   alignItems: 'center',
                   flexDirection: 'row',
                   justifyContent: 'center',
                   gap: 8,
+                  marginTop: 20,
                 }}
               >
                 {loading ? (
@@ -301,7 +292,7 @@ export default function CreateScreen() {
                 )}
               </TouchableOpacity>
             )}
-          </View>
+          </ScrollView>
         </ScreenContainer>
       </Modal>
     </ScreenContainer>

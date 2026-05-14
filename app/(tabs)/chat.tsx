@@ -222,12 +222,7 @@ export default function ChatScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF' }}>
-          <Text>MESSAGES</Text>
-        </Text>
-      </View>
+
 
       {/* Conversations List */}
       {convLoading ? (

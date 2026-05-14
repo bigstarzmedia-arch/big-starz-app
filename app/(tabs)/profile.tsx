@@ -60,8 +60,6 @@ export default function ProfileScreen() {
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-
-
         {/* Profile Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>
           {/* Avatar */}

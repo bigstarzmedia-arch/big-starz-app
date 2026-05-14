@@ -63,8 +63,6 @@ export default function WalletScreen() {
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-
-
         {/* Balance Card */}
         <View
           style={{

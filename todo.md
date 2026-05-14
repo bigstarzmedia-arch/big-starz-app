@@ -236,33 +236,33 @@
 - [ ] Implement Supabase real-time subscriptions for messaging
 
 ### Phase 2: AI Video Generation (Sora + Premium APIs)
-- [ ] Integrate Sora API for free tier video generation
-- [ ] Build video prompt input UI (text-to-video generation)
+- [x] Integrate Sora API for free tier video generation
+- [x] Build video prompt input UI (text-to-video generation)
 - [ ] Implement HeyGen API for paid tier (face clone videos)
 - [ ] Implement Kling API for paid tier (video beautification)
-- [ ] Create video generation progress tracking UI
-- [ ] Build video output gallery with preview, download, share
+- [x] Create video generation progress tracking UI
+- [x] Build video output gallery with preview, download, share
 - [ ] Implement S3 storage for generated videos
 - [ ] Add video metadata (title, description, tags, visibility)
 - [ ] Implement tier-based rate limiting (Free: 5/mo, Pro: 50/mo, Elite: unlimited)
 
 ### Phase 3: Face Clone Upload & Synthesis
-- [ ] Build face upload component (camera/gallery picker)
+- [x] Build face upload component (camera/gallery picker)
 - [ ] Implement face detection and validation (MediaPipe)
-- [ ] Create face clone storage in Supabase
+- [x] Create face clone storage in Supabase
 - [ ] Wire HeyGen API to use uploaded face for video synthesis
 - [ ] Build face clone management UI (view, delete, set default)
 - [ ] Implement video preview with face clone applied
 - [ ] Add quality indicators and tips for best results
 
 ### Phase 4: Real-Time Messaging System
-- [ ] Create Supabase messages table (sender, recipient, content, timestamp)
-- [ ] Build chat list UI (conversations with last message preview)
-- [ ] Build chat detail UI (message thread with real-time updates)
-- [ ] Implement message input with send button
+- [x] Create Supabase messages table (sender, recipient, content, timestamp)
+- [x] Build chat list UI (conversations with last message preview)
+- [x] Build chat detail UI (message thread with real-time updates)
+- [x] Implement message input with send button
 - [ ] Add typing indicators
-- [ ] Implement read receipts
-- [ ] Add notification badges for unread messages
+- [x] Implement read receipts
+- [x] Add notification badges for unread messages
 - [ ] Create group chat functionality (optional for v2.0)
 
 ### Phase 5: Creator Profiles & Discovery

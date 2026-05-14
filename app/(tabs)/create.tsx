@@ -1,15 +1,35 @@
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Image } from 'react-native';
-import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, Image, FlatList } from 'react-native';
+import { useState, useEffect } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { trpc } from '@/lib/trpc';
+
+interface GeneratedVideo {
+  id: number;
+  prompt: string;
+  outputVideoUrl?: string;
+  processingStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: Date;
+}
 
 export default function CreateScreen() {
   const [showModal, setShowModal] = useState(false);
   const [selectedOption, setSelectedOption] = useState<'text-to-video' | 'face-clone' | 'music' | null>(null);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [generatedVideo, setGeneratedVideo] = useState<{ id: string; url: string; title: string } | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([]);
+
+  // Fetch user's generated videos
+  const { data: videos } = trpc.videoGeneration.list.useQuery();
+  useEffect(() => {
+    if (videos) {
+      setGeneratedVideos(videos as GeneratedVideo[]);
+    }
+  }, [videos]);
 
   const handleOptionSelect = (option: 'text-to-video' | 'face-clone' | 'music') => {
     setSelectedOption(option);
@@ -18,27 +38,96 @@ export default function CreateScreen() {
     }
   };
 
+  const handlePickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+    }
+  };
+
+  const generateWithSora = trpc.videoGeneration.generateWithSora.useMutation({
+    onSuccess: (videoGenId) => {
+      // Simulate progress
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += Math.random() * 30;
+        if (currentProgress >= 95) {
+          clearInterval(interval);
+          setProgress(95);
+        } else {
+          setProgress(currentProgress);
+        }
+      }, 1000);
+
+      // Simulate completion after 10 seconds
+      setTimeout(() => {
+        clearInterval(interval);
+        setProgress(100);
+        setLoading(false);
+        setPrompt('');
+        setSelectedOption(null);
+        
+        // Refresh videos list
+        if (videos) {
+          setGeneratedVideos([...videos] as GeneratedVideo[]);
+        }
+      }, 10000);
+    },
+    onError: (error) => {
+      console.error('Generation error:', error);
+      setLoading(false);
+      setProgress(0);
+    },
+  });
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     setLoading(true);
+    setProgress(10);
+
     try {
-      // TODO: Integrate Sora API for free tier
-      // For now, simulate video generation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      setGeneratedVideo({
-        id: Date.now().toString(),
-        url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=900&fit=crop',
-        title: prompt,
-      });
-
-      setPrompt('');
-      setSelectedOption(null);
+      if (selectedOption === 'text-to-video') {
+        await generateWithSora.mutateAsync({ prompt });
+      } else if (selectedOption === 'face-clone' && selectedImage) {
+        // TODO: Implement face clone upload
+        console.log('Face clone upload:', selectedImage);
+        setLoading(false);
+      } else if (selectedOption === 'music') {
+        // TODO: Implement music generation
+        console.log('Music generation:', prompt);
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Generation error:', error);
-    } finally {
       setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -115,49 +204,90 @@ export default function CreateScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Generated Video Preview */}
-          {generatedVideo && (
-            <View
-              style={{
-                backgroundColor: '#1A1A1A',
-                borderRadius: 16,
-                overflow: 'hidden',
-                borderWidth: 2,
-                borderColor: '#FF0055',
-              }}
-            >
-              <Image
-                source={{ uri: generatedVideo.url }}
-                style={{ width: '100%', height: 200 }}
-                resizeMode="cover"
+          {/* Generated Videos List */}
+          {generatedVideos.length > 0 && (
+            <View style={{ gap: 12 }}>
+              <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Your Videos</Text>
+              <FlatList
+                data={generatedVideos}
+                keyExtractor={(item) => item.id.toString()}
+                scrollEnabled={false}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      backgroundColor: '#1A1A1A',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      borderWidth: 1,
+                      borderColor: '#333',
+                      marginBottom: 8,
+                    }}
+                  >
+                    {item.outputVideoUrl && (
+                      <Image
+                        source={{ uri: item.outputVideoUrl }}
+                        style={{ width: '100%', height: 150 }}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={{ padding: 12, gap: 8 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFF', flex: 1 }} numberOfLines={2}>
+                          {item.prompt}
+                        </Text>
+                        <View
+                          style={{
+                            backgroundColor:
+                              item.processingStatus === 'completed'
+                                ? '#00FF00'
+                                : item.processingStatus === 'failed'
+                                  ? '#FF0055'
+                                  : '#FFA500',
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderRadius: 4,
+                            marginLeft: 8,
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#000' }}>
+                            {item.processingStatus === 'completed'
+                              ? '✓'
+                              : item.processingStatus === 'failed'
+                                ? '✕'
+                                : '⏳'}
+                          </Text>
+                        </View>
+                      </View>
+                      {item.processingStatus === 'completed' && (
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              backgroundColor: '#FF0055',
+                              paddingVertical: 8,
+                              borderRadius: 6,
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>Share</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              backgroundColor: '#333',
+                              paddingVertical: 8,
+                              borderRadius: 6,
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>Download</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                )}
               />
-              <View style={{ padding: 12, gap: 8 }}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>{generatedVideo.title}</Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: '#FF0055',
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Share</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      backgroundColor: '#333',
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Download</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             </View>
           )}
         </View>
@@ -179,6 +309,7 @@ export default function CreateScreen() {
                   onPress={() => {
                     setSelectedOption(null);
                     setPrompt('');
+                    setSelectedImage(null);
                   }}
                 >
                   <Text style={{ fontSize: 24, color: '#FF0055' }}>✕</Text>
@@ -208,7 +339,15 @@ export default function CreateScreen() {
 
               {selectedOption === 'face-clone' && (
                 <View style={{ gap: 12 }}>
+                  {selectedImage && (
+                    <Image
+                      source={{ uri: selectedImage }}
+                      style={{ width: '100%', height: 200, borderRadius: 12 }}
+                      resizeMode="cover"
+                    />
+                  )}
                   <TouchableOpacity
+                    onPress={handleTakePhoto}
                     style={{
                       backgroundColor: '#FF0055',
                       paddingVertical: 12,
@@ -219,6 +358,7 @@ export default function CreateScreen() {
                     <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>📷 Take Photo</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    onPress={handlePickImage}
                     style={{
                       backgroundColor: '#333',
                       paddingVertical: 12,
@@ -250,14 +390,35 @@ export default function CreateScreen() {
                   }}
                 />
               )}
+
+              {/* Progress Bar */}
+              {loading && (
+                <View style={{ marginBottom: 16, gap: 8 }}>
+                  <View style={{ height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                    <View
+                      style={{
+                        height: '100%',
+                        backgroundColor: '#FF0055',
+                        width: `${progress}%`,
+                      }}
+                    />
+                  </View>
+                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
+                    {Math.round(progress)}% complete
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Generate Button */}
             <TouchableOpacity
               onPress={handleGenerate}
-              disabled={loading || !prompt.trim()}
+              disabled={loading || !prompt.trim() || (selectedOption === 'face-clone' && !selectedImage)}
               style={{
-                backgroundColor: loading || !prompt.trim() ? '#666' : '#FF0055',
+                backgroundColor:
+                  loading || !prompt.trim() || (selectedOption === 'face-clone' && !selectedImage)
+                    ? '#666'
+                    : '#FF0055',
                 paddingVertical: 14,
                 borderRadius: 12,
                 alignItems: 'center',

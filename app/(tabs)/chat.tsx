@@ -1,111 +1,83 @@
-import { View, Text, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import * as Haptics from 'expo-haptics';
+import { trpc } from '@/lib/trpc';
 
 interface Message {
-  id: string;
-  sender: string;
+  id: number;
+  senderId: number;
+  recipientId: number;
   content: string;
-  timestamp: Date;
-  isOwn: boolean;
+  isRead: boolean;
+  createdAt: Date;
 }
 
 interface Conversation {
-  id: string;
-  creator: string;
-  avatar: string;
-  lastMessage: string;
-  timestamp: Date;
-  unread: number;
+  id: number;
+  userId1: number;
+  userId2: number;
+  lastMessageAt?: Date;
+  createdAt: Date;
 }
 
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: '1',
-    creator: '@NeonVex',
-    avatar: '🎤',
-    lastMessage: 'Hey, love your latest video!',
-    timestamp: new Date(Date.now() - 3600000),
-    unread: 2,
-  },
-  {
-    id: '2',
-    creator: '@CosmicVibe',
-    avatar: '🎵',
-    lastMessage: 'Want to collab on a track?',
-    timestamp: new Date(Date.now() - 7200000),
-    unread: 0,
-  },
-  {
-    id: '3',
-    creator: '@GlitchQueen',
-    avatar: '✨',
-    lastMessage: 'Check out my new face clone video!',
-    timestamp: new Date(Date.now() - 86400000),
-    unread: 0,
-  },
-];
-
-const MOCK_MESSAGES: Message[] = [
-  {
-    id: '1',
-    sender: '@NeonVex',
-    content: 'Hey, love your latest video!',
-    timestamp: new Date(Date.now() - 300000),
-    isOwn: false,
-  },
-  {
-    id: '2',
-    sender: 'You',
-    content: 'Thanks! Wanna collab?',
-    timestamp: new Date(Date.now() - 240000),
-    isOwn: true,
-  },
-  {
-    id: '3',
-    sender: '@NeonVex',
-    content: 'Definitely! What did you have in mind?',
-    timestamp: new Date(Date.now() - 180000),
-    isOwn: false,
-  },
-];
-
 export default function ChatScreen() {
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const flatListRef = useRef<FlatList>(null);
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+  // Fetch conversations
+  const { data: conversationsData, isLoading: convLoading } = trpc.messages.list.useQuery();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'You',
-      content: messageInput,
-      timestamp: new Date(),
-      isOwn: true,
-    };
+  useEffect(() => {
+    if (conversationsData) {
+      setConversations(conversationsData as Conversation[]);
+    }
+  }, [conversationsData]);
 
-    setMessages([...messages, newMessage]);
-    setMessageInput('');
+  // Fetch messages for selected conversation
+  const { data: messagesData, isLoading: messagesLoading } = trpc.messages.getThread.useQuery(
+    { userId: selectedConversation || 0 },
+    { enabled: selectedConversation !== null }
+  );
+
+  useEffect(() => {
+    if (messagesData) {
+      setMessages(messagesData as Message[]);
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messagesData]);
+
+  // Send message mutation
+  const sendMessageMutation = trpc.messages.send.useMutation({
+    onSuccess: () => {
+      setMessageInput('');
+      // Refresh messages
+      if (selectedConversation) {
+        // In a real app, you'd refetch here
+      }
+    },
+    onError: (error) => {
+      console.error('Send message error:', error);
+    },
+  });
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !selectedConversation) return;
 
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    // Simulate response
-    setTimeout(() => {
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: '@NeonVex',
-        content: 'That sounds great! Let me know when you\'re ready.',
-        timestamp: new Date(),
-        isOwn: false,
-      };
-      setMessages((prev) => [...prev, response]);
-    }, 1000);
+    await sendMessageMutation.mutateAsync({
+      recipientId: selectedConversation,
+      content: messageInput,
+    });
   };
 
   if (selectedConversation) {
@@ -127,59 +99,71 @@ export default function ChatScreen() {
             <Text style={{ fontSize: 20, color: '#FF0055' }}>←</Text>
           </TouchableOpacity>
           <View>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>
-              {MOCK_CONVERSATIONS.find((c) => c.id === selectedConversation)?.creator}
-            </Text>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>Creator #{selectedConversation}</Text>
             <Text style={{ fontSize: 12, color: '#AAA' }}>Online</Text>
           </View>
         </View>
 
         {/* Messages */}
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                flexDirection: item.isOwn ? 'row-reverse' : 'row',
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                gap: 8,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: item.isOwn ? '#FF0055' : '#333',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 16 }}>{item.isOwn ? '👤' : '🎤'}</Text>
-              </View>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: item.isOwn ? '#FF0055' : '#1A1A1A',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  maxWidth: '80%',
-                }}
-              >
-                <Text style={{ color: '#FFF', fontSize: 14 }}>{item.content}</Text>
-                <Text style={{ color: item.isOwn ? '#FFB6D9' : '#AAA', fontSize: 10, marginTop: 4 }}>
-                  {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </View>
-            </View>
-          )}
-          contentContainerStyle={{ paddingVertical: 12 }}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
+        {messagesLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator color="#FF0055" size="large" />
+          </View>
+        ) : messages.length === 0 ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 40 }}>👋</Text>
+            <Text style={{ fontSize: 14, color: '#AAA' }}>Start a conversation</Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => {
+              const isOwn = item.senderId !== selectedConversation;
+              return (
+                <View
+                  style={{
+                    flexDirection: isOwn ? 'row-reverse' : 'row',
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    gap: 8,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: isOwn ? '#FF0055' : '#333',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>{isOwn ? '👤' : '🎤'}</Text>
+                  </View>
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: isOwn ? '#FF0055' : '#1A1A1A',
+                      borderRadius: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      maxWidth: '80%',
+                    }}
+                  >
+                    <Text style={{ color: '#FFF', fontSize: 14 }}>{item.content}</Text>
+                    <Text style={{ color: isOwn ? '#FFB6D9' : '#AAA', fontSize: 10, marginTop: 4 }}>
+                      {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                </View>
+              );
+            }}
+            contentContainerStyle={{ paddingVertical: 12 }}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          />
+        )}
 
         {/* Message Input */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -198,6 +182,8 @@ export default function ChatScreen() {
               placeholderTextColor="#666"
               value={messageInput}
               onChangeText={setMessageInput}
+              multiline
+              maxLength={500}
               style={{
                 flex: 1,
                 backgroundColor: '#1A1A1A',
@@ -207,20 +193,26 @@ export default function ChatScreen() {
                 color: '#FFF',
                 borderWidth: 1,
                 borderColor: '#333',
+                maxHeight: 100,
               }}
             />
             <TouchableOpacity
               onPress={handleSendMessage}
+              disabled={!messageInput.trim() || sendMessageMutation.isPending}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: '#FF0055',
+                backgroundColor: messageInput.trim() ? '#FF0055' : '#666',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 18 }}>📤</Text>
+              {sendMessageMutation.isPending ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <Text style={{ fontSize: 18 }}>➤</Text>
+              )}
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -238,81 +230,98 @@ export default function ChatScreen() {
       </View>
 
       {/* Conversations List */}
-      <FlatList
-        data={MOCK_CONVERSATIONS}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setSelectedConversation(item.id)}
-            style={{
-              flexDirection: 'row',
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: '#1A1A1A',
-              gap: 12,
-              alignItems: 'center',
-            }}
-          >
-            {/* Avatar */}
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: '#1A1A1A',
-                justifyContent: 'center',
-                alignItems: 'center',
-                position: 'relative',
-              }}
-            >
-              <Text style={{ fontSize: 24 }}>{item.avatar}</Text>
-              <View
+      {convLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color="#FF0055" size="large" />
+        </View>
+      ) : conversations.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+          <Text style={{ fontSize: 40 }}>💬</Text>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF' }}>No conversations yet</Text>
+          <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
+            Start chatting with creators to build your network
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={conversations}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => {
+            const otherUserId = item.userId1 === item.userId2 ? item.userId2 : item.userId1;
+            return (
+              <TouchableOpacity
+                onPress={() => setSelectedConversation(otherUserId)}
                 style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: '#00FF00',
-                  borderWidth: 2,
-                  borderColor: '#000',
-                }}
-              />
-            </View>
-
-            {/* Message Preview */}
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>{item.creator}</Text>
-                <Text style={{ fontSize: 12, color: '#AAA' }}>
-                  {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </View>
-              <Text style={{ fontSize: 12, color: '#AAA', marginTop: 4 }} numberOfLines={1}>
-                {item.lastMessage}
-              </Text>
-            </View>
-
-            {/* Unread Badge */}
-            {item.unread > 0 && (
-              <View
-                style={{
-                  backgroundColor: '#FF0055',
-                  borderRadius: 12,
-                  width: 24,
-                  height: 24,
-                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#1A1A1A',
+                  gap: 12,
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>{item.unread}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
-      />
+                {/* Avatar */}
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: '#1A1A1A',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  <Text style={{ fontSize: 24 }}>🎤</Text>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: '#00FF00',
+                      borderWidth: 2,
+                      borderColor: '#000',
+                    }}
+                  />
+                </View>
+
+                {/* Message Preview */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Creator #{otherUserId}</Text>
+                    <Text style={{ fontSize: 12, color: '#AAA' }}>
+                      {item.lastMessageAt
+                        ? new Date(item.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : 'Now'}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 12, color: '#AAA', marginTop: 4 }} numberOfLines={1}>
+                    Last message
+                  </Text>
+                </View>
+
+                {/* Unread Badge */}
+                <View
+                  style={{
+                    backgroundColor: '#FF0055',
+                    borderRadius: 12,
+                    width: 24,
+                    height: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>3</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      )}
     </ScreenContainer>
   );
 }

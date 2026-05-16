@@ -187,6 +187,23 @@ export type InsertEarningsLedger = typeof earningsLedger.$inferInsert;
 export type RevenueCatEvent = typeof revenueCatEvents.$inferSelect;
 export type InsertRevenueCatEvent = typeof revenueCatEvents.$inferInsert;
 
+export type FreeTierQuota = typeof freeTierQuota.$inferSelect;
+export type InsertFreeTierQuota = typeof freeTierQuota.$inferInsert;
+
+/**
+ * Free Tier Quota table (Daily generation limits)
+ */
+export const freeTierQuota = mysqlTable("freeTierQuota", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  dailyGenerationsRemaining: int("dailyGenerationsRemaining").default(3).notNull(),
+  totalGenerationsThisMonth: int("totalGenerationsThisMonth").default(0).notNull(),
+  lastResetDate: timestamp("lastResetDate").defaultNow().notNull(),
+  subscriptionTier: mysqlEnum("subscriptionTier", ["free", "pro", "elite"]).default("free").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 /**
  * Messages table (Real-time chat)
  */

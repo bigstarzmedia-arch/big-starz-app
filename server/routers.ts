@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { COOKIE_NAME } from "../shared/const";
+import { generateFreeVideoWithQuota, checkDailyQuota, getUserSubscriptionTier } from "./free-tier";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -21,6 +22,25 @@ export const appRouter = router({
 
   // Cameo & Beautify Engine (FREE TIER: Pollinations.ai + Hugging Face Stable Diffusion)
   videos: router({
+    // Free Tier: Text-to-Video with Sora API and quota tracking
+    generateFree: protectedProcedure
+      .input(z.object({
+        prompt: z.string().min(10, "Prompt must be at least 10 characters"),
+      }))
+      .mutation(({ ctx, input }) => {
+        return generateFreeVideoWithQuota(ctx.user.id, input.prompt);
+      }),
+
+    // Check free tier daily quota
+    checkQuota: protectedProcedure.query(({ ctx }) => {
+      return checkDailyQuota(ctx.user.id);
+    }),
+
+    // Get user's subscription tier
+    getTier: protectedProcedure.query(({ ctx }) => {
+      return getUserSubscriptionTier(ctx.user.id);
+    }),
+
     create: protectedProcedure
       .input(z.object({
         aiModel: z.enum(["pollinations", "stable-diffusion", "text-to-video"]),

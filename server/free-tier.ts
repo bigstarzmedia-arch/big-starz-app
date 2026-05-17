@@ -22,8 +22,8 @@ const MASTER_AESTHETIC = `Cinematic 4K music video style, high-end luxury aesthe
  * Free Tier Configuration
  */
 const FREE_TIER_CONFIG = {
-  DAILY_GENERATION_LIMIT: 3,
-  MONTHLY_GENERATION_LIMIT: 30,
+  DAILY_GENERATION_LIMIT: 300,
+  MONTHLY_GENERATION_LIMIT: 9000,
   API_ENDPOINT: process.env.GOOGLE_VEO_API_URL || "https://api.google.com/veo/v1/generate",
   API_KEY: process.env.GOOGLE_VEO_API_KEY || process.env.SORA_API_KEY,
 };

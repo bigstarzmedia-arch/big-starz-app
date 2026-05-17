@@ -26,6 +26,10 @@ const MAPPING = {
   "play.fill": "play-arrow",
   "heart.fill": "favorite",
   "square.and.arrow.up": "share",
+  "play.circle.fill": "play-circle",
+  "plus.circle.fill": "add-circle",
+  "bubble.right.fill": "chat-bubble",
+  "person.fill": "person",
 } as IconMapping;
 
 /**

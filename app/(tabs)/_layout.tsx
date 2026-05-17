@@ -79,7 +79,14 @@ export default function TabLayout() {
         }}
       />
 
-
+      {/* MUSIC - Music note icon */}
+      <Tabs.Screen
+        name="music"
+        options={{
+          title: "Music",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

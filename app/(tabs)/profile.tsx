@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -48,6 +49,7 @@ const VIDEOS: Video[] = [
 ];
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
 
   const handleFollowToggle = () => {
@@ -55,6 +57,13 @@ export default function ProfileScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+  };
+
+  const handleMessage = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push({ pathname: '/(tabs)/chat', params: { creatorId: '1' } });
   };
 
   return (
@@ -96,21 +105,36 @@ export default function ProfileScreen() {
             <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>{PROFILE.tier} Tier</Text>
           </View>
 
-          {/* Follow Button */}
-          <TouchableOpacity
-            onPress={handleFollowToggle}
-            style={{
-              width: '100%',
-              backgroundColor: isFollowing ? '#333' : '#FF0055',
-              paddingVertical: 12,
-              borderRadius: 12,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-              {isFollowing ? 'Following' : 'Follow'}
-            </Text>
-          </TouchableOpacity>
+          {/* Follow & Message Buttons */}
+          <View style={{ width: '100%', gap: 12 }}>
+            <TouchableOpacity
+              onPress={handleFollowToggle}
+              style={{
+                width: '100%',
+                backgroundColor: isFollowing ? '#333' : '#FF0055',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleMessage}
+              style={{
+                width: '100%',
+                backgroundColor: '#00FFFF',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>💬 Message</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats */}

@@ -1,18 +1,26 @@
-import { View, Text, TouchableOpacity, Modal, ScrollView, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, ActivityIndicator, Linking } from 'react-native';
+import { useState, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
+import * as RevenueCat from '@/lib/revenuecat-sdk';
 
 interface PaywallProps {
   visible: boolean;
   onClose: () => void;
-  onSubscribe: (tier: 'free' | 'pro' | 'elite') => Promise<void>;
+  userId: string;
   currentTier?: 'free' | 'pro' | 'elite';
 }
 
-export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }: PaywallProps) {
+export function Paywall({ visible, onClose, userId, currentTier = 'free' }: PaywallProps) {
   const [loading, setLoading] = useState(false);
   const [selectedTier, setSelectedTier] = useState<'free' | 'pro' | 'elite'>('pro');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setError(null);
+    }
+  }, [visible]);
 
   const handleSubscribe = async (tier: 'free' | 'pro' | 'elite') => {
     if (tier === 'free') {
@@ -21,14 +29,31 @@ export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }:
     }
 
     setLoading(true);
+    setError(null);
     try {
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
-      await onSubscribe(tier);
-      onClose();
-    } catch (error) {
-      console.error('Subscription error:', error);
+
+      // Create payment link via RevenueCat
+      const packageId = tier === 'pro' ? 'big_starz_pro' : 'big_starz_elite';
+      const { url } = await RevenueCat.createPaymentLink(userId, packageId);
+
+      // Open payment link in browser
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank');
+      } else {
+        await Linking.openURL(url);
+      }
+
+      // Close paywall after opening payment
+      setTimeout(() => {
+        onClose();
+      }, 500);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process subscription';
+      setError(errorMessage);
+      console.error('Subscription error:', err);
     } finally {
       setLoading(false);
     }
@@ -52,6 +77,20 @@ export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }:
             </Text>
           </View>
 
+          {/* Error Message */}
+          {error && (
+            <View
+              style={{
+                backgroundColor: '#FF0055',
+                padding: 12,
+                borderRadius: 8,
+                marginVertical: 12,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '500' }}>{error}</Text>
+            </View>
+          )}
+
           {/* Tier Cards */}
           <View style={{ gap: 16, marginVertical: 20 }}>
             {/* Free Tier */}
@@ -72,7 +111,7 @@ export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }:
               </View>
               <Text style={{ fontSize: 12, color: '#AAA' }}>Perfect for getting started</Text>
               <View style={{ gap: 8 }}>
-                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 3 videos per day</Text>
+                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 300 daily credits</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Basic styles</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Standard quality</Text>
               </View>
@@ -114,7 +153,7 @@ export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }:
               </View>
               <Text style={{ fontSize: 12, color: '#AAA' }}>For serious creators</Text>
               <View style={{ gap: 8 }}>
-                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 50 videos per day</Text>
+                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 1000 daily credits</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ All styles & effects</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 4K quality</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Priority processing</Text>
@@ -157,11 +196,11 @@ export function Paywall({ visible, onClose, onSubscribe, currentTier = 'free' }:
               </View>
               <Text style={{ fontSize: 12, color: '#AAA' }}>For professional studios</Text>
               <View style={{ gap: 8 }}>
-                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Unlimited videos</Text>
+                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Unlimited credits</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ All premium features</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ 8K quality</Text>
                 <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Instant processing</Text>
-                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Custom watermark</Text>
+                <Text style={{ fontSize: 12, color: '#AAA' }}>✓ Elite badge</Text>
               </View>
               {currentTier === 'elite' && (
                 <View

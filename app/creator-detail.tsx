@@ -4,6 +4,7 @@ import { ScreenContainer } from '@/components/screen-container';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
+import { BookingCalendar } from '@/components/booking-calendar';
 
 interface Creator {
   id: string;
@@ -72,6 +73,8 @@ export default function CreatorDetailScreen() {
   const creator = MOCK_CREATORS[creatorId as string];
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showBookingCalendar, setShowBookingCalendar] = useState(false);
+  const userSubscribers = 1250; // TODO: Get from user context
 
   if (!creator) {
     return (
@@ -99,21 +102,34 @@ export default function CreatorDetailScreen() {
 
   const handleBooking = () => {
     if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    Alert.alert(
-      'Booking Confirmed',
-      `You've booked ${creator.name} for ${selectedDuration} hour(s) at $${totalCost}. Payment will be processed.`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            setShowBookingModal(false);
-            router.back();
+    setShowBookingCalendar(true);
+  };
+
+  const handleConfirmBooking = async (date: Date, duration: number, totalCost: number) => {
+    try {
+      // TODO: Call backend API to create booking
+      // await api.castings.createBooking({ creatorId, date, duration, totalCost });
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      Alert.alert(
+        'Booking Confirmed',
+        `You've booked ${creator.name} for ${duration} hour(s) at $${totalCost.toFixed(2)}. Payment will be processed.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setShowBookingCalendar(false);
+              router.back();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to confirm booking');
+    }
   };
 
   return (
@@ -432,6 +448,16 @@ export default function CreatorDetailScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Booking Calendar Modal */}
+      <BookingCalendar
+        visible={showBookingCalendar}
+        onClose={() => setShowBookingCalendar(false)}
+        creatorName={creator.name}
+        hourlyRate={creator.rate}
+        userSubscribers={userSubscribers}
+        onConfirmBooking={handleConfirmBooking}
+      />
     </ScreenContainer>
   );
 }

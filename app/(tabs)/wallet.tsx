@@ -55,6 +55,7 @@ export default function WalletScreen() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [currentTier, setCurrentTier] = useState<'free' | 'pro' | 'elite'>('pro');
+  const userId = '1'; // TODO: Get from auth context
 
   const handleWithdraw = () => {
     if (Platform.OS !== 'web') {
@@ -63,11 +64,11 @@ export default function WalletScreen() {
     setShowWithdrawModal(true);
   };
 
-  const handleSubscribe = async (tier: 'free' | 'pro' | 'elite') => {
-    // In a real app, this would call RevenueCat
-    // For now, we'll simulate the subscription
-    setCurrentTier(tier);
-    Alert.alert('Success', `Upgraded to ${tier.toUpperCase()} tier!`);
+  const handleUpgradeClick = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowPaywall(true);
   };
 
   return (
@@ -175,19 +176,18 @@ export default function WalletScreen() {
           <Text style={{ fontSize: 12, color: '#AAA' }}>
             50 generations/month • Priority processing • Advanced analytics
           </Text>
-          <TouchableOpacity
-            onPress={() => setShowPaywall(true)}
-            style={{
-              marginTop: 8,
-              paddingVertical: 8,
-              borderWidth: 1,
-              borderColor: '#FF0055',
-              borderRadius: 6,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#FF0055', fontWeight: 'bold', fontSize: 12 }}>Upgrade to Elite</Text>
-          </TouchableOpacity>
+                      <TouchableOpacity
+              onPress={handleUpgradeClick}
+              style={{
+                backgroundColor: '#FF0055',
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>Upgrade Plan</Text>
+            </TouchableOpacity>
         </View>
 
         {/* Transaction History */}
@@ -238,7 +238,7 @@ export default function WalletScreen() {
       <Paywall
         visible={showPaywall}
         onClose={() => setShowPaywall(false)}
-        onSubscribe={handleSubscribe}
+        userId={userId}
         currentTier={currentTier}
       />
     </ScreenContainer>

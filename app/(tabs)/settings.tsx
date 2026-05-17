@@ -1,15 +1,21 @@
-import { View, Text, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
-import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Switch, I18nManager } from 'react-native';
+import { useState, useEffect } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
-import { useLanguage } from '@/lib/language-provider';
+import { useLanguage, useTranslation } from '@/lib/language-provider';
 import { LANGUAGES, Language } from '@/lib/i18n';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
 export default function SettingsScreen() {
   const { language, setLanguage, isRTL } = useLanguage();
+  const t = useTranslation();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    // Set RTL mode for Arabic and Urdu
+    I18nManager.forceRTL(isRTL);
+  }, [isRTL]);
 
   const handleLanguageChange = async (lang: Language) => {
     await setLanguage(lang);
@@ -23,13 +29,13 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-          <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFF' }}>⚙️ Settings</Text>
+          <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFF' }}>⚙️ {t('settings.title')}</Text>
         </View>
 
         {/* Language Section */}
         <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 12 }}>
-            🌐 Language
+            🌐 {t('settings.language')}
           </Text>
           <View style={{ backgroundColor: '#1A1A1A', borderRadius: 12, overflow: 'hidden' }}>
             {(Object.keys(LANGUAGES) as Language[]).map((lang, index) => (
@@ -61,7 +67,7 @@ export default function SettingsScreen() {
         {/* Notifications Section */}
         <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 12 }}>
-            🔔 Notifications
+            🔔 {t('settings.notifications')}
           </Text>
           <View
             style={{
@@ -74,7 +80,7 @@ export default function SettingsScreen() {
               borderRadius: 12,
             }}
           >
-            <Text style={{ fontSize: 14, color: '#FFF' }}>Enable Notifications</Text>
+            <Text style={{ fontSize: 14, color: '#FFF' }}>{t('settings.notifications')}</Text>
             <Switch
               value={notifications}
               onValueChange={(value) => {
@@ -83,8 +89,8 @@ export default function SettingsScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
               }}
-              trackColor={{ false: '#666', true: '#FF0055' }}
-              thumbColor="#FFF"
+              trackColor={{ false: '#333', true: '#FF0055' }}
+              thumbColor={notifications ? '#FFF' : '#999'}
             />
           </View>
         </View>
@@ -92,7 +98,7 @@ export default function SettingsScreen() {
         {/* Theme Section */}
         <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 12 }}>
-            🌙 Theme
+            🌙 {t('settings.theme')}
           </Text>
           <View
             style={{
@@ -114,84 +120,51 @@ export default function SettingsScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
               }}
-              trackColor={{ false: '#666', true: '#FF0055' }}
-              thumbColor="#FFF"
+              trackColor={{ false: '#333', true: '#FF0055' }}
+              thumbColor={darkMode ? '#FFF' : '#999'}
             />
           </View>
         </View>
 
-        {/* Account Section */}
+        {/* About Section */}
         <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 12 }}>
-            👤 Account
+            ℹ️ {t('settings.about')}
           </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#1A1A1A',
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderRadius: 12,
-              marginBottom: 8,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: '#FFF' }}>Edit Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#1A1A1A',
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderRadius: 12,
-              marginBottom: 8,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: '#FFF' }}>Change Password</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#1A1A1A',
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderRadius: 12,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: '#FFF' }}>Privacy Policy</Text>
-          </TouchableOpacity>
+          <View style={{ backgroundColor: '#1A1A1A', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14 }}>
+            <Text style={{ fontSize: 14, color: '#999', marginBottom: 8 }}>Big Starz Media</Text>
+            <Text style={{ fontSize: 12, color: '#666' }}>Version 4.0.0</Text>
+            <Text style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+              © 2026 Big Starz Media. All rights reserved.
+            </Text>
+          </View>
         </View>
 
-        {/* Danger Zone */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
-          <TouchableOpacity
-            onPress={() => {
-              Alert.alert('Logout', 'Are you sure you want to logout?', [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Logout',
-                  style: 'destructive',
-                  onPress: () => {
-                    if (Platform.OS !== 'web') {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                    }
-                  },
-                },
-              ]);
-            }}
-            style={{
-              backgroundColor: '#FF0055',
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderRadius: 12,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Version Info */}
-        <View style={{ paddingHorizontal: 16, alignItems: 'center', marginBottom: 20 }}>
-          <Text style={{ fontSize: 12, color: '#666' }}>Big Starz v3.2.0</Text>
-          <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>© 2026 Big Starz Media</Text>
+        {/* Privacy Section */}
+        <View style={{ paddingHorizontal: 16 }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFF', marginBottom: 12 }}>
+            🔒 {t('settings.privacy')}
+          </Text>
+          <View style={{ backgroundColor: '#1A1A1A', borderRadius: 12, overflow: 'hidden' }}>
+            <TouchableOpacity
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                borderBottomWidth: 1,
+                borderBottomColor: '#333',
+              }}
+            >
+              <Text style={{ fontSize: 14, color: '#FFF' }}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+              }}
+            >
+              <Text style={{ fontSize: 14, color: '#FFF' }}>Terms of Service</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </ScreenContainer>

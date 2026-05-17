@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
-import { Language, LANGUAGES } from './i18n';
+import { Language, LANGUAGES, translations } from './i18n';
 
 interface LanguageContextType {
   language: Language;
@@ -82,9 +82,28 @@ export function useLanguage() {
 
 export function useTranslation() {
   const { language } = useLanguage();
-  const { getTranslation } = require('./i18n');
 
   return (key: string): string => {
     return getTranslation(language, key);
   };
+}
+
+// Helper function to get translation
+function getTranslation(language: Language, key: string): string {
+  const keys = key.split('.');
+  let value: any = translations[language];
+  
+  for (const k of keys) {
+    value = value?.[k];
+  }
+  
+  // Fallback to English if translation not found
+  if (!value) {
+    value = translations.en;
+    for (const k of keys) {
+      value = value?.[k];
+    }
+  }
+  
+  return value || key;
 }

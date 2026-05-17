@@ -87,6 +87,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
         }}
       />
+
+      {/* SETTINGS - Gear icon */}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

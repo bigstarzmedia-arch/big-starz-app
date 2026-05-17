@@ -18,14 +18,13 @@ interface Video {
   liked: boolean;
 }
 
-// Mock video data with remote URLs
-// In production, these would come from your backend/CDN
+// Real Sora videos from CDN
 const VIDEOS: Video[] = [
   {
     id: '1',
     creator: '@NeonVex',
     title: 'AI Music Video - Cyberpunk',
-    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/uVFjRxyGEvVYafOu.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
     likes: 8400,
     comments: 342,
@@ -35,7 +34,7 @@ const VIDEOS: Video[] = [
     id: '2',
     creator: '@CosmicVibe',
     title: 'Face Clone Collab',
-    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/ZIHqcEAjIsUDSuBR.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
     likes: 5200,
     comments: 218,
@@ -45,7 +44,7 @@ const VIDEOS: Video[] = [
     id: '3',
     creator: '@GlitchQueen',
     title: 'Sora Generated - Fashion',
-    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/hMlOhQFwMbKZrZpM.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
     likes: 12100,
     comments: 567,
@@ -55,7 +54,7 @@ const VIDEOS: Video[] = [
     id: '4',
     creator: '@SonicDreams',
     title: 'AI Studio Creation',
-    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerEscapes.mp4',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/OzQsvSebycxKzkTE.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=1000&fit=crop',
     likes: 7800,
     comments: 294,
@@ -65,10 +64,40 @@ const VIDEOS: Video[] = [
     id: '5',
     creator: '@PixelArtist',
     title: 'Neon Aesthetic',
-    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerFun.mp4',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/MltsfIVvclVFQrND.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=1000&fit=crop',
     likes: 9300,
     comments: 421,
+    liked: false,
+  },
+  {
+    id: '6',
+    creator: '@LuxeBeats',
+    title: 'Premium Music Video',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/rltHzsiGkGPADNsM.mp4',
+    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
+    likes: 6500,
+    comments: 189,
+    liked: false,
+  },
+  {
+    id: '7',
+    creator: '@VibeCreator',
+    title: 'Cinematic Sora',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/PBfKKJcaqYcqUCnE.mp4',
+    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
+    likes: 11200,
+    comments: 512,
+    liked: false,
+  },
+  {
+    id: '8',
+    creator: '@StudioPro',
+    title: 'AI Generated Masterpiece',
+    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/VViCazzzkvqtaNGb.mp4',
+    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
+    likes: 14800,
+    comments: 723,
     liked: false,
   },
 ];

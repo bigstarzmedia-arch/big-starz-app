@@ -48,6 +48,7 @@
     "expo-image-picker": "^55.0.19",
     "expo-keep-awake": "~15.0.8",
     "expo-linking": "~8.0.10",
+    "expo-localization": "^55.0.14",
     "expo-media-library": "^55.0.15",
     "expo-notifications": "~0.32.15",
     "expo-router": "~6.0.19",

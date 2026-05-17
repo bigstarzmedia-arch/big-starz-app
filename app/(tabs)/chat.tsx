@@ -222,7 +222,24 @@ export default function ChatScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-
+      {/* Tabs */}
+      <View
+        style={{
+          flexDirection: 'row',
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: '#333',
+          gap: 16,
+        }}
+      >
+        <TouchableOpacity style={{ paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: '#FF0055' }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FF0055' }}>Messages</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={{ paddingBottom: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#AAA' }}>Friends</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Conversations List */}
       {convLoading ? (

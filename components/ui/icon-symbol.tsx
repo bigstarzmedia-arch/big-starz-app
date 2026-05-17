@@ -31,6 +31,7 @@ const MAPPING = {
   "bubble.right.fill": "chat-bubble",
   "person.fill": "person",
   "gearshape.fill": "settings",
+  "film": "movie",
 } as IconMapping;
 
 /**

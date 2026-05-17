@@ -88,6 +88,15 @@ export default function TabLayout() {
         }}
       />
 
+      {/* CASTING - Casting icon */}
+      <Tabs.Screen
+        name="casting"
+        options={{
+          title: "Casting",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="film" color={color} />,
+        }}
+      />
+
       {/* SETTINGS - Gear icon */}
       <Tabs.Screen
         name="settings"

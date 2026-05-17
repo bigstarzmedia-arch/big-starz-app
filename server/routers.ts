@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { COOKIE_NAME } from "../shared/const";
 import { generateFreeVideoWithQuota, checkDailyQuota, getUserSubscriptionTier } from "./free-tier";
+import * as revenuecat from "./revenuecat";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -258,6 +259,33 @@ export const appRouter = router({
       .mutation(({ ctx, input }) => {
         return db.setDefaultFaceClone(ctx.user.id, input.faceCloneId);
       }),
+  }),
+
+  // Subscription Management (RevenueCat)
+  subscriptions: router({
+    getTier: protectedProcedure.query(({ ctx }) => {
+      return revenuecat.getUserSubscriptionTier(ctx.user.id.toString());
+    }),
+
+    getDailyQuota: protectedProcedure.query(({ ctx }) => {
+      return revenuecat.getDailyQuota(ctx.user.id.toString());
+    }),
+
+    getOfferings: publicProcedure.query(() => {
+      return revenuecat.getSubscriptionTiers();
+    }),
+
+    createPaymentLink: protectedProcedure
+      .input(z.object({
+        tier: z.enum(['pro', 'elite']),
+      }))
+      .mutation(({ ctx, input }) => {
+        return revenuecat.createPaymentLink(ctx.user.id.toString(), input.tier);
+      }),
+
+    hasActiveSubscription: protectedProcedure.query(({ ctx }) => {
+      return revenuecat.hasActiveSubscription(ctx.user.id.toString());
+    }),
   }),
 
   // Video Generation (Sora API)

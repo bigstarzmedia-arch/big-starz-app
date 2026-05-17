@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { Paywall } from '@/components/paywall';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -52,12 +53,21 @@ const TRANSACTIONS: Transaction[] = [
 
 export default function WalletScreen() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [currentTier, setCurrentTier] = useState<'free' | 'pro' | 'elite'>('pro');
 
   const handleWithdraw = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowWithdrawModal(true);
+  };
+
+  const handleSubscribe = async (tier: 'free' | 'pro' | 'elite') => {
+    // In a real app, this would call RevenueCat
+    // For now, we'll simulate the subscription
+    setCurrentTier(tier);
+    Alert.alert('Success', `Upgraded to ${tier.toUpperCase()} tier!`);
   };
 
   return (
@@ -166,6 +176,7 @@ export default function WalletScreen() {
             50 generations/month • Priority processing • Advanced analytics
           </Text>
           <TouchableOpacity
+            onPress={() => setShowPaywall(true)}
             style={{
               marginTop: 8,
               paddingVertical: 8,
@@ -222,6 +233,14 @@ export default function WalletScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Paywall Modal */}
+      <Paywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSubscribe={handleSubscribe}
+        currentTier={currentTier}
+      />
     </ScreenContainer>
   );
 }

@@ -1,6 +1,7 @@
-import { View, Text, FlatList, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Dimensions, Image, ActivityIndicator } from 'react-native';
 import { useState, useRef } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -10,17 +11,21 @@ interface Video {
   id: string;
   creator: string;
   title: string;
+  videoUri: string;
   thumbnail: string;
   likes: number;
   comments: number;
   liked: boolean;
 }
 
+// Mock video data with remote URLs
+// In production, these would come from your backend/CDN
 const VIDEOS: Video[] = [
   {
     id: '1',
     creator: '@NeonVex',
-    title: 'AI Music Video',
+    title: 'AI Music Video - Cyberpunk',
+    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
     likes: 8400,
     comments: 342,
@@ -30,6 +35,7 @@ const VIDEOS: Video[] = [
     id: '2',
     creator: '@CosmicVibe',
     title: 'Face Clone Collab',
+    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
     likes: 5200,
     comments: 218,
@@ -38,10 +44,31 @@ const VIDEOS: Video[] = [
   {
     id: '3',
     creator: '@GlitchQueen',
-    title: 'Sora Generated',
+    title: 'Sora Generated - Fashion',
+    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4',
     thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
     likes: 12100,
     comments: 567,
+    liked: false,
+  },
+  {
+    id: '4',
+    creator: '@SonicDreams',
+    title: 'AI Studio Creation',
+    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerEscapes.mp4',
+    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=1000&fit=crop',
+    likes: 7800,
+    comments: 294,
+    liked: false,
+  },
+  {
+    id: '5',
+    creator: '@PixelArtist',
+    title: 'Neon Aesthetic',
+    videoUri: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerFun.mp4',
+    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=1000&fit=crop',
+    likes: 9300,
+    comments: 421,
     liked: false,
   },
 ];
@@ -64,13 +91,43 @@ export default function VibeScreen() {
   };
 
   const renderVideo = ({ item }: { item: Video }) => (
-    <View style={{ width: screenWidth, height: screenHeight - 80, backgroundColor: '#000', position: 'relative' }}>
-      {/* Video Background */}
-      <Image
-        source={{ uri: item.thumbnail }}
-        style={{ width: '100%', height: '100%' }}
-        resizeMode="cover"
+    <VideoCard video={item} onToggleLike={toggleLike} />
+  );
+
+  return (
+    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+      <FlatList
+        ref={flatListRef}
+        data={videos}
+        keyExtractor={(item) => item.id}
+        renderItem={renderVideo}
+        pagingEnabled
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={screenHeight - 80}
+        decelerationRate="fast"
       />
+    </ScreenContainer>
+  );
+}
+
+function VideoCard({ video, onToggleLike }: { video: Video; onToggleLike: (id: string) => void }) {
+  const player = useVideoPlayer(video.videoUri, (player) => {
+    player.loop = true;
+    player.play();
+  });
+
+  return (
+    <View style={{ width: screenWidth, height: screenHeight - 80, backgroundColor: '#000', position: 'relative' }}>
+      {/* Video Player */}
+      <VideoView
+        style={{ width: '100%', height: '100%' }}
+        player={player}
+        allowsFullscreen
+        allowsPictureInPicture
+      />
+
+
 
       {/* Dark Overlay */}
       <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
@@ -78,10 +135,10 @@ export default function VibeScreen() {
       {/* Creator Info - Bottom Left */}
       <View style={{ position: 'absolute', bottom: 20, left: 16, zIndex: 10 }}>
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFF', marginBottom: 4 }}>
-          {item.creator}
+          {video.creator}
         </Text>
         <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFF', marginBottom: 8 }}>
-          {item.title}
+          {video.title}
         </Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <View
@@ -92,10 +149,10 @@ export default function VibeScreen() {
               borderRadius: 12,
             }}
           >
-            <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>Ban</Text>
+            <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>Big Starz</Text>
           </View>
           <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '600' }}>
-            ❤️ {(item.likes / 1000).toFixed(1)}K
+            ❤️ {(video.likes / 1000).toFixed(1)}K
           </Text>
         </View>
       </View>
@@ -113,12 +170,12 @@ export default function VibeScreen() {
       >
         {/* Like Button */}
         <TouchableOpacity
-          onPress={() => toggleLike(item.id)}
+          onPress={() => onToggleLike(video.id)}
           style={{ alignItems: 'center', gap: 4 }}
         >
-          <Text style={{ fontSize: 32 }}>{item.liked ? '❤️' : '🤍'}</Text>
+          <Text style={{ fontSize: 32 }}>{video.liked ? '❤️' : '🤍'}</Text>
           <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '600' }}>
-            {(item.likes / 1000).toFixed(1)}K
+            {(video.likes / 1000).toFixed(1)}K
           </Text>
         </TouchableOpacity>
 
@@ -126,7 +183,7 @@ export default function VibeScreen() {
         <TouchableOpacity style={{ alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 32 }}>💬</Text>
           <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '600' }}>
-            {(item.comments / 100).toFixed(0)}K
+            {(video.comments / 100).toFixed(0)}K
           </Text>
         </TouchableOpacity>
 
@@ -137,21 +194,5 @@ export default function VibeScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
-
-  return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-      <FlatList
-        ref={flatListRef}
-        data={videos}
-        keyExtractor={(item) => item.id}
-        renderItem={renderVideo}
-        pagingEnabled
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={screenHeight - 80}
-        decelerationRate="fast"
-      />
-    </ScreenContainer>
   );
 }

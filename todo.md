@@ -1,313 +1,145 @@
-# Big Starz Casting & Music App - TODO
+# Big Starz App - Complete OnSpaceAI Redesign (v3.0.0)
 
-## Core Features
+## COMPLETE REDESIGN - ONSPACEAI MATCHING (v3.0.0)
 
-### Authentication & Onboarding
-- [x] Implement email/phone sign-up with OAuth options
-- [ ] Create profile setup flow (role selection: Creator, Model, Artist, Producer)
-- [x] Integrate RevenueCat subscription paywall ($30/month)
-- [x] Implement subscription entitlement gating for premium features
+### Phase 1: Feed Redesign
+- [ ] Add category tabs (For You, Music, Live, Fashion, AI Picks)
+- [ ] Implement trending videos grid (2-column layout)
+- [ ] Add Watch button (pink) and Gift button (gold outline)
+- [ ] Add creator info at bottom (name, likes, genre)
+- [ ] Implement category filtering and search
+- [ ] Add "TRENDING NOW" badge to featured videos
 
-### Cameo & Beautify Engine (Kling & HeyGen API)
-- [x] Create video upload component (camera/gallery picker)
-- [ ] Implement Kling API integration for video beautification
-- [ ] Implement HeyGen API integration for video beautification
-- [x] Build beautify settings UI (model selection, style presets, resolution)
-- [x] Create real-time progress tracking for video processing
-- [ ] Build video output gallery with download/share/delete options
-- [ ] Implement S3 file storage for beautified videos
-- [ ] Add video metadata management (title, description, tags, visibility)
-- [x] Wire STUDIO screen "Generate Video" button to real API mutations (FREE-TIER: Pollinations/Stable Diffusion)
+### Phase 2: Create (AI Studio) Redesign
+- [ ] Rebuild Create screen with 3 cards: Music Video (pink), AI Cameo (blue), AI Image (pink)
+- [ ] Music Video: Text input + style selector (Cinematic, Anime, Neon, Fashion) + Generate button
+- [ ] AI Cameo: Upload/Camera + Prompt + Preview + Generate button with 3-step process (Upload, Prompt, Preview)
+- [ ] AI Image: Text input + style selector + Generate button
+- [ ] Add progress tracking for all generations
+- [ ] Add "Create with Big Starz AI ✨" subtitle
 
-### Music & Lyric Studio (OpenAI & ElevenLabs)
-- [x] Create audio file upload component for instrumentals
-- [ ] Implement OpenAI GPT-4 integration for lyric generation
-- [ ] Implement Anthropic Claude integration as alternative lyric generator
-- [x] Build lyric prompt input UI with real-time generation
-- [x] Create inline lyric editing interface
-- [ ] Implement ElevenLabs TTS integration for voice synthesis
-- [x] Build voice selection UI (multiple voice options)
-- [ ] Create music preview player (instrumental + generated vocals)
-- [ ] Implement export options (MP3 download, social share, library save)
-- [ ] Add music metadata management (title, artist, genre, mood, lyrics)
+### Phase 3: Live, Earn, Profile Redesign
+- [ ] Live screen: Live streaming interface with tools
+- [ ] Earn screen: Affiliate partnerships grid with commission rates (12-22%) and Apply buttons
+- [ ] Profile screen: Creator avatar, stats (followers, following, videos), Edit Profile, Share, My Videos/Liked tabs
+- [ ] Membership modal: Free ($0), Pro ($9.99), Elite with feature lists
+- [ ] Add "Upgrade to Elite" banner on profile
 
-### Affiliate Modeling Feature
-- [ ] Create Supabase table for casting briefs (brand, requirements, deadline, compensation)
-- [ ] Build casting browse UI (grid with brand info, requirements, deadline)
-- [ ] Implement casting detail view with full brief and brand guidelines
-- [ ] Create casting application flow (portfolio selection, Q&A, confirmation)
-- [ ] Build application status tracking (pending, accepted, rejected)
-- [ ] Implement in-app messaging system for casting director communication
-- [ ] Create user portfolio management (beautified videos, photos)
-- [x] Implement marketplace search & filtering for CAST screen (by genre, price, aesthetic tags)
+### Phase 4: API Integration
+- [ ] Sora API: Text-to-video generation for Music Video
+- [ ] Runway API: Video editing and beautification
+- [ ] ElevenLabs API: Text-to-speech for music generation
+- [ ] HappyFace API: Face detection for AI Cameo
+- [ ] Gemini API: Image generation for AI Image
+- [ ] Veo API: Video enhancement
+- [ ] Camera access: Recording and upload for AI Cameo
 
-### Subscriber & Monetization System (Supabase & Stripe)
-- [x] Create Supabase table for user subscriber counts
-- [x] Build subscriber tracking logic (real-time counter updates)
-- [x] Implement 1k subscriber milestone detection
-- [ ] Create visual progress bar to 1k subscribers
-- [ ] Build "Enable Casting Fees" feature unlock at 1k subscribers
-- [ ] Implement Stripe account connection flow
-- [ ] Create casting fee configuration UI (set custom fee amount)
-- [ ] Build Stripe payment processing for user-to-user casting fees
-- [ ] Implement earnings dashboard (breakdown, monthly chart, payout history)
-- [ ] Create earnings ledger and transaction history
-- [ ] Build payout reconciliation with Stripe
+### Phase 5: End-to-End Testing
+- [ ] Test Feed category tabs and video loading
+- [ ] Test Music Video generation with Sora
+- [ ] Test AI Cameo upload and face detection with HappyFace
+- [ ] Test AI Image generation with Gemini
+- [ ] Test camera recording for all features
+- [ ] Test Earn affiliate links
+- [ ] Test Profile editing and stats
+- [ ] Test Membership tier selection
+- [ ] Verify all buttons work and no errors
+- [ ] Test on iOS and Android via Expo Go
 
-### RevenueCat Subscription Gateway
-- [ ] Integrate RevenueCat SDK into app
-- [ ] Configure $30/month subscription tier
-- [ ] Create "premium_access" entitlement
-- [ ] Implement paywall presentation logic
-- [ ] Build subscription status screen (current plan, renewal date, cancel)
-- [ ] Implement restore purchase functionality
-- [ ] Add subscription analytics tracking
+### Phase 6: Deployment
+- [ ] Create final checkpoint
+- [ ] Generate APK
+- [ ] Submit to Google Play Store
+- [ ] Submit to Apple App Store
 
-### Backend API & Database
-- [ ] Design Supabase schema (users, videos, music, castings, applications, earnings)
-- [ ] Implement user authentication endpoints
-- [ ] Create video upload/storage endpoints
-- [ ] Create music generation endpoints
-- [ ] Implement casting management endpoints
-- [ ] Create subscriber tracking endpoints
-- [ ] Implement earnings/payout endpoints
-- [ ] Add error handling and validation
+## API Integration Details
 
-### UI & Navigation
-- [ ] Create tab bar navigation (Home, Cameo Studio, Music Studio, Affiliate Hub, Profile)
-- [ ] Build Home screen dashboard
-- [ ] Implement screen transitions and animations
-- [ ] Create Settings screen with account, privacy, payment options
-- [ ] Build Help/Support section with FAQ
+### Sora API (Text-to-Video)
+- [ ] Set up Sora API key in environment variables
+- [ ] Create video generation endpoint in backend
+- [ ] Wire Music Video generation to Sora
+- [ ] Implement progress tracking and status polling
+- [ ] Add video output storage in S3
 
-### Testing & Deployment
-- [ ] Write unit tests for core business logic
-- [ ] Test video beautification workflows (Kling & HeyGen)
-- [ ] Test music generation workflows (OpenAI & ElevenLabs)
-- [ ] Test Stripe payment processing
-- [ ] Test RevenueCat subscription flows
-- [ ] Test 1k subscriber monetization gate
-- [ ] Perform end-to-end user flow testing
-- [ ] Test on iOS and Android devices
-- [ ] Prepare app for App Store and Google Play submission
+### Runway API (Video Editing)
+- [ ] Set up Runway API key
+- [ ] Create video beautification endpoint
+- [ ] Wire to AI Cameo beautification
+- [ ] Implement video enhancement pipeline
 
-## Total Entry Point Overwrite (CRITICAL)
-- [ ] Implement MediaPipe Beautify backend (skin-smoothing, studio lighting filters)
-- [ ] Implement Cameo biometric bridge (Head-Turn Scan, Voice Clone routes)
-- [ ] Remove generic template from index.tsx
-- [ ] Apply Matte Black background globally
-- [ ] Apply neon glassmorphism to all components
-- [ ] Fix navigation bar with real icons (Star, Mic, etc.)
-- [ ] Build live Vibe Feed with active Beautify filter
-- [ ] Verify cameo-synthesis route is wired up
-- [ ] Show preview with Big Starz identity
+### ElevenLabs API (Text-to-Speech)
+- [ ] Set up ElevenLabs API key
+- [ ] Create voice synthesis endpoint
+- [ ] Wire to Music Video generation
+- [ ] Add voice selection UI
 
-## Final Three Features (Phase 3)
-- [ ] Implement Push Notifications (Expo Notifications) for gifts, casting approvals, subscriber milestones
-- [ ] Build Creator Onboarding Tutorials (interactive 3-step: Cameo Scan → Voice Clone → First Music Generation)
-- [ ] Implement Direct Social Export (TikTok/Instagram one-tap with auto-captions and trending sounds)
-- [x] Add real-time notification system for new casting offers, messages, and earnings milestones
+### HappyFace API (Face Detection)
+- [ ] Set up HappyFace API key
+- [ ] Create face detection endpoint
+- [ ] Validate face upload for AI Cameo
+- [ ] Add face quality checks
 
-## Known Issues & Bugs
-- [ ] TypeScript error in server/_core/storageProxy.ts (element type indexing)
+### Gemini API (Image Generation)
+- [ ] Set up Gemini API key
+- [ ] Create image generation endpoint
+- [ ] Wire to AI Image generation
+- [ ] Implement style selector
+
+### Veo API (Video Enhancement)
+- [ ] Set up Veo API key
+- [ ] Create video enhancement endpoint
+- [ ] Wire to video beautification pipeline
+
+## Testing Checklist
+
+### Feed Testing
+- [ ] Category tabs switch correctly
+- [ ] Videos load in 2-column grid
+- [ ] Watch button opens video player
+- [ ] Gift button shows gift selection
+- [ ] Creator info displays correctly
+- [ ] Search functionality works
+
+### Create (AI Studio) Testing
+- [ ] Music Video card opens text input
+- [ ] Style selector shows all 4 options (Cinematic, Anime, Neon, Fashion)
+- [ ] Generate button calls Sora API
+- [ ] Progress bar shows generation status
+- [ ] AI Cameo card opens camera/upload
+- [ ] Face detection validates upload
+- [ ] AI Image card opens text input
+- [ ] Generate button calls Gemini API
+
+### Live Testing
+- [ ] Live streaming interface loads
+- [ ] Tools are accessible
+
+### Earn Testing
+- [ ] Affiliate cards display correctly
+- [ ] Commission rates show (12-22%)
+- [ ] Apply Now buttons are clickable
+- [ ] Links open affiliate pages
+
+### Profile Testing
+- [ ] Creator avatar displays
+- [ ] Stats show (followers, following, videos)
+- [ ] Edit Profile button works
+- [ ] Share button opens share sheet
+- [ ] My Videos tab shows user videos
+- [ ] Liked tab shows liked videos
+
+### Membership Testing
+- [ ] Free tier shows $0
+- [ ] Pro tier shows $9.99
+- [ ] Elite tier shows features
+- [ ] Subscribe buttons work
+
+## Known Issues
+- None yet (starting fresh)
 
 ## Completed Features
-- [x] Project scaffold initialized (Expo 54, React Native, TypeScript)
-- [x] GitHub repository created and initial code pushed
-- [x] Design framework documented (design.md)
-
-## Visual Identity & Interactive Preview (Priority)
-- [x] Ensure Matte Black background and Neon Pink/Purple accents are active on all screens
-- [x] Integrate 3D Cartoon Character art into background layers with glassmorphism effect
-- [x] Big Starz Logo high-res and centered in header
-- [x] Cameo Studio: Active camera frame with 3D Face Mesh instructions (Look Center, Turn Right, Turn Left, Look Up)
-- [x] Cameo Studio: Head-turn scan interaction logic
-- [x] Music Studio: Genre selection UI (Pop, Country, EDM, Latin, Rock)
-- [x] Entry point must be Big Starz Home/Vibe Feed
-
-## TikTok/Sora App Transformation (Priority)
-- [x] Wire Cameo to real expo-camera with face mesh scan instructions
-- [x] Connect Music Studio to free AI (Pollinations AI) for real lyric generation
-- [x] Build Wallet/Earnings tab with full dashboard (balance, transactions, payout)
-- [x] Make Vibe Feed TikTok-style with full-screen swipeable video cards
-- [x] Ensure app is testable via Expo Go QR code on real device
-
-## Polish & Final Integrations (Current Sprint)
-- [x] Add Wallet as 5th tab in tab bar
-- [x] Integrate Pollinations.ai free image generation for AI video thumbnails in Vibe Feed
-- [x] Wire "ADD VOCALS" button in Music Studio to ElevenLabs TTS (or free Hume MCP)
-- [x] Fix Cameo Studio "GENERATE CAMEO" button to produce real AI output (Pollinations image)
-- [x] Add smooth press animations (scale 0.97) to all interactive elements consistently
-- [x] Add loading shimmer/skeleton states for feed items
-- [x] Ensure all screens have consistent header styling
-- [x] Add pull-to-refresh on Vibe Feed
-- [x] Wire Gift button to show gift selection modal
-- [x] Wire Share button to native share sheet
-- [x] Add Big Starz watermark overlay on all generated content
-- [x] Ensure dark mode is consistent (no white flashes)
-- [x] Add "Following" / "For You" toggle on Vibe Feed header (TikTok-style)
-- [x] Polish tab bar with proper active/inactive states and labels
-
-## Paywall + Onboarding + Social Export (Current Sprint)
-- [ ] Build Subscription Paywall Gate ($30/month) that blocks all generation features until payment
-- [ ] Implement Starz Token economy (50 tokens/month, 1 generation = 1 token)
-- [ ] Add token balance tracking with AsyncStorage persistence
-- [ ] Build paywall modal UI with pricing, features list, and subscribe button
-- [ ] Gate Cameo Studio, Music Studio, and Video Generation behind paywall
-- [ ] Build Creator Onboarding Tutorial (3-step: Cameo Scan → Voice Clone → First Song)
-- [ ] Build Direct Social Export (TikTok/Instagram one-tap share with Big Starz watermark)
-- [ ] All AI calls use free APIs only: Pollinations.ai, OpenRouter free models, Hugging Face free inference
-
-- [x] Add content download feature (save generated videos, lyrics, cameo images to device)
-
-
-## Vector Images 2 Integration (Glassmorphism Aesthetic - Version 1.0.2)
-- [ ] Integrate Vector Images 2 as background layers on Vibe Feed and Music Studio
-- [ ] Apply 25% opacity + 20px Gaussian blur to vector backgrounds
-- [ ] Add neon pink glow effect to all action buttons
-- [ ] Center Big Starz logo on all screen headers
-- [ ] Replace generic backgrounds with matte black obsidian skin globally
-- [ ] Verify glassmorphism effect renders correctly on preview
-- [ ] Save Version 1.0.2 checkpoint for APK build
-
-
-## COMPLETE FRONTEND OVERHAUL (v1.0.3 - FINAL PUBLISH BUILD)
-
-### Phase 1: Global Theme & Bottom Navigation
-- [ ] Update theme.config.js: Deep Obsidian (#000000), Neon Pink (#FF0055), Electric Cyan (#00FFFF), Neon Yellow (#FFFF00)
-- [ ] Rebuild bottom navigation bar with 5 tabs: Vibe (Play), Studio (Camera), Cast (People), Chat (Bubble), Wallet (Wallet)
-- [ ] Create global header: "BIG" (white) + "STARZ" (Neon Pink), Search icon, Notification Bell (pink badge)
-- [ ] Fix all z-index and flexbox issues to prevent overlaps
-- [ ] Ensure bottom nav is persistent and functional across all screens
-
-### Phase 2: VIBE Screen
-- [ ] Build TikTok/Reels vertical scrolling feed
-- [ ] Add horizontal "Featured Artists" row (NeonVex, CosmicVibe, GlitchQueen with circular pink avatars)
-- [ ] Add filter pills: All, Rap, R&B, Trending, New
-- [ ] Ensure scrollable if content exceeds screen height
-
-### Phase 3: STUDIO Screen
-- [ ] Build sleek dashboard with 3 action cards: "Photo to Video", "Go Live", "Beat Studio"
-- [ ] Add "Cameo Scan" section with large pink "Upload Photo" button
-- [ ] Add checkmarks: "Face clearly visible", "Good lighting", "Full body preferred"
-
-### Phase 4: CAST Screen
-- [ ] Remove all Affiliate Modeling/brand campaigns
-- [ ] Build 2-column talent grid (#1A1A1A cards, rounded edges)
-- [ ] Add dummy data: Quicy ($150, Rap/Management), Boom ($100, Production), Blaze ($50, Rap), Luna ($75, R&B)
-- [ ] Include star ratings and tags for each talent
-
-### Phase 5: CHAT Screen
-- [ ] Build "GLOBAL CHAT" list view
-- [ ] Add "Online Now" avatars with green status dots
-- [ ] Add message list: NeonVex, SkyLuxe, GlitchQueen with sample messages
-
-### Phase 6: Verification & Testing
-- [ ] Fix all overlapping layout issues
-- [ ] Ensure all screens are scrollable
-- [ ] Compile code with 0 TypeScript errors
-- [ ] Run full test suite (target: 300+ tests passing)
-
-### Phase 7: Final Publish
-- [ ] Save checkpoint
-- [ ] Launch live preview
-- [ ] Ready for APK build
-
-
-## UI REDESIGN - CARTOONY & MINIMAL (v1.0.4)
-- [ ] Remove all duplicate buttons and clutter
-- [ ] Add cartoon vector backgrounds to all screens
-- [ ] Redesign with big, simple buttons (minimal UI like TikTok/Sora)
-- [ ] Rebuild VIBE as full-screen TikTok-style feed with minimal overlays
-- [ ] Rebuild STUDIO with big buttons: Photo to Video, Go Live, Concert Mode
-- [ ] Rebuild CAST as TikTok-style talent roster with minimal UI
-- [ ] Clean up CHAT and WALLET, remove unnecessary elements
-- [ ] Test for overlaps and duplicate UI elements
-
-
-## COMPLETE REBUILD - AI VIDEO CREATION + SOCIAL NETWORKING (v2.0.0)
-
-### Phase 1: Core Navigation & Architecture
-- [x] Redesign tab navigation: Feed (Vibe), Create (+), Chat, Profile, Wallet
-- [x] Update _layout.tsx with new tab structure and icons
-- [x] Create Create screen with plus button UI (modal for video generation options)
-- [x] Build new Chat screen with real-time messaging UI
-- [x] Rebuild Profile screen with creator stats and portfolio
-- [ ] Implement Supabase real-time subscriptions for messaging
-
-### Phase 2: AI Video Generation (Sora + Premium APIs)
-- [x] Integrate Sora API for free tier video generation
-- [x] Build video prompt input UI (text-to-video generation)
-- [ ] Implement HeyGen API for paid tier (face clone videos)
-- [ ] Implement Kling API for paid tier (video beautification)
-- [x] Create video generation progress tracking UI
-- [x] Build video output gallery with preview, download, share
-- [ ] Implement S3 storage for generated videos
-- [ ] Add video metadata (title, description, tags, visibility)
-- [ ] Implement tier-based rate limiting (Free: 5/mo, Pro: 50/mo, Elite: unlimited)
-
-### Phase 3: Face Clone Upload & Synthesis
-- [x] Build face upload component (camera/gallery picker)
-- [ ] Implement face detection and validation (MediaPipe)
-- [x] Create face clone storage in Supabase
-- [ ] Wire HeyGen API to use uploaded face for video synthesis
-- [ ] Build face clone management UI (view, delete, set default)
-- [ ] Implement video preview with face clone applied
-- [ ] Add quality indicators and tips for best results
-
-### Phase 4: Real-Time Messaging System
-- [x] Create Supabase messages table (sender, recipient, content, timestamp)
-- [x] Build chat list UI (conversations with last message preview)
-- [x] Build chat detail UI (message thread with real-time updates)
-- [x] Implement message input with send button
-- [ ] Add typing indicators
-- [x] Implement read receipts
-- [x] Add notification badges for unread messages
-- [ ] Create group chat functionality (optional for v2.0)
-
-### Phase 5: Creator Profiles & Discovery
-- [ ] Build creator profile screen (avatar, bio, follower count, videos)
-- [ ] Implement follow/unfollow functionality
-- [ ] Create creator discovery UI (trending creators, search)
-- [ ] Build portfolio gallery (user's generated videos)
-- [ ] Add creator stats dashboard (views, likes, followers, earnings)
-- [ ] Implement creator verification badge logic
-- [ ] Build "Following" feed (videos from followed creators)
-- [ ] Add trending/For You algorithm (tag-based filtering)
-
-### Phase 6: Subscription & Monetization
-- [ ] Update paywall with 3 tiers: Free (Sora), Pro ($30/mo), Elite ($99/mo)
-- [ ] Integrate RevenueCat for subscription management
-- [ ] Implement tier-based feature gates (video generation limits)
-- [ ] Add tier indicator to profile and dashboard
-- [ ] Create earnings dashboard (views, likes, creator fund payouts)
-- [ ] Implement Stripe Connect for creator payouts
-- [ ] Add subscription status screen (current plan, renewal date, manage)
-
-### Phase 7: Testing & Deployment
-- [ ] Test video generation on free tier (Sora)
-- [ ] Test video generation on paid tiers (HeyGen, Kling)
-- [ ] Test face clone upload and synthesis
-- [ ] Test real-time messaging (send, receive, read receipts)
-- [ ] Test creator profiles and follow/unfollow
-- [ ] Test subscription tier gating
-- [ ] Test on iOS and Android via Expo Go
-- [ ] Performance optimization (video loading, messaging latency)
-- [ ] Generate APK and prepare for app store submission
-
-### Phase 8: Launch Preparation
-- [ ] Create checkpoint for v2.0.0
-- [ ] Prepare app store listings (screenshots, description)
-- [ ] Set up analytics (PostHog integration)
-- [ ] Configure error tracking (Sentry)
-- [ ] Test payment processing (Stripe + RevenueCat)
-- [ ] Prepare launch marketing materials
-- [ ] Final QA on physical devices
-- [ ] Deploy to production
-
-## THREE-TIER SUBSCRIPTION MODEL (v1.0.5) - DEPRECATED
-- [x] Wire Sora API to free tier for video generation
-- [x] Update paywall modal to show 3 tiers: Free (Sora), Mid ($30/month - Kling/HeyGen), Elite ($99/month - priority)
-- [x] Route video generation based on tier (free→Sora, mid→Kling, elite→HeyGen)
-- [x] Add tier indicator to user profile/dashboard
-- [x] Implement tier-based feature gates (free: 5 videos/month, mid: 50/month, elite: unlimited)
+- [x] Free Tier backend with quota tracking (3/day free, 50/day pro, unlimited elite)
+- [x] Database schema with freeTierQuota table
+- [x] tRPC API routes for video generation and quota checking
+- [x] 15 passing vitest tests
+- [x] Reusable free-tier-backend skill created

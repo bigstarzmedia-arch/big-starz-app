@@ -1,253 +1,249 @@
-import { View, Text, Dimensions, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useState, useRef, useMemo } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { useTranslation } from '@/lib/language-provider';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation } from '@/lib/language-provider';
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
+const COLUMN_WIDTH = (screenWidth - 32) / 2;
 
 interface Video {
   id: string;
-  creator: string;
   title: string;
-  videoUri: string;
+  creator: string;
   thumbnail: string;
+  duration: string;
   likes: number;
-  comments: number;
-  liked: boolean;
+  genre: string;
+  badge: 'wrench' | 'crown' | 'diamond';
+  trending?: boolean;
 }
 
-// Real Sora videos from CDN
+// Mock video data with real thumbnails
 const VIDEOS: Video[] = [
   {
     id: '1',
-    creator: '@NeonVex',
-    title: 'AI Music Video - Cyberpunk',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/uVFjRxyGEvVYafOu.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
-    likes: 8400,
-    comments: 342,
-    liked: false,
+    title: 'Dragon Phoenix Remix',
+    creator: 'Mei Ling',
+    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=500&fit=crop',
+    duration: '0:47',
+    likes: 142800,
+    genre: 'Electronic',
+    badge: 'wrench',
+    trending: true,
   },
   {
     id: '2',
-    creator: '@CosmicVibe',
-    title: 'Face Clone Collab',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/ZIHqcEAjIsUDSuBR.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
-    likes: 5200,
-    comments: 218,
-    liked: false,
+    title: 'Sacred Drums x Lo-fi',
+    creator: 'Alex Chen',
+    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=500&fit=crop',
+    duration: '1:03',
+    likes: 89200,
+    genre: 'Fusion',
+    badge: 'diamond',
   },
   {
     id: '3',
-    creator: '@GlitchQueen',
-    title: 'Sora Generated - Fashion',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/hMlOhQFwMbKZrZpM.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
-    likes: 12100,
-    comments: 567,
-    liked: false,
+    title: 'Neon Nights',
+    creator: 'Luna Park',
+    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=400&h=500&fit=crop',
+    duration: '2:15',
+    likes: 156400,
+    genre: 'Synthwave',
+    badge: 'crown',
   },
   {
     id: '4',
-    creator: '@SonicDreams',
-    title: 'AI Studio Creation',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/OzQsvSebycxKzkTE.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=1000&fit=crop',
-    likes: 7800,
-    comments: 294,
-    liked: false,
+    title: 'Cosmic Journey',
+    creator: 'Nova Star',
+    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=500&fit=crop',
+    duration: '1:32',
+    likes: 98700,
+    genre: 'Ambient',
+    badge: 'wrench',
   },
   {
     id: '5',
-    creator: '@PixelArtist',
-    title: 'Neon Aesthetic',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/MltsfIVvclVFQrND.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=1000&fit=crop',
-    likes: 9300,
-    comments: 421,
-    liked: false,
+    title: 'Electric Dreams',
+    creator: 'Pixel Art',
+    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=500&fit=crop',
+    duration: '0:58',
+    likes: 124500,
+    genre: 'Electronic',
+    badge: 'diamond',
   },
   {
     id: '6',
-    creator: '@LuxeBeats',
-    title: 'Premium Music Video',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/rltHzsiGkGPADNsM.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
-    likes: 6500,
-    comments: 189,
-    liked: false,
-  },
-  {
-    id: '7',
-    creator: '@SynthWave',
-    title: 'Retro Future Vibes',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/pAjQvfVEKvfEjKvZ.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
-    likes: 11200,
-    comments: 489,
-    liked: false,
-  },
-  {
-    id: '8',
-    creator: '@DigitalDream',
-    title: 'AI Collaboration',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/YqKvnLwZvOqLrKvZ.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
-    likes: 7900,
-    comments: 356,
-    liked: false,
+    title: 'Jazz Fusion',
+    creator: 'Blue Note',
+    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=500&fit=crop',
+    duration: '1:45',
+    likes: 76300,
+    genre: 'Jazz',
+    badge: 'crown',
   },
 ];
 
-// Separate component for video item to avoid hook issues
-function VideoItem({
-  item,
-  index,
-  onLike,
-  onShare,
-  liked,
-}: {
-  item: Video;
-  index: number;
-  onLike: (index: number) => void;
-  onShare: () => void;
-  liked: boolean;
-}) {
-  const player = useVideoPlayer(item.videoUri, (player) => {
-    player.loop = true;
-    player.play();
-  });
+const CATEGORIES = ['For You', 'Music', 'Live', 'Fashion', 'AI Picks'];
+
+const getBadgeEmoji = (badge: string) => {
+  switch (badge) {
+    case 'wrench':
+      return '🔧';
+    case 'crown':
+      return '👑';
+    case 'diamond':
+      return '💎';
+    default:
+      return '';
+  }
+};
+
+function VideoCard({ video }: { video: Video }) {
+  const handlePress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   return (
-    <View style={{ height: screenHeight, width: screenWidth }} className="bg-black">
-      {/* Video Background */}
-      <VideoView
-        style={{ flex: 1 }}
-        player={player}
-        allowsFullscreen
-        allowsPictureInPicture
-      />
-
-      {/* Gradient Overlay */}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 300 }}
-      />
-
-      {/* Creator Info - Bottom Left */}
-      <View style={{ position: 'absolute', bottom: 100, left: 16, zIndex: 10 }}>
-        <View className="flex-row items-center gap-3 mb-3">
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.8} style={{ width: COLUMN_WIDTH }}>
+      <View className="bg-slate-900 rounded-2xl overflow-hidden mb-4">
+        {/* Thumbnail */}
+        <View className="relative">
           <Image
-            source={{ uri: item.thumbnail }}
-            style={{ width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#EC4899' }}
+            source={{ uri: video.thumbnail }}
+            style={{ width: '100%', height: 300 }}
+            resizeMode="cover"
           />
-          <View>
-            <Text className="text-white font-bold text-base">{item.creator}</Text>
-            <View className="flex-row items-center gap-1">
-              <Text className="text-pink-500 font-bold text-xs">★ Big Starz</Text>
-            </View>
+
+          {/* Badge - Top Left */}
+          <View className="absolute top-3 left-3 w-10 h-10 bg-blue-600 rounded-full items-center justify-center">
+            <Text className="text-lg">{getBadgeEmoji(video.badge)}</Text>
+          </View>
+
+          {/* Badge - Top Right */}
+          <View className="absolute top-3 right-3 w-10 h-10 bg-cyan-500 rounded-full items-center justify-center">
+            <Text className="text-lg">💎</Text>
+          </View>
+
+          {/* Duration - Bottom Left */}
+          <View className="absolute bottom-3 left-3 bg-black/60 px-2 py-1 rounded">
+            <Text className="text-white text-xs font-bold">{video.duration}</Text>
+          </View>
+
+          {/* Play Button - Bottom Center */}
+          <View className="absolute bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-pink-500 rounded-full items-center justify-center border-2 border-white">
+            <Text className="text-white text-xs">▶</Text>
           </View>
         </View>
-        <Text className="text-white font-semibold text-lg max-w-xs">{item.title}</Text>
+
+        {/* Info */}
+        <View className="p-3">
+          <Text className="text-white font-bold text-sm mb-1">{video.title}</Text>
+          <Text className="text-gray-400 text-xs mb-2">{video.creator}</Text>
+
+          {/* Stats */}
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-1">
+              <Text className="text-pink-500">❤️</Text>
+              <Text className="text-gray-300 text-xs">
+                {video.likes > 1000000
+                  ? (video.likes / 1000000).toFixed(1) + 'M'
+                  : (video.likes / 1000).toFixed(1) + 'K'}
+              </Text>
+            </View>
+            <Text className="text-yellow-500 text-lg">🎁</Text>
+          </View>
+        </View>
       </View>
-
-      {/* Engagement Buttons - Right Side */}
-      <View style={{ position: 'absolute', bottom: 120, right: 16, zIndex: 10 }} className="gap-6">
-        {/* Like Button */}
-        <TouchableOpacity
-          onPress={() => onLike(index)}
-          style={{ alignItems: 'center' }}
-          activeOpacity={0.7}
-        >
-          <View
-            className={`w-14 h-14 rounded-full items-center justify-center ${
-              liked ? 'bg-pink-500' : 'bg-white/20'
-            }`}
-          >
-            <Text className="text-2xl">{liked ? '❤️' : '🤍'}</Text>
-          </View>
-          <Text className={`text-xs font-bold mt-1 ${liked ? 'text-pink-500' : 'text-white'}`}>
-            {(item.likes / 1000).toFixed(1)}K
-          </Text>
-        </TouchableOpacity>
-
-        {/* Comment Button */}
-        <TouchableOpacity style={{ alignItems: 'center' }} activeOpacity={0.7}>
-          <View className="w-14 h-14 rounded-full bg-white/20 items-center justify-center">
-            <Text className="text-2xl">💬</Text>
-          </View>
-          <Text className="text-xs font-bold text-white mt-1">
-            {(item.comments / 1000).toFixed(1)}K
-          </Text>
-        </TouchableOpacity>
-
-        {/* Share Button */}
-        <TouchableOpacity onPress={onShare} style={{ alignItems: 'center' }} activeOpacity={0.7}>
-          <View className="w-14 h-14 rounded-full bg-white/20 items-center justify-center">
-            <Text className="text-2xl">🔗</Text>
-          </View>
-          <Text className="text-xs font-bold text-white mt-1">Share</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export default function HomeScreen() {
   const t = useTranslation();
-  const [videos, setVideos] = useState(VIDEOS);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-
-  const handleLike = (index: number) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const newVideos = [...videos];
-    newVideos[index].liked = !newVideos[index].liked;
-    newVideos[index].likes += newVideos[index].liked ? 1 : -1;
-    setVideos(newVideos);
-  };
-
-  const handleShare = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-  };
-
-  const renderVideo = ({ item, index }: { item: Video; index: number }) => (
-    <VideoItem
-      item={item}
-      index={index}
-      onLike={handleLike}
-      onShare={handleShare}
-      liked={videos[index].liked}
-    />
-  );
+  const [selectedCategory, setSelectedCategory] = useState('For You');
 
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-      <FlatList
-        ref={flatListRef}
-        data={videos}
-        renderItem={renderVideo}
-        keyExtractor={(item) => item.id}
-        pagingEnabled
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(event.nativeEvent.contentOffset.y / screenHeight);
-          setCurrentIndex(index);
-        }}
-        scrollEnabled={true}
-        showsVerticalScrollIndicator={false}
-      />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View className="px-4 py-4 flex-row items-center justify-between">
+          <View>
+            <Text className="text-pink-500 font-black text-2xl">BIG STARZ</Text>
+            <Text className="text-yellow-400 font-black text-sm -mt-1">MEDIA</Text>
+          </View>
+
+          <View className="flex-row items-center gap-3">
+            {/* Stars & Count */}
+            <View className="bg-yellow-900/50 px-3 py-1 rounded-full flex-row items-center gap-1">
+              <Text className="text-yellow-400 text-lg">⭐</Text>
+              <Text className="text-yellow-400 font-bold text-sm">2,840</Text>
+            </View>
+
+            {/* Pro Badge */}
+            <View className="border-2 border-cyan-500 px-3 py-1 rounded-full flex-row items-center gap-1">
+              <Text className="text-cyan-500 text-sm">💎</Text>
+              <Text className="text-cyan-500 font-bold text-xs">PRO</Text>
+            </View>
+
+            {/* Search */}
+            <TouchableOpacity>
+              <Text className="text-2xl">🔍</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Category Tabs */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="px-4 mb-6"
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {CATEGORIES.map((category) => (
+            <TouchableOpacity
+              key={category}
+              onPress={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-full border-2 ${
+                selectedCategory === category
+                  ? 'bg-pink-500 border-pink-500'
+                  : 'bg-transparent border-slate-700'
+              }`}
+            >
+              <Text
+                className={`font-semibold text-sm ${
+                  selectedCategory === category ? 'text-white' : 'text-slate-400'
+                }`}
+              >
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Trending Badge */}
+        <View className="px-4 mb-4">
+          <View className="border-2 border-pink-500 bg-pink-500/10 px-4 py-2 rounded-full w-fit flex-row items-center gap-2">
+            <Text className="text-lg">🔥</Text>
+            <Text className="text-pink-500 font-bold text-sm">TRENDING NOW</Text>
+          </View>
+        </View>
+
+        {/* Video Grid */}
+        <View className="px-4 pb-20">
+          <FlatList
+            data={VIDEOS}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: 'space-between' }}
+            renderItem={({ item }) => <VideoCard video={item} />}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+          />
+        </View>
+      </ScrollView>
     </ScreenContainer>
   );
 }

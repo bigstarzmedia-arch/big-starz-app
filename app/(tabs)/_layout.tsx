@@ -34,12 +34,12 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* FEED - Home icon */}
+      {/* VIBE FEED - Play icon */}
       <Tabs.Screen
         name="index"
         options={{
-          title: "Feed",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="house.fill" color={color} />,
+          title: "Vibe",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="play.circle.fill" color={color} />,
         }}
       />
 
@@ -52,21 +52,12 @@ export default function TabLayout() {
         }}
       />
 
-      {/* LIVE - Video icon */}
+      {/* CHAT - Message bubble icon */}
       <Tabs.Screen
         name="chat"
         options={{
-          title: "Live",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="film.fill" color={color} />,
-        }}
-      />
-
-      {/* EARN - Wallet icon */}
-      <Tabs.Screen
-        name="wallet"
-        options={{
-          title: "Earn",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="creditcard.fill" color={color} />,
+          title: "Chat",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="bubble.right.fill" color={color} />,
         }}
       />
 
@@ -76,6 +67,42 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
+        }}
+      />
+
+      {/* WALLET - Wallet icon */}
+      <Tabs.Screen
+        name="wallet"
+        options={{
+          title: "Wallet",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="creditcard.fill" color={color} />,
+        }}
+      />
+
+      {/* MUSIC - Music note icon */}
+      <Tabs.Screen
+        name="music"
+        options={{
+          title: "Music",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
+        }}
+      />
+
+      {/* CASTING - Casting icon */}
+      <Tabs.Screen
+        name="casting"
+        options={{
+          title: "Casting",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="film" color={color} />,
+        }}
+      />
+
+      {/* SETTINGS - Gear icon */}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
         }}
       />
     </Tabs>

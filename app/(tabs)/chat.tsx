@@ -222,7 +222,7 @@ export default function ChatScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-      {/* Tabs */}
+      {/* Header with Tabs and New Message Button */}
       <View
         style={{
           flexDirection: 'row',
@@ -231,13 +231,36 @@ export default function ChatScreen() {
           borderBottomWidth: 1,
           borderBottomColor: '#333',
           gap: 16,
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
-        <TouchableOpacity style={{ paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: '#FF0055' }}>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FF0055' }}>Messages</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={{ paddingBottom: 8 }}>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#AAA' }}>Friends</Text>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
+          <TouchableOpacity style={{ paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: '#FF0055' }}>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FF0055' }}>Messages</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ paddingBottom: 8 }}>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#AAA' }}>Friends</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            if (Platform.OS !== 'web') {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
+            // Open new message modal or navigate to friend selection
+            alert('Select a creator to message');
+          }}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: '#FF0055',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontSize: 20, color: '#FFF' }}>✏️</Text>
         </TouchableOpacity>
       </View>
 

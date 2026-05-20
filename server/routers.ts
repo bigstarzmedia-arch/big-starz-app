@@ -7,6 +7,7 @@ import { COOKIE_NAME } from "../shared/const";
 import { generateFreeVideoWithQuota, checkDailyQuota, getUserSubscriptionTier } from "./free-tier";
 import * as revenuecat from "./revenuecat";
 import * as googleDrive from "./google-drive";
+import { TieredVideoAPI, videoGenerationSchema } from "./tiered-video-api";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -20,6 +21,32 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // Tiered Video Generation (Free: Grok, Pro: Kling, Elite: Seedance)
+  tieredVideos: router({
+    generate: protectedProcedure
+      .input(videoGenerationSchema)
+      .mutation(async ({ ctx, input }) => {
+        const api = new TieredVideoAPI();
+        const tierData = await getUserSubscriptionTier(ctx.user.id);
+        const userTier = (tierData as any)?.tier || "free";
+        return api.generateVideo({
+          ...input,
+          userId: String(ctx.user.id),
+          tier: userTier as "free" | "pro" | "elite",
+        });
+      }),
+
+    checkStatus: protectedProcedure
+      .input(z.object({
+        videoId: z.string(),
+        provider: z.enum(["grok", "kling", "seedance"]),
+      }))
+      .query(async ({ input }) => {
+        const api = new TieredVideoAPI();
+        return api.checkStatus(input.videoId, input.provider);
+      }),
   }),
 
   // Cameo & Beautify Engine (FREE TIER: Pollinations.ai + Hugging Face Stable Diffusion)

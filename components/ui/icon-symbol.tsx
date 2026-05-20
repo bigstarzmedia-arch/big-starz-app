@@ -32,6 +32,7 @@ const MAPPING = {
   "person.fill": "person",
   "gearshape.fill": "settings",
   "film": "movie",
+  "chart.bar.fill": "bar-chart",
 } as IconMapping;
 
 /**

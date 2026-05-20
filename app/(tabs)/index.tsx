@@ -1,5 +1,5 @@
-import { View, Text, Dimensions, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useState, useRef, useMemo } from 'react';
+import { ScrollView, View, Text, Pressable, Dimensions, FlatList } from 'react-native';
+import { useState, useEffect as useEffectHook } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
@@ -7,247 +7,197 @@ import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '@/lib/language-provider';
 
+
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 interface Video {
   id: string;
-  creator: string;
-  title: string;
-  videoUri: string;
-  thumbnail: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
+  name: string;
+  url: string;
+  creator?: string;
+  title?: string;
+  likes?: number;
+  comments?: number;
+  liked?: boolean;
 }
 
-// Real Sora videos from CDN
-const VIDEOS: Video[] = [
+// Mock fallback videos while Google Drive videos load
+const FALLBACK_VIDEOS: Video[] = [
   {
     id: '1',
+    name: 'AI Music Video - Cyberpunk',
+    url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/uVFjRxyGEvVYafOu.mp4',
     creator: '@NeonVex',
     title: 'AI Music Video - Cyberpunk',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/uVFjRxyGEvVYafOu.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
     likes: 8400,
     comments: 342,
     liked: false,
   },
   {
     id: '2',
+    name: 'Face Clone Collab',
+    url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/ZIHqcEAjIsUDSuBR.mp4',
     creator: '@CosmicVibe',
     title: 'Face Clone Collab',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/ZIHqcEAjIsUDSuBR.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
     likes: 5200,
     comments: 218,
     liked: false,
   },
-  {
-    id: '3',
-    creator: '@GlitchQueen',
-    title: 'Sora Generated - Fashion',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/hMlOhQFwMbKZrZpM.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
-    likes: 12100,
-    comments: 567,
-    liked: false,
-  },
-  {
-    id: '4',
-    creator: '@SonicDreams',
-    title: 'AI Studio Creation',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/OzQsvSebycxKzkTE.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=1000&fit=crop',
-    likes: 7800,
-    comments: 294,
-    liked: false,
-  },
-  {
-    id: '5',
-    creator: '@PixelArtist',
-    title: 'Neon Aesthetic',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/MltsfIVvclVFQrND.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=1000&fit=crop',
-    likes: 9300,
-    comments: 421,
-    liked: false,
-  },
-  {
-    id: '6',
-    creator: '@LuxeBeats',
-    title: 'Premium Music Video',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/rltHzsiGkGPADNsM.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=1000&fit=crop',
-    likes: 6500,
-    comments: 189,
-    liked: false,
-  },
-  {
-    id: '7',
-    creator: '@SynthWave',
-    title: 'Retro Future Vibes',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/pAjQvfVEKvfEjKvZ.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=1000&fit=crop',
-    likes: 11200,
-    comments: 489,
-    liked: false,
-  },
-  {
-    id: '8',
-    creator: '@DigitalDream',
-    title: 'AI Collaboration',
-    videoUri: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/YqKvnLwZvOqLrKvZ.mp4',
-    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=600&h=1000&fit=crop',
-    likes: 7900,
-    comments: 356,
-    liked: false,
-  },
 ];
 
-// Separate component for video item to avoid hook issues
-function VideoItem({
-  item,
-  index,
-  onLike,
-  onShare,
-  liked,
-}: {
-  item: Video;
-  index: number;
-  onLike: (index: number) => void;
-  onShare: () => void;
-  liked: boolean;
-}) {
-  const player = useVideoPlayer(item.videoUri, (player) => {
-    player.loop = true;
-    player.play();
-  });
+function VideoItem({ video, index }: { video: Video; index: number }) {
+  const [likes, setLikes] = useState(video.likes || 0);
+  const [liked, setLiked] = useState(video.liked || false);
+  const player = useVideoPlayer(video.url);
+
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikes(liked ? likes - 1 : likes + 1);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   return (
-    <View style={{ height: screenHeight, width: screenWidth }} className="bg-black">
-      {/* Video Background */}
+    <View style={{ height: screenHeight, width: screenWidth }}>
       <VideoView
-        style={{ flex: 1 }}
         player={player}
+        style={{ width: '100%', height: '100%' }}
         allowsFullscreen
         allowsPictureInPicture
       />
 
-      {/* Gradient Overlay */}
+      {/* Gradient overlay at bottom */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        colors={['transparent', 'rgba(0,0,0,0.8)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 300 }}
+        style={{ position: 'absolute', bottom: 0, width: '100%', height: '40%' }}
       />
 
-      {/* Creator Info - Bottom Left */}
-      <View style={{ position: 'absolute', bottom: 100, left: 16, zIndex: 10 }}>
-        <View className="flex-row items-center gap-3 mb-3">
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={{ width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#EC4899' }}
-          />
-          <View>
-            <Text className="text-white font-bold text-base">{item.creator}</Text>
-            <View className="flex-row items-center gap-1">
-              <Text className="text-pink-500 font-bold text-xs">★ Big Starz</Text>
-            </View>
-          </View>
-        </View>
-        <Text className="text-white font-semibold text-lg max-w-xs">{item.title}</Text>
+      {/* Creator info */}
+      <View style={{ position: 'absolute', bottom: 80, left: 16 }}>
+        <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
+          {video.title || video.name}
+        </Text>
+        <Text style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>
+          {video.creator || 'Big Starz Creator'}
+        </Text>
       </View>
 
-      {/* Engagement Buttons - Right Side */}
-      <View style={{ position: 'absolute', bottom: 120, right: 16, zIndex: 10 }} className="gap-6">
-        {/* Like Button */}
-        <TouchableOpacity
-          onPress={() => onLike(index)}
-          style={{ alignItems: 'center' }}
-          activeOpacity={0.7}
+      {/* Action buttons on right */}
+      <View style={{ position: 'absolute', right: 12, bottom: 100, gap: 12 }}>
+        <Pressable
+          onPress={handleLike}
+          style={({ pressed }) => [
+            {
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#ff1493',
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
         >
-          <View
-            className={`w-14 h-14 rounded-full items-center justify-center ${
-              liked ? 'bg-pink-500' : 'bg-white/20'
-            }`}
-          >
-            <Text className="text-2xl">{liked ? '❤️' : '🤍'}</Text>
-          </View>
-          <Text className={`text-xs font-bold mt-1 ${liked ? 'text-pink-500' : 'text-white'}`}>
-            {(item.likes / 1000).toFixed(1)}K
+          <Text style={{ fontSize: 24 }}>{liked ? '❤️' : '🤍'}</Text>
+          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
+            {likes > 999 ? `${(likes / 1000).toFixed(1)}K` : likes}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        {/* Comment Button */}
-        <TouchableOpacity style={{ alignItems: 'center' }} activeOpacity={0.7}>
-          <View className="w-14 h-14 rounded-full bg-white/20 items-center justify-center">
-            <Text className="text-2xl">💬</Text>
-          </View>
-          <Text className="text-xs font-bold text-white mt-1">
-            {(item.comments / 1000).toFixed(1)}K
+        <Pressable
+          style={({ pressed }) => [
+            {
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#00d4ff',
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Text style={{ fontSize: 24 }}>💬</Text>
+          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
+            {(video.comments || 0) > 999 ? `${((video.comments || 0) / 1000).toFixed(1)}K` : video.comments || 0}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        {/* Share Button */}
-        <TouchableOpacity onPress={onShare} style={{ alignItems: 'center' }} activeOpacity={0.7}>
-          <View className="w-14 h-14 rounded-full bg-white/20 items-center justify-center">
-            <Text className="text-2xl">🔗</Text>
-          </View>
-          <Text className="text-xs font-bold text-white mt-1">Share</Text>
-        </TouchableOpacity>
+        <Pressable
+          style={({ pressed }) => [
+            {
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#ffd700',
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Text style={{ fontSize: 24 }}>🔗</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
 export default function HomeScreen() {
-  const t = useTranslation();
-  const [videos, setVideos] = useState(VIDEOS);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const translate = useTranslation();
+  const [videos, setVideos] = useState<Video[]>(FALLBACK_VIDEOS);
+  const [loading, setLoading] = useState(true);
 
-  const handleLike = (index: number) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const newVideos = [...videos];
-    newVideos[index].liked = !newVideos[index].liked;
-    newVideos[index].likes += newVideos[index].liked ? 1 : -1;
-    setVideos(newVideos);
-  };
-
-  const handleShare = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-  };
-
-  const renderVideo = ({ item, index }: { item: Video; index: number }) => (
-    <VideoItem
-      item={item}
-      index={index}
-      onLike={handleLike}
-      onShare={handleShare}
-      liked={videos[index].liked}
-    />
-  );
+  // Fetch Sora videos from Google Drive
+  useEffectHook(() => {
+    const fetchVideos = async () => {
+      try {
+        const response = await fetch('/api/trpc/googleDrive.getSoraVideos');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            const formattedVideos: Video[] = data.map((v: any, idx: number) => ({
+              id: v.id,
+              name: v.name,
+              url: v.url,
+              creator: `@Creator${idx + 1}`,
+              title: v.name.replace('.mp4', ''),
+              likes: Math.floor(Math.random() * 10000),
+              comments: Math.floor(Math.random() * 1000),
+              liked: false,
+            }));
+            setVideos(formattedVideos);
+          }
+        }
+      } catch (error) {
+        console.log('Using fallback videos');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVideos();
+  }, []);
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
-      <FlatList
-        ref={flatListRef}
-        data={videos}
-        renderItem={renderVideo}
-        keyExtractor={(item) => item.id}
-        pagingEnabled
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(event.nativeEvent.contentOffset.y / screenHeight);
-          setCurrentIndex(index);
-        }}
-        scrollEnabled={true}
-        showsVerticalScrollIndicator={false}
-      />
+    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black">
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={videos}
+          renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
+          keyExtractor={(item) => item.id}
+          pagingEnabled
+          scrollEventThrottle={16}
+          snapToInterval={screenHeight}
+          decelerationRate="fast"
+        />
+      )}
     </ScreenContainer>
   );
 }

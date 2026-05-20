@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { trpc } from '@/lib/trpc';
+import { VideoUpload } from '@/components/video-upload';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ interface GenerationState {
   loading: boolean;
   progress: number;
   selectedImage: string | null;
+  selectedVideo: string | null;
 }
 
 export default function CreateScreen() {
@@ -40,6 +42,7 @@ export default function CreateScreen() {
     loading: false,
     progress: 0,
     selectedImage: null,
+    selectedVideo: null,
   });
 
   // tRPC mutations
@@ -113,6 +116,7 @@ export default function CreateScreen() {
             loading: false,
             progress: 100,
             selectedImage: null,
+            selectedVideo: null,
           });
           Alert.alert('Success', 'Music video generated! Check your library.');
           setShowModal(false);
@@ -132,6 +136,7 @@ export default function CreateScreen() {
           loading: false,
           progress: 100,
           selectedImage: null,
+          selectedVideo: null,
         });
         Alert.alert('Success', 'Face clone created! Check your library.');
         setShowModal(false);
@@ -149,6 +154,7 @@ export default function CreateScreen() {
           loading: false,
           progress: 100,
           selectedImage: null,
+          selectedVideo: null,
         });
         Alert.alert('Success', 'Image generated! Check your library.');
         setShowModal(false);
@@ -171,6 +177,7 @@ export default function CreateScreen() {
       loading: false,
       progress: 0,
       selectedImage: null,
+      selectedVideo: null,
     });
   };
 
@@ -370,78 +377,31 @@ export default function CreateScreen() {
                 {/* AI Cameo Input */}
                 {generation.type === 'ai-cameo' && (
                   <>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>AI Cameo</Text>
-
-                    {generation.selectedImage ? (
-                      <>
-                        <View
-                          style={{
-                            width: '100%',
-                            height: 200,
-                            backgroundColor: '#1A1A1A',
-                            borderRadius: 12,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text style={{ color: '#AAA', fontSize: 14 }}>📷 Image Selected</Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => setGeneration({ ...generation, selectedImage: null })}
-                          style={{
-                            backgroundColor: '#333',
-                            paddingVertical: 12,
-                            borderRadius: 8,
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 14 }}>Change Image</Text>
-                        </TouchableOpacity>
-                      </>
-                    ) : (
-                      <View style={{ gap: 12 }}>
-                        <TouchableOpacity
-                          onPress={handleTakePhoto}
-                          style={{
-                            backgroundColor: '#00FFFF',
-                            paddingVertical: 14,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 16 }}>📷 Take Photo</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={handlePickImage}
-                          style={{
-                            backgroundColor: '#333',
-                            paddingVertical: 14,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>🖼️ From Gallery</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-
-                    <TextInput
-                      placeholder="Describe the cameo effect..."
-                      placeholderTextColor="#666"
-                      value={generation.prompt}
-                      onChangeText={(text) => setGeneration({ ...generation, prompt: text })}
-                      multiline
-                      numberOfLines={3}
-                      style={{
-                        backgroundColor: '#1A1A1A',
-                        borderRadius: 12,
-                        padding: 14,
-                        color: '#FFF',
-                        borderWidth: 1,
-                        borderColor: '#333',
-                        fontSize: 14,
-                      }}
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>AI Cameo - Upload Video</Text>
+                    <VideoUpload
+                      onVideoSelected={(uri) => setGeneration({ ...generation, selectedVideo: uri })}
+                      loading={generation.loading}
                     />
+
+                    {generation.selectedVideo && (
+                      <TextInput
+                        placeholder="Describe the cameo effect..."
+                        placeholderTextColor="#666"
+                        value={generation.prompt}
+                        onChangeText={(text) => setGeneration({ ...generation, prompt: text })}
+                        multiline
+                        numberOfLines={3}
+                        style={{
+                          backgroundColor: '#1A1A1A',
+                          borderRadius: 12,
+                          padding: 14,
+                          color: '#FFF',
+                          borderWidth: 1,
+                          borderColor: '#333',
+                          fontSize: 14,
+                        }}
+                      />
+                    )}
                   </>
                 )}
 

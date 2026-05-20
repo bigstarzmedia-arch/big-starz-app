@@ -97,6 +97,15 @@ export default function TabLayout() {
         }}
       />
 
+      {/* ANALYTICS - Chart icon */}
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="chart.bar.fill" color={color} />,
+        }}
+      />
+
       {/* SETTINGS - Gear icon */}
       <Tabs.Screen
         name="settings"

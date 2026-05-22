@@ -184,7 +184,7 @@ export default function HomeScreen() {
   const { language, setLanguage } = useLanguage();
   const languages = ['English', 'हिन्दी', 'العربية', 'Swahili'];
   const languageCodes = ['en', 'hi', 'ar', 'sw'];
-
+  
   const handleLanguageSwitch = () => {
     const currentIndex = languageCodes.indexOf(language);
     const nextIndex = (currentIndex + 1) % languageCodes.length;
@@ -192,44 +192,45 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black">
-      {/* Translator Button */}
-      <TouchableOpacity
-        onPress={handleLanguageSwitch}
-        style={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          zIndex: 100,
-          backgroundColor: '#FF1493',
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderRadius: 20,
-        }}
-      >
-        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{languages[languageCodes.indexOf(language)]}</Text>
-      </TouchableOpacity>
-
-      {loading ? (
-        <ImageBackground
-          source={{ uri: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vibe-background-1-8xKNqybsTapztdpZYA2JaM.webp' }}
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+    <ImageBackground
+      source={{ uri: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vibe-background-1-8xKNqybsTapztdpZYA2JaM.webp' }}
+      style={{ flex: 1 }}
+      imageStyle={{ resizeMode: 'cover' }}
+    >
+      <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-transparent">
+        {/* Translator Button */}
+        <TouchableOpacity
+          onPress={handleLanguageSwitch}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 100,
+            backgroundColor: '#FF1493',
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderRadius: 20,
+          }}
         >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }}>
-            <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
+          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{languages[languageCodes.indexOf(language)]}</Text>
+        </TouchableOpacity>
+
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Loading videos...</Text>
           </View>
-        </ImageBackground>
-      ) : (
-        <FlatList
-          data={videos}
-          renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
-          keyExtractor={(item) => item.id}
-          pagingEnabled
-          scrollEventThrottle={16}
-          snapToInterval={screenHeight}
-          decelerationRate="fast"
-        />
-      )}
-    </ScreenContainer>
+        ) : (
+          <FlatList
+            data={videos}
+            renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
+            keyExtractor={(item) => item.id}
+            pagingEnabled
+            scrollEventThrottle={16}
+            snapToInterval={screenHeight}
+            decelerationRate="fast"
+          />
+        )}
+      </ScreenContainer>
+    </ImageBackground>
   );
 }

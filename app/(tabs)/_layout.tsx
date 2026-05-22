@@ -61,55 +61,61 @@ export default function TabLayout() {
         }}
       />
 
-      {/* PROFILE - Person icon */}
+      {/* PROFILE - Person icon (hidden from tab bar, accessible via navigation) */}
       <Tabs.Screen
         name="profile"
         options={{
+          href: null, // Hide from tab bar
           title: "Profile",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
         }}
       />
 
-      {/* WALLET - Wallet icon */}
+      {/* WALLET - Wallet icon (hidden from tab bar) */}
       <Tabs.Screen
         name="wallet"
         options={{
+          href: null, // Hide from tab bar
           title: "Wallet",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="creditcard.fill" color={color} />,
         }}
       />
 
-      {/* MUSIC - Music note icon */}
+      {/* MUSIC - Music note icon (hidden from tab bar) */}
       <Tabs.Screen
         name="music"
         options={{
+          href: null, // Hide from tab bar
           title: "Music",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
         }}
       />
 
-      {/* CASTING - Casting icon */}
+      {/* CASTING - Casting icon (hidden from tab bar) */}
       <Tabs.Screen
         name="casting"
         options={{
+          href: null, // Hide from tab bar
           title: "Casting",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="film" color={color} />,
         }}
       />
 
-      {/* ANALYTICS - Chart icon */}
+      {/* ANALYTICS - Chart icon (hidden from tab bar) */}
       <Tabs.Screen
         name="analytics"
         options={{
+          href: null, // Hide from tab bar
           title: "Analytics",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="chart.bar.fill" color={color} />,
         }}
       />
 
-      {/* SETTINGS - Gear icon */}
+      {/* SETTINGS - Gear icon (hidden from tab bar) */}
       <Tabs.Screen
         name="settings"
         options={{
+          href: null, // Hide from tab bar
           title: "Settings",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
         }}

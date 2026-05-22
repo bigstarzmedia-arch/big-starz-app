@@ -137,9 +137,18 @@
 ## Known Issues
 - None yet (starting fresh)
 
+## Current Tasks (Session 2)
+- [x] Integrate 3 vector background images into ALL black screens (Create, Chat, Wallet, Settings, Profile, Music, Casting, Analytics)
+- [x] Add "Big Starz Casting App" header to all screens with vector backgrounds
+- [x] Add "Big Starz" watermark to all non-Elite tier videos
+- [ ] Connect Seedance API for Elite tier users
+- [ ] Implement real-time Chat with WebSocket
+- [ ] Add Stripe webhook handling for subscription status sync
+
 ## Completed Features
 - [x] Free Tier backend with quota tracking (3/day free, 50/day pro, unlimited elite)
 - [x] Database schema with freeTierQuota table
 - [x] tRPC API routes for video generation and quota checking
 - [x] 15 passing vitest tests
 - [x] Reusable free-tier-backend skill created
+- [x] Generated 3 cartoon vector backgrounds with diverse performers

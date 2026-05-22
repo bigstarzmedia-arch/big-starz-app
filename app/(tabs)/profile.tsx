@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, FlatList } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -67,7 +68,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="Profile">
+      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Profile Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>
@@ -239,6 +241,7 @@ export default function ProfileScreen() {
           />
         </View>
       </ScrollView>
-    </ScreenContainer>
+      </ScreenContainer>
+    </BigStarzBackground>
   );
 }

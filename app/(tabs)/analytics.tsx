@@ -1,6 +1,7 @@
-import { ScrollView, View, Text, Pressable, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, Pressable } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '@/lib/language-provider';
 
@@ -68,7 +69,8 @@ export default function AnalyticsScreen() {
   const maxValue = Math.max(...weeklyData.map((d) => d.value));
 
   return (
-    <ScreenContainer edges={['top', 'left', 'right']} containerClassName="bg-black">
+    <BigStarzBackground showHeader={true} headerTitle="Analytics">
+      <ScreenContainer edges={['top', 'left', 'right']} containerClassName="bg-transparent">
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
         {/* Header */}
         <View className="mt-6 mb-6">
@@ -192,6 +194,7 @@ export default function AnalyticsScreen() {
           ))}
         </View>
       </ScrollView>
-    </ScreenContainer>
+      </ScreenContainer>
+    </BigStarzBackground>
   );
 }

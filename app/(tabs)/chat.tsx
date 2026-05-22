@@ -1,6 +1,7 @@
-import { View, Text, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import * as Haptics from 'expo-haptics';
 import { trpc } from '@/lib/trpc';
 
@@ -82,7 +83,8 @@ export default function ChatScreen() {
 
   if (selectedConversation) {
     return (
-      <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+      <BigStarzBackground showHeader={false}>
+        <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
         {/* Header */}
         <View
           style={{
@@ -217,11 +219,13 @@ export default function ChatScreen() {
           </View>
         </KeyboardAvoidingView>
       </ScreenContainer>
+      </BigStarzBackground>
     );
   }
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="Messages">
+      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
       {/* Header with Tabs and New Message Button */}
       <View
         style={{
@@ -358,5 +362,6 @@ export default function ChatScreen() {
         />
       )}
     </ScreenContainer>
+    </BigStarzBackground>
   );
 }

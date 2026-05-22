@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import { Paywall } from '@/components/paywall';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -72,7 +73,8 @@ export default function WalletScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="Wallet & Earnings">
+      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Balance Card */}
         <View
@@ -241,6 +243,7 @@ export default function WalletScreen() {
         userId={userId}
         currentTier={currentTier}
       />
-    </ScreenContainer>
+      </ScreenContainer>
+    </BigStarzBackground>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -189,7 +190,7 @@ export default function CreateScreen() {
   const showQuotaWarning = quotaRemaining === 0 && !generateVideoMutation.isPending;
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="AI Studio">
       {/* Plus Button */}
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <TouchableOpacity
@@ -213,7 +214,8 @@ export default function CreateScreen() {
 
       {/* Modal */}
       <Modal visible={showModal} transparent animationType="slide">
-        <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+        <BigStarzBackground showHeader={true} headerTitle="Create with Big Starz AI ✨">
+          <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
           <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16, justifyContent: 'space-between' }}>
             {/* Close Button */}
             <TouchableOpacity
@@ -520,8 +522,9 @@ export default function CreateScreen() {
               </TouchableOpacity>
             )}
           </ScrollView>
-        </ScreenContainer>
+            </ScreenContainer>
+        </BigStarzBackground>
       </Modal>
-    </ScreenContainer>
+    </BigStarzBackground>
   );
 }

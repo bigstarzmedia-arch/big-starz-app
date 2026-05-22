@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, FlatList, TextInput } from 'react-native';
 import { useState, useMemo } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -138,7 +139,8 @@ export default function CastingScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="Casting Collab">
+      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
@@ -348,6 +350,7 @@ export default function CastingScreen() {
           )}
         </View>
       </ScrollView>
-    </ScreenContainer>
+      </ScreenContainer>
+    </BigStarzBackground>
   );
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { processVideoWithWatermark } from "./watermark";
 
 export type UserTier = "free" | "pro" | "elite";
 
@@ -13,8 +14,10 @@ interface VideoGenerationRequest {
 interface VideoGenerationResponse {
   videoId: string;
   videoUrl: string;
+  watermarkedUrl?: string;
   provider: "grok" | "kling" | "seedance";
   status: "pending" | "processing" | "completed" | "failed";
+  hasWatermark: boolean;
   createdAt: Date;
 }
 
@@ -37,16 +40,38 @@ export class TieredVideoAPI {
     const { prompt, duration = 10, style = "cinematic", userId, tier } = request;
 
     try {
+      let response: VideoGenerationResponse;
+
       switch (tier) {
         case "free":
-          return await this.generateWithGrok(prompt, duration, style, userId);
+          response = await this.generateWithGrok(prompt, duration, style, userId);
+          break;
         case "pro":
-          return await this.generateWithKling(prompt, duration, style, userId);
+          response = await this.generateWithKling(prompt, duration, style, userId);
+          break;
         case "elite":
-          return await this.generateWithSeedance(prompt, duration, style, userId);
+          response = await this.generateWithSeedance(prompt, duration, style, userId);
+          break;
         default:
           throw new Error(`Unknown tier: ${tier}`);
       }
+
+      // Apply watermark for non-Elite tiers
+      if (tier !== "elite") {
+        const watermarked = await processVideoWithWatermark({
+          videoUrl: response.videoUrl,
+          tier,
+          position: "bottom-right",
+          opacity: 0.6,
+          scale: 1,
+        });
+        response.watermarkedUrl = watermarked.watermarkedUrl;
+        response.hasWatermark = watermarked.hasWatermark;
+      } else {
+        response.hasWatermark = false;
+      }
+
+      return response;
     } catch (error) {
       console.error(`Video generation failed for tier ${tier}:`, error);
       throw error;
@@ -89,6 +114,7 @@ export class TieredVideoAPI {
       videoUrl: data.video_url,
       provider: "grok",
       status: "processing",
+      hasWatermark: false, // Will be set by generateVideo()
       createdAt: new Date(),
     };
   }
@@ -130,6 +156,7 @@ export class TieredVideoAPI {
       videoUrl: data.video_url,
       provider: "kling",
       status: "processing",
+      hasWatermark: false, // Will be set by generateVideo()
       createdAt: new Date(),
     };
   }
@@ -172,6 +199,7 @@ export class TieredVideoAPI {
       videoUrl: data.video_url,
       provider: "seedance",
       status: "processing",
+      hasWatermark: false, // Elite tier - no watermark
       createdAt: new Date(),
     };
   }
@@ -204,6 +232,7 @@ export class TieredVideoAPI {
       videoUrl: data.video_url || "",
       provider,
       status: data.status,
+      hasWatermark: false,
       createdAt: new Date(data.created_at),
     };
   }

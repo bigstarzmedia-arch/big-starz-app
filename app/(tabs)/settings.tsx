@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Switch, I18nManager } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, I18nManager } from 'react-native';
 import { useState, useEffect } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { BigStarzBackground } from '@/components/big-starz-background';
 import { useLanguage, useTranslation } from '@/lib/language-provider';
 import { LANGUAGES, Language } from '@/lib/i18n';
 import * as Haptics from 'expo-haptics';
@@ -25,7 +26,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+    <BigStarzBackground showHeader={true} headerTitle="Settings">
+      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
@@ -167,6 +169,7 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
-    </ScreenContainer>
+      </ScreenContainer>
+    </BigStarzBackground>
   );
 }

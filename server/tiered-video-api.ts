@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { processVideoWithWatermark } from "./watermark";
+import { generateSeedanceVideo, getSeedanceStatus, type SeedanceGenerateRequest } from "./seedance-api";
 
 export type UserTier = "free" | "pro" | "elite";
 
@@ -31,7 +32,7 @@ export class TieredVideoAPI {
   private grokApiKey = process.env.XAI_API_KEY;
   private klingAccessKey = process.env.KLING_ACCESS_KEY;
   private klingSecretKey = process.env.KLING_SECRET_KEY;
-  private seedanceApiKey = process.env.SEEDANCE_API_KEY;
+  private atlascloudApiKey = process.env.ATLASCLOUD_API_KEY;
 
   /**
    * Generate video based on user tier
@@ -171,37 +172,35 @@ export class TieredVideoAPI {
     style: string,
     userId: string
   ): Promise<VideoGenerationResponse> {
-    // Seedance - using their premium video generation endpoint
-    const response = await fetch("https://api.seedance.ai/v1/videos/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.seedanceApiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: `${prompt}. Style: ${style}`,
-        duration, // No limit for elite tier
-        quality: "ultra",
-        fps: 30,
-        resolution: "4k",
-        userId,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Seedance API error: ${response.statusText}`);
+    if (!this.atlascloudApiKey) {
+      throw new Error('Seedance API key not configured');
     }
 
-    const data = await response.json();
+    try {
+      const seedanceRequest: SeedanceGenerateRequest = {
+        prompt: `${prompt}. Style: ${style}`,
+        duration: Math.min(duration, 15), // Seedance max 15s
+        resolution: '1440p-SR', // Super-resolution 4K for Elite
+        ratio: '9:16', // Mobile vertical format
+        generateAudio: true,
+        watermark: false, // Elite tier - no watermark
+        returnLastFrame: false,
+      };
 
-    return {
-      videoId: data.video_id,
-      videoUrl: data.video_url,
-      provider: "seedance",
-      status: "processing",
-      hasWatermark: false, // Elite tier - no watermark
-      createdAt: new Date(),
-    };
+      const result = await generateSeedanceVideo(seedanceRequest);
+
+      return {
+        videoId: result.id,
+        videoUrl: result.videoUrl || '',
+        provider: 'seedance',
+        status: result.status === 'completed' ? 'completed' : 'processing',
+        hasWatermark: false, // Elite tier - no watermark
+        createdAt: new Date(result.createdAt),
+      };
+    } catch (error) {
+      console.error('Seedance generation error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -244,7 +243,7 @@ export class TieredVideoAPI {
       case "kling":
         return this.klingAccessKey || "";
       case "seedance":
-        return this.seedanceApiKey || "";
+        return this.atlascloudApiKey || "";
     }
   }
 }

@@ -141,7 +141,7 @@
 - [x] Integrate 3 vector background images into ALL black screens (Create, Chat, Wallet, Settings, Profile, Music, Casting, Analytics)
 - [x] Add "Big Starz Casting App" header to all screens with vector backgrounds
 - [x] Add "Big Starz" watermark to all non-Elite tier videos
-- [ ] Connect Seedance API for Elite tier users
+- [x] Connect Seedance 2.0 API for Elite tier users (1440p-SR 4K, reference images/videos/audio)
 - [ ] Implement real-time Chat with WebSocket
 - [ ] Add Stripe webhook handling for subscription status sync
 

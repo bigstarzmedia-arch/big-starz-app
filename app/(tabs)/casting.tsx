@@ -1,8 +1,7 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, FlatList, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, FlatList, TextInput, Alert } from 'react-native';
 import { useState, useMemo } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { BigStarzBackground } from '@/components/big-starz-background';
-import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -112,7 +111,6 @@ const MOCK_CREATORS: Creator[] = [
 const CATEGORIES = ['All', 'Dancer', 'Singer', 'Model', 'Actor', 'Producer', 'Makeup Artist'];
 
 export default function CastingScreen() {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
@@ -128,28 +126,38 @@ export default function CastingScreen() {
     });
   }, [searchQuery, selectedCategory, priceRange]);
 
-  const handleCreatorPress = (creator: Creator) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleHireCreator = (creator: Creator) => {
+    if (!creator.available) {
+      Alert.alert('Not Available', `${creator.name} is currently not available.`);
+      return;
     }
-    router.push({
-      pathname: '/creator-detail',
-      params: { creatorId: creator.id, creatorName: creator.name },
-    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Send Casting Offer',
+      `Hire ${creator.name} for $${creator.rate}?`,
+      [
+        { text: 'Cancel', onPress: () => {} },
+        {
+          text: 'Send Offer',
+          onPress: () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('Success', `Offer sent to ${creator.name}!`);
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <BigStarzBackground showHeader={true} headerTitle="Casting Collab">
-      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+    <ScreenContainer className="flex-1 bg-black">
+      <BigStarzBackground>
+        <View />
+      </BigStarzBackground>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }} className="z-10">
         {/* Header */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-          <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 4 }}>
-            🎬 Casting
-          </Text>
-          <Text style={{ fontSize: 14, color: '#888' }}>
-            Discover & book creators for your videos
-          </Text>
+        <View className="px-6 pt-6 pb-4">
+          <Text className="text-3xl font-bold text-white mb-1">🎬 Cast Creators</Text>
+          <Text className="text-sm text-gray-400">Hire talented creators for your videos</Text>
         </View>
 
         {/* Search Bar */}
@@ -234,13 +242,14 @@ export default function CastingScreen() {
               {filteredCreators.map((creator) => (
                 <TouchableOpacity
                   key={creator.id}
-                  onPress={() => handleCreatorPress(creator)}
+                  onPress={() => handleHireCreator(creator)}
                   style={{
                     backgroundColor: '#1A1A1A',
                     borderRadius: 12,
                     overflow: 'hidden',
                     borderWidth: 1,
-                    borderColor: '#333',
+                    borderColor: creator.available ? '#333' : '#666',
+                    opacity: creator.available ? 1 : 0.6,
                   }}
                 >
                   <View style={{ flexDirection: 'row', padding: 12, gap: 12 }}>
@@ -314,24 +323,26 @@ export default function CastingScreen() {
                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FF0055' }}>
                           ${creator.rate}/hr
                         </Text>
-                        <View
+                        <TouchableOpacity
+                          onPress={() => handleHireCreator(creator)}
+                          disabled={!creator.available}
                           style={{
                             paddingHorizontal: 12,
                             paddingVertical: 6,
                             borderRadius: 6,
-                            backgroundColor: creator.available ? '#00FF00' : '#666',
+                            backgroundColor: creator.available ? '#FF0055' : '#666',
                           }}
                         >
                           <Text
                             style={{
                               fontSize: 11,
                               fontWeight: 'bold',
-                              color: creator.available ? '#000' : '#FFF',
+                              color: '#FFF',
                             }}
                           >
-                            {creator.available ? 'Available' : 'Booked'}
+                            {creator.available ? 'Hire' : 'Booked'}
                           </Text>
-                        </View>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>
@@ -350,7 +361,6 @@ export default function CastingScreen() {
           )}
         </View>
       </ScrollView>
-      </ScreenContainer>
-    </BigStarzBackground>
+    </ScreenContainer>
   );
 }

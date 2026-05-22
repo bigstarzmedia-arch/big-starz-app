@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   Alert,
+  Image,
 } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
@@ -20,511 +21,352 @@ import { VideoUpload } from '@/components/video-upload';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type CreationType = 'music-video' | 'ai-cameo' | 'ai-image' | null;
-type MusicStyle = 'cinematic' | 'anime' | 'neon' | 'fashion';
-type ImageStyle = 'photorealistic' | 'anime' | 'oil-painting' | 'neon';
+type CreationType = 'text-to-video' | 'text-to-song' | null;
+type VideoModel = 'seedance' | 'kling' | 'runway' | 'grok';
 
 interface GenerationState {
   type: CreationType;
   prompt: string;
-  style: MusicStyle | ImageStyle;
   loading: boolean;
   progress: number;
+  videoModel: VideoModel;
   selectedImage: string | null;
-  selectedVideo: string | null;
 }
 
 export default function CreateScreen() {
+  const [activeTab, setActiveTab] = useState<'video' | 'song'>('video');
   const [showModal, setShowModal] = useState(false);
   const [generation, setGeneration] = useState<GenerationState>({
     type: null,
     prompt: '',
-    style: 'cinematic',
     loading: false,
     progress: 0,
+    videoModel: 'seedance',
     selectedImage: null,
-    selectedVideo: null,
   });
 
   // tRPC mutations
   const generateVideoMutation = trpc.videos.generateFree.useMutation();
-  const checkQuotaMutation = trpc.videos.checkQuota.useQuery();
-  const createVideoMutation = trpc.videos.create.useMutation();
-  const createMusicMutation = trpc.music.create.useMutation();
 
-  const handleCardPress = (type: CreationType) => {
-    setGeneration({ ...generation, type });
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleTextToVideo = async () => {
+    if (!generation.prompt.trim()) {
+      Alert.alert('Error', 'Please enter a prompt for your video');
+      return;
     }
-  };
 
-  const handleStyleSelect = (style: MusicStyle | ImageStyle) => {
-    setGeneration({ ...generation, style });
-  };
+    setGeneration((prev) => ({ ...prev, loading: true, progress: 0 }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-  const handlePickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setGeneration((prev) => ({
+          ...prev,
+          progress: Math.min(prev.progress + Math.random() * 30, 90),
+        }));
+      }, 500);
+
+      const result = await generateVideoMutation.mutateAsync({
+        prompt: generation.prompt,
       });
-      if (!result.canceled && result.assets[0]) {
-        setGeneration({ ...generation, selectedImage: result.assets[0].uri });
-      }
-    } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
 
-  const handleTakePhoto = async () => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
+      clearInterval(progressInterval);
+      setGeneration((prev) => ({ ...prev, progress: 100 }));
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Success', 'Video generated! Check your gallery.');
+      setShowModal(false);
+      setGeneration({
+        type: null,
+        prompt: '',
+        loading: false,
+        progress: 0,
+        videoModel: 'seedance',
+        selectedImage: null,
       });
-      if (!result.canceled && result.assets[0]) {
-        setGeneration({ ...generation, selectedImage: result.assets[0].uri });
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      Alert.alert('Error', 'Failed to take photo');
+    } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', error.message || 'Failed to generate video');
+    } finally {
+      setGeneration((prev) => ({ ...prev, loading: false }));
     }
   };
 
-  const handleGenerate = async () => {
-    if (!generation.prompt.trim() && generation.type !== 'ai-cameo') return;
-    if (generation.type === 'ai-cameo' && !generation.selectedImage) return;
+  const handleTextToSong = async () => {
+    if (!generation.prompt.trim()) {
+      Alert.alert('Error', 'Please enter lyrics or song description');
+      return;
+    }
 
-    setGeneration({ ...generation, loading: true, progress: 10 });
+    setGeneration((prev) => ({ ...prev, loading: true, progress: 0 }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      if (generation.type === 'music-video') {
-        // Call Sora API via tRPC for music video generation
-        const result = await generateVideoMutation.mutateAsync({
-          prompt: `${generation.prompt} Style: ${generation.style}`,
-        });
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setGeneration((prev) => ({
+          ...prev,
+          progress: Math.min(prev.progress + Math.random() * 25, 90),
+        }));
+      }, 600);
 
-        if (result) {
-          setGeneration({
-            type: null,
-            prompt: '',
-            style: 'cinematic',
-            loading: false,
-            progress: 100,
-            selectedImage: null,
-            selectedVideo: null,
-          });
-          Alert.alert('Success', 'Music video generated! Check your library.');
-          setShowModal(false);
-        }
-      } else if (generation.type === 'ai-cameo') {
-        // Upload face clone and beautify with Runway API
-        setGeneration((prev) => ({ ...prev, progress: 50 }));
+      // Call song generation API
+      const result = await generateVideoMutation.mutateAsync({
+        prompt: generation.prompt,
+      });
 
-        // In a real app, you'd upload the image to S3 first
-        // For now, we'll simulate the process
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+      clearInterval(progressInterval);
+      setGeneration((prev) => ({ ...prev, progress: 100 }));
 
-        setGeneration({
-          type: null,
-          prompt: '',
-          style: 'cinematic',
-          loading: false,
-          progress: 100,
-          selectedImage: null,
-          selectedVideo: null,
-        });
-        Alert.alert('Success', 'Face clone created! Check your library.');
-        setShowModal(false);
-      } else if (generation.type === 'ai-image') {
-        // Call Gemini API for image generation
-        setGeneration((prev) => ({ ...prev, progress: 50 }));
-
-        // Simulate image generation
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        setGeneration({
-          type: null,
-          prompt: '',
-          style: 'photorealistic',
-          loading: false,
-          progress: 100,
-          selectedImage: null,
-          selectedVideo: null,
-        });
-        Alert.alert('Success', 'Image generated! Check your library.');
-        setShowModal(false);
-      }
-    } catch (error) {
-      console.error('Generation error:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Generation failed. Please try again.';
-      Alert.alert('Error', errorMessage);
-      setGeneration((prev) => ({ ...prev, loading: false, progress: 0 }));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Success', 'Song generated! Check your music library.');
+      setShowModal(false);
+      setGeneration({
+        type: null,
+        prompt: '',
+        loading: false,
+        progress: 0,
+        videoModel: 'seedance',
+        selectedImage: null,
+      });
+    } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', error.message || 'Failed to generate song');
+    } finally {
+      setGeneration((prev) => ({ ...prev, loading: false }));
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setGeneration({
-      type: null,
-      prompt: '',
-      style: 'cinematic',
-      loading: false,
-      progress: 0,
-      selectedImage: null,
-      selectedVideo: null,
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [9, 16],
+      quality: 1,
     });
+
+    if (!result.canceled) {
+      setGeneration((prev) => ({
+        ...prev,
+        selectedImage: result.assets[0].uri,
+      }));
+    }
   };
-
-  const musicStyles: MusicStyle[] = ['cinematic', 'anime', 'neon', 'fashion'];
-  const imageStyles: ImageStyle[] = ['photorealistic', 'anime', 'oil-painting', 'neon'];
-
-  // Show quota warning if user is on free tier
-  const quotaRemaining = checkQuotaMutation.data?.remaining ?? 0;
-  const showQuotaWarning = quotaRemaining === 0 && !generateVideoMutation.isPending;
 
   return (
-    <BigStarzBackground showHeader={true} headerTitle="AI Studio">
-      {/* Plus Button */}
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <ScreenContainer className="flex-1 bg-black">
+      <BigStarzBackground>
+        <View />
+      </BigStarzBackground>
+
+      {/* Header */}
+      <View className="px-6 pt-6 pb-4 z-10">
+        <Text className="text-3xl font-bold text-white mb-1">Create</Text>
+        <Text className="text-sm text-gray-400">
+          Generate videos and songs with AI
+        </Text>
+      </View>
+
+      {/* Tab Navigation */}
+      <View className="flex-row px-6 gap-3 mb-6 z-10">
         <TouchableOpacity
-          onPress={() => setShowModal(true)}
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: '#FF0055',
-            justifyContent: 'center',
-            alignItems: 'center',
-            shadowColor: '#FF0055',
-            shadowOpacity: 0.8,
-            shadowRadius: 20,
-            elevation: 10,
+          onPress={() => {
+            setActiveTab('video');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           }}
+          className={`flex-1 py-3 rounded-full ${
+            activeTab === 'video' ? 'bg-pink-500' : 'bg-gray-800'
+          }`}
         >
-          <Text style={{ fontSize: 48, color: '#FFF', fontWeight: 'bold' }}>+</Text>
+          <Text
+            className={`text-center font-semibold ${
+              activeTab === 'video' ? 'text-white' : 'text-gray-400'
+            }`}
+          >
+            🎬 Text to Video
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            setActiveTab('song');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }}
+          className={`flex-1 py-3 rounded-full ${
+            activeTab === 'song' ? 'bg-pink-500' : 'bg-gray-800'
+          }`}
+        >
+          <Text
+            className={`text-center font-semibold ${
+              activeTab === 'song' ? 'text-white' : 'text-gray-400'
+            }`}
+          >
+            🎵 Text to Song
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal */}
-      <Modal visible={showModal} transparent animationType="slide">
-        <BigStarzBackground showHeader={true} headerTitle="Create with Big Starz AI ✨">
-          <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16, justifyContent: 'space-between' }}>
-            {/* Close Button */}
-            <TouchableOpacity
-              onPress={closeModal}
-              style={{ alignSelf: 'flex-end', marginBottom: 20 }}
-            >
-              <Text style={{ fontSize: 32, color: '#FF0055', fontWeight: 'bold' }}>✕</Text>
-            </TouchableOpacity>
-
-            {/* Quota Warning */}
-            {showQuotaWarning && (
-              <View
-                style={{
-                  backgroundColor: '#FF0055',
-                  borderRadius: 12,
-                  padding: 12,
-                  marginBottom: 16,
-                }}
-              >
-                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                  Daily quota reached! Upgrade to Pro for 50 videos/month.
-                </Text>
-              </View>
-            )}
-
-            {/* Main Content */}
-            {generation.type === null ? (
-              // Card Selection View
-              <View style={{ gap: 16 }}>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF', marginBottom: 8 }}>
-                  Create with Big Starz AI ✨
-                </Text>
-
-                {/* Music Video Card */}
-                <TouchableOpacity
-                  onPress={() => handleCardPress('music-video')}
-                  disabled={showQuotaWarning}
-                  style={{
-                    backgroundColor: '#1A1A1A',
-                    borderRadius: 16,
-                    padding: 20,
-                    borderWidth: 2,
-                    borderColor: '#FF0055',
-                    alignItems: 'center',
-                    gap: 12,
-                    opacity: showQuotaWarning ? 0.5 : 1,
-                  }}
-                >
-                  <Text style={{ fontSize: 48 }}>🎬</Text>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>Music Video</Text>
-                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
-                    Generate AI music videos with Sora
-                  </Text>
-                </TouchableOpacity>
-
-                {/* AI Cameo Card */}
-                <TouchableOpacity
-                  onPress={() => handleCardPress('ai-cameo')}
-                  style={{
-                    backgroundColor: '#1A1A1A',
-                    borderRadius: 16,
-                    padding: 20,
-                    borderWidth: 2,
-                    borderColor: '#00FFFF',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 48 }}>👤</Text>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#00FFFF' }}>AI Cameo</Text>
-                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
-                    Beautify videos with face cloning
-                  </Text>
-                </TouchableOpacity>
-
-                {/* AI Image Card */}
-                <TouchableOpacity
-                  onPress={() => handleCardPress('ai-image')}
-                  style={{
-                    backgroundColor: '#1A1A1A',
-                    borderRadius: 16,
-                    padding: 20,
-                    borderWidth: 2,
-                    borderColor: '#FFFF00',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 48 }}>🖼️</Text>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFF00' }}>AI Image</Text>
-                  <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
-                    Generate images with Gemini
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              // Generation Input View
-              <View style={{ gap: 16 }}>
-                {/* Back Button */}
-                <TouchableOpacity
-                  onPress={() => setGeneration({ ...generation, type: null })}
-                  style={{ marginBottom: 8 }}
-                >
-                  <Text style={{ fontSize: 16, color: '#FF0055', fontWeight: 'bold' }}>← Back</Text>
-                </TouchableOpacity>
-
-                {/* Music Video Input */}
-                {generation.type === 'music-video' && (
-                  <>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>Music Video</Text>
-                    <TextInput
-                      placeholder="Describe your music video..."
-                      placeholderTextColor="#666"
-                      value={generation.prompt}
-                      onChangeText={(text) => setGeneration({ ...generation, prompt: text })}
-                      multiline
-                      numberOfLines={4}
-                      style={{
-                        backgroundColor: '#1A1A1A',
-                        borderRadius: 12,
-                        padding: 14,
-                        color: '#FFF',
-                        borderWidth: 1,
-                        borderColor: '#333',
-                        fontSize: 14,
+      {/* Content */}
+      <ScrollView className="flex-1 px-6 z-10">
+        {activeTab === 'video' ? (
+          <View className="gap-4">
+            {/* Video Model Selection */}
+            <View>
+              <Text className="text-white font-semibold mb-2">AI Model</Text>
+              <View className="flex-row gap-2">
+                {(['seedance', 'kling', 'runway', 'grok'] as VideoModel[]).map(
+                  (model) => (
+                    <TouchableOpacity
+                      key={model}
+                      onPress={() => {
+                        setGeneration((prev) => ({
+                          ...prev,
+                          videoModel: model,
+                        }));
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       }}
-                    />
-
-                    {/* Style Selector */}
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#AAA' }}>Style</Text>
-                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                      {musicStyles.map((style) => (
-                        <TouchableOpacity
-                          key={style}
-                          onPress={() => handleStyleSelect(style)}
-                          style={{
-                            backgroundColor:
-                              generation.style === style ? '#FF0055' : '#1A1A1A',
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            borderWidth: 1,
-                            borderColor: generation.style === style ? '#FF0055' : '#333',
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: generation.style === style ? '#FFF' : '#AAA',
-                              fontWeight: '600',
-                              fontSize: 12,
-                            }}
-                          >
-                            {style.charAt(0).toUpperCase() + style.slice(1)}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                )}
-
-                {/* AI Cameo Input */}
-                {generation.type === 'ai-cameo' && (
-                  <>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>AI Cameo - Upload Video</Text>
-                    <VideoUpload
-                      onVideoSelected={(uri) => setGeneration({ ...generation, selectedVideo: uri })}
-                      loading={generation.loading}
-                    />
-
-                    {generation.selectedVideo && (
-                      <TextInput
-                        placeholder="Describe the cameo effect..."
-                        placeholderTextColor="#666"
-                        value={generation.prompt}
-                        onChangeText={(text) => setGeneration({ ...generation, prompt: text })}
-                        multiline
-                        numberOfLines={3}
-                        style={{
-                          backgroundColor: '#1A1A1A',
-                          borderRadius: 12,
-                          padding: 14,
-                          color: '#FFF',
-                          borderWidth: 1,
-                          borderColor: '#333',
-                          fontSize: 14,
-                        }}
-                      />
-                    )}
-                  </>
-                )}
-
-                {/* AI Image Input */}
-                {generation.type === 'ai-image' && (
-                  <>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>AI Image</Text>
-                    <TextInput
-                      placeholder="Describe the image you want..."
-                      placeholderTextColor="#666"
-                      value={generation.prompt}
-                      onChangeText={(text) => setGeneration({ ...generation, prompt: text })}
-                      multiline
-                      numberOfLines={4}
-                      style={{
-                        backgroundColor: '#1A1A1A',
-                        borderRadius: 12,
-                        padding: 14,
-                        color: '#FFF',
-                        borderWidth: 1,
-                        borderColor: '#333',
-                        fontSize: 14,
-                      }}
-                    />
-
-                    {/* Style Selector */}
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#AAA' }}>Style</Text>
-                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                      {imageStyles.map((style) => (
-                        <TouchableOpacity
-                          key={style}
-                          onPress={() => handleStyleSelect(style)}
-                          style={{
-                            backgroundColor:
-                              generation.style === style ? '#FFFF00' : '#1A1A1A',
-                            paddingHorizontal: 16,
-                            paddingVertical: 8,
-                            borderRadius: 20,
-                            borderWidth: 1,
-                            borderColor: generation.style === style ? '#FFFF00' : '#333',
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: generation.style === style ? '#000' : '#AAA',
-                              fontWeight: '600',
-                              fontSize: 12,
-                            }}
-                          >
-                            {style
-                              .split('-')
-                              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                              .join(' ')}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                )}
-
-                {/* Progress Bar */}
-                {generation.loading && (
-                  <View style={{ gap: 8 }}>
-                    <View style={{ height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
-                      <View
-                        style={{
-                          height: '100%',
-                          backgroundColor: '#FF0055',
-                          width: `${generation.progress}%`,
-                        }}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>
-                      {Math.round(generation.progress)}% Complete
-                    </Text>
-                  </View>
+                      className={`flex-1 py-2 rounded-lg ${
+                        generation.videoModel === model
+                          ? 'bg-pink-500'
+                          : 'bg-gray-800'
+                      }`}
+                    >
+                      <Text
+                        className={`text-center text-xs font-semibold ${
+                          generation.videoModel === model
+                            ? 'text-white'
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {model.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  )
                 )}
               </View>
-            )}
+            </View>
 
-            {/* Generate Button */}
-            {generation.type !== null && (
-              <TouchableOpacity
-                onPress={handleGenerate}
-                disabled={
-                  generation.loading ||
-                  (!generation.prompt.trim() && generation.type !== 'ai-cameo') ||
-                  (generation.type === 'ai-cameo' && !generation.selectedImage) ||
-                  showQuotaWarning
+            {/* Video Prompt */}
+            <View>
+              <Text className="text-white font-semibold mb-2">
+                Describe Your Video
+              </Text>
+              <TextInput
+                placeholder="e.g., A luxury music video in Tokyo with neon lights and dancers wearing Gucci..."
+                placeholderTextColor="#666"
+                multiline
+                numberOfLines={4}
+                value={generation.prompt}
+                onChangeText={(text) =>
+                  setGeneration((prev) => ({ ...prev, prompt: text }))
                 }
-                style={{
-                  backgroundColor:
-                    generation.loading ||
-                    (!generation.prompt.trim() && generation.type !== 'ai-cameo') ||
-                    (generation.type === 'ai-cameo' && !generation.selectedImage) ||
-                    showQuotaWarning
-                      ? '#666'
-                      : '#FF0055',
-                  paddingVertical: 16,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  gap: 8,
-                  marginTop: 20,
-                }}
-              >
-                {generation.loading ? (
-                  <>
-                    <ActivityIndicator color="#FFF" />
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>Generating...</Text>
-                  </>
-                ) : (
-                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>Generate</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-            </ScreenContainer>
-        </BigStarzBackground>
-      </Modal>
-    </BigStarzBackground>
+                className="bg-gray-900 text-white p-4 rounded-lg border border-gray-700"
+              />
+            </View>
+
+            {/* Reference Image */}
+            <View>
+              <Text className="text-white font-semibold mb-2">
+                Reference Image (Optional)
+              </Text>
+              {generation.selectedImage ? (
+                <View className="relative">
+                  <Image
+                    source={{ uri: generation.selectedImage }}
+                    className="w-full h-40 rounded-lg"
+                  />
+                  <TouchableOpacity
+                    onPress={() =>
+                      setGeneration((prev) => ({
+                        ...prev,
+                        selectedImage: null,
+                      }))
+                    }
+                    className="absolute top-2 right-2 bg-red-500 rounded-full p-2"
+                  >
+                    <Text className="text-white">✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={pickImage}
+                  className="bg-gray-900 border-2 border-dashed border-gray-700 rounded-lg p-6 items-center"
+                >
+                  <Text className="text-gray-400 text-lg">📸</Text>
+                  <Text className="text-gray-400 text-sm mt-2">
+                    Tap to add reference image
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        ) : (
+          <View className="gap-4">
+            {/* Song Prompt */}
+            <View>
+              <Text className="text-white font-semibold mb-2">
+                Write Your Lyrics or Song Idea
+              </Text>
+              <TextInput
+                placeholder="e.g., Verse 1: I'm living my best life, diamonds shining bright..."
+                placeholderTextColor="#666"
+                multiline
+                numberOfLines={5}
+                value={generation.prompt}
+                onChangeText={(text) =>
+                  setGeneration((prev) => ({ ...prev, prompt: text }))
+                }
+                className="bg-gray-900 text-white p-4 rounded-lg border border-gray-700"
+              />
+            </View>
+
+            {/* Voice Selection */}
+            <View>
+              <Text className="text-white font-semibold mb-2">Voice</Text>
+              <View className="flex-row gap-2">
+                {['Male', 'Female'].map((voice) => (
+                  <TouchableOpacity
+                    key={voice}
+                    className="flex-1 py-2 rounded-lg bg-gray-800"
+                  >
+                    <Text className="text-center text-sm text-gray-400">
+                      {voice}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Generate Button */}
+        <TouchableOpacity
+          onPress={() => {
+            if (activeTab === 'video') {
+              handleTextToVideo();
+            } else {
+              handleTextToSong();
+            }
+          }}
+          disabled={generation.loading}
+          className={`mt-6 mb-8 py-4 rounded-full ${
+            generation.loading ? 'bg-gray-600' : 'bg-pink-500'
+          }`}
+        >
+          {generation.loading ? (
+            <View className="flex-row items-center justify-center gap-2">
+              <ActivityIndicator color="white" />
+              <Text className="text-white font-bold">
+                {Math.round(generation.progress)}%
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-white text-center font-bold text-lg">
+              {activeTab === 'video' ? '🎬 Generate Video' : '🎵 Generate Song'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </ScreenContainer>
   );
 }

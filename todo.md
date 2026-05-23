@@ -175,3 +175,14 @@
 - [x] Write comprehensive tests for all 3 features (24 new tests)
 - [x] Verify all TypeScript errors resolved
 - [x] Ready for final deployment
+
+
+## Session 8 - CRITICAL BUGS TO FIX
+- [ ] Fix translation system - currently not working, need to implement proper i18n
+- [ ] Spread out buttons in UI - currently cramped, need better layout
+- [ ] Redesign Profile screen: Add Cameo display, Profile picture upload, Edit cameo option, Make another character option
+- [ ] Replace mock videos with user's actual videos (10811.mp4, 10810.mp4, 9760.mp4, 9798.mp4, 9976.mp4, 9887.mp4)
+- [ ] Create Affiliate page for jewelry and clothing designers with mock-up and instant API access
+- [ ] Implement trending algorithm to surface top-performing videos
+- [ ] Add push notifications for video completion, gifts, and followers
+- [ ] Test all features end-to-end

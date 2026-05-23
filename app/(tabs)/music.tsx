@@ -1,7 +1,6 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
-import { BigStarzBackground } from '@/components/big-starz-background';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -200,8 +199,7 @@ export default function MusicScreen() {
   );
 
   return (
-    <BigStarzBackground showHeader={true} headerTitle="Music Studio">
-      <ScreenContainer containerClassName="bg-transparent" edges={['top', 'left', 'right']}>
+    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
       <View style={{ flex: 1, paddingHorizontal: 8, paddingTop: 16 }}>
         {/* Header */}
         <View style={{ marginBottom: 16, paddingHorizontal: 8 }}>
@@ -267,7 +265,6 @@ export default function MusicScreen() {
           </TouchableOpacity>
         </View>
       )}
-      </ScreenContainer>
-    </BigStarzBackground>
+    </ScreenContainer>
   );
 }

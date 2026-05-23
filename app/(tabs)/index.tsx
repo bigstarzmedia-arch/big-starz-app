@@ -1,11 +1,11 @@
-import { ScrollView, View, Text, Pressable, Dimensions, FlatList, ImageBackground, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, Pressable, Dimensions, FlatList } from 'react-native';
 import { useState, useEffect as useEffectHook } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation, useLanguage } from '@/lib/language-provider';
+import { useTranslation } from '@/lib/language-provider';
 
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -181,56 +181,23 @@ export default function HomeScreen() {
     fetchVideos();
   }, []);
 
-  const { language, setLanguage } = useLanguage();
-  const languages = ['English', 'हिन्दी', 'العربية', 'Swahili'];
-  const languageCodes = ['en', 'hi', 'ar', 'sw'];
-  
-  const handleLanguageSwitch = () => {
-    const currentIndex = languageCodes.indexOf(language);
-    const nextIndex = (currentIndex + 1) % languageCodes.length;
-    setLanguage(languageCodes[nextIndex] as 'en' | 'hi' | 'ar' | 'sw');
-  };
-
   return (
-    <ImageBackground
-      source={{ uri: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vibe-background-1-8xKNqybsTapztdpZYA2JaM.webp' }}
-      style={{ flex: 1 }}
-      imageStyle={{ resizeMode: 'cover' }}
-    >
-      <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-transparent">
-        {/* Translator Button */}
-        <TouchableOpacity
-          onPress={handleLanguageSwitch}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 100,
-            backgroundColor: '#FF1493',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{languages[languageCodes.indexOf(language)]}</Text>
-        </TouchableOpacity>
-
-        {loading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Loading videos...</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={videos}
-            renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
-            keyExtractor={(item) => item.id}
-            pagingEnabled
-            scrollEventThrottle={16}
-            snapToInterval={screenHeight}
-            decelerationRate="fast"
-          />
-        )}
-      </ScreenContainer>
-    </ImageBackground>
+    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black">
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={videos}
+          renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
+          keyExtractor={(item) => item.id}
+          pagingEnabled
+          scrollEventThrottle={16}
+          snapToInterval={screenHeight}
+          decelerationRate="fast"
+        />
+      )}
+    </ScreenContainer>
   );
 }

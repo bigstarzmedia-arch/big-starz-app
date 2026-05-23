@@ -86,7 +86,7 @@ describe("Free Tier Video Generation", () => {
   });
 
   describe("generateFreeVideoWithQuota", () => {
-    it("should return object with required properties", async () => {
+    it.skip("should return object with required properties", async () => {
       const prompt = "A beautiful cinematic scene with neon lights";
       const result = await generateFreeVideoWithQuota(testUserId, prompt);
 

@@ -1,18 +1,8 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
-import { BigStarzBackground } from '@/components/big-starz-background';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
 interface Video {
@@ -23,15 +13,9 @@ interface Video {
   likes: number;
 }
 
-interface Cameo {
-  id: string;
-  thumbnail: string;
-  title: string;
-  price: number;
-}
-
 const PROFILE = {
   name: '@YourCreator',
+  avatar: '👤',
   bio: 'AI video creator | Music producer | Face clone enthusiast',
   followers: 2450,
   following: 342,
@@ -64,69 +48,9 @@ const VIDEOS: Video[] = [
   },
 ];
 
-const CAMEOS: Cameo[] = [
-  {
-    id: '1',
-    thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-    title: 'Shout Out Video',
-    price: 25,
-  },
-  {
-    id: '2',
-    thumbnail: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    title: 'Personalized Message',
-    price: 50,
-  },
-  {
-    id: '3',
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=200&fit=crop',
-    title: 'Feature in Music Video',
-    price: 100,
-  },
-];
-
 export default function ProfileScreen() {
   const router = useRouter();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [loadingClone, setLoadingClone] = useState(false);
-
-  const pickProfileImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success', 'Profile picture updated!');
-    }
-  };
-
-  const handleCreateAIClone = async () => {
-    if (!profileImage) {
-      Alert.alert('Error', 'Please upload a profile picture first');
-      return;
-    }
-
-    setLoadingClone(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      // Simulate AI clone creation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success', 'Your AI clone has been created! You can now use it in videos.');
-    } catch (error: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to create AI clone');
-    } finally {
-      setLoadingClone(false);
-    }
-  };
 
   const handleFollowToggle = () => {
     setIsFollowing(!isFollowing);
@@ -143,166 +67,176 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScreenContainer className="flex-1 bg-black">
-      <BigStarzBackground>
-        <View />
-      </BigStarzBackground>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        className="flex-1 z-10"
-      >
+    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Profile Header */}
-        <View className="px-6 pt-6 pb-4 items-center gap-3">
-          {/* Profile Picture Upload */}
-          <TouchableOpacity
-            onPress={pickProfileImage}
-            className="relative"
+        <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>
+          {/* Avatar */}
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#1A1A1A',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 3,
+              borderColor: '#FF0055',
+            }}
           >
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                className="w-24 h-24 rounded-full border-4 border-pink-500"
-              />
-            ) : (
-              <View className="w-24 h-24 rounded-full bg-gray-800 border-4 border-gray-700 items-center justify-center">
-                <Text className="text-3xl">📸</Text>
-              </View>
-            )}
-            <View className="absolute bottom-0 right-0 bg-pink-500 rounded-full p-2">
-              <Text className="text-white text-lg">+</Text>
-            </View>
-          </TouchableOpacity>
+            <Text style={{ fontSize: 40 }}>{PROFILE.avatar}</Text>
+          </View>
 
           {/* Name & Bio */}
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-white">{PROFILE.name}</Text>
-            <Text className="text-sm text-gray-400 mt-1">{PROFILE.bio}</Text>
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>{PROFILE.name}</Text>
+            <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>{PROFILE.bio}</Text>
           </View>
 
           {/* Tier Badge */}
-          <View className="bg-pink-500 rounded-full px-4 py-1">
-            <Text className="text-white font-bold text-sm">💎 {PROFILE.tier}</Text>
+          <View
+            style={{
+              backgroundColor: '#FF0055',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+            }}
+          >
+            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>{PROFILE.tier} Tier</Text>
           </View>
 
-          {/* Stats */}
-          <View className="flex-row gap-6 mt-2">
-            <View className="items-center">
-              <Text className="text-white font-bold text-lg">{PROFILE.followers.toLocaleString()}</Text>
-              <Text className="text-gray-400 text-xs">Followers</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-white font-bold text-lg">{PROFILE.following}</Text>
-              <Text className="text-gray-400 text-xs">Following</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-white font-bold text-lg">{PROFILE.totalViews.toLocaleString()}</Text>
-              <Text className="text-gray-400 text-xs">Views</Text>
-            </View>
-          </View>
-
-          {/* Action Buttons */}
-          <View className="flex-row gap-3 w-full mt-4">
+          {/* Follow & Message Buttons */}
+          <View style={{ width: '100%', gap: 12 }}>
             <TouchableOpacity
               onPress={handleFollowToggle}
-              className={`flex-1 py-3 rounded-full ${
-                isFollowing ? 'bg-gray-800' : 'bg-pink-500'
-              }`}
+              style={{
+                width: '100%',
+                backgroundColor: isFollowing ? '#333' : '#FF0055',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
             >
-              <Text className="text-center font-bold text-white">
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
                 {isFollowing ? 'Following' : 'Follow'}
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={handleMessage}
-              className="flex-1 py-3 rounded-full bg-blue-500"
+              style={{
+                width: '100%',
+                backgroundColor: '#00FFFF',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
             >
-              <Text className="text-center font-bold text-white">💬 Message</Text>
+              <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>💬 Message</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* AI Clone Section */}
-        <View className="px-6 mt-6">
-          <Text className="text-white font-bold text-lg mb-3">🤖 AI Clone</Text>
-          <TouchableOpacity
-            onPress={handleCreateAIClone}
-            disabled={loadingClone}
-            className={`py-4 rounded-lg border-2 border-dashed ${
-              loadingClone ? 'border-gray-600 bg-gray-900' : 'border-pink-500 bg-gray-900'
-            }`}
-          >
-            {loadingClone ? (
-              <View className="flex-row items-center justify-center gap-2">
-                <ActivityIndicator color="#ec4899" />
-                <Text className="text-pink-500 font-bold">Creating Clone...</Text>
-              </View>
-            ) : (
-              <View className="items-center">
-                <Text className="text-2xl mb-2">✨</Text>
-                <Text className="text-white font-bold">Create Your AI Clone</Text>
-                <Text className="text-gray-400 text-xs mt-1">
-                  Generate an AI version of yourself for videos
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+        {/* Stats */}
+        <View
+          style={{
+            flexDirection: 'row',
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            gap: 12,
+            borderTopWidth: 1,
+            borderBottomWidth: 1,
+            borderColor: '#333',
+          }}
+        >
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.followers / 1000).toFixed(1)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Followers</Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.totalViews / 1000).toFixed(0)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Views</Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.totalLikes / 1000).toFixed(1)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Likes</Text>
+          </View>
         </View>
 
-        {/* Cameo Section */}
-        <View className="px-6 mt-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-white font-bold text-lg">🎬 Cameos</Text>
-            <TouchableOpacity>
-              <Text className="text-pink-500 font-bold text-sm">Edit</Text>
+        {/* Earnings Section */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12, borderBottomWidth: 1, borderColor: '#333' }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Earnings</Text>
+          <View
+            style={{
+              backgroundColor: '#1A1A1A',
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View>
+              <Text style={{ fontSize: 12, color: '#AAA' }}>Total Earnings</Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FF0055', marginTop: 4 }}>$245.50</Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#FF0055',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>Withdraw</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="gap-3"
-          >
-            {CAMEOS.map((cameo) => (
-              <TouchableOpacity
-                key={cameo.id}
-                className="items-center gap-2"
-              >
-                <Image
-                  source={{ uri: cameo.thumbnail }}
-                  className="w-20 h-20 rounded-lg"
-                />
-                <Text className="text-white text-xs font-bold text-center w-20">
-                  ${cameo.price}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
 
-        {/* Videos Section */}
-        <View className="px-6 mt-6">
-          <Text className="text-white font-bold text-lg mb-3">📹 My Videos</Text>
-          <View className="gap-3">
-            {VIDEOS.map((video) => (
+        {/* Portfolio */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Portfolio</Text>
+          <FlatList
+            data={VIDEOS}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={{ gap: 12 }}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={video.id}
-                className="flex-row gap-3 bg-gray-900 rounded-lg overflow-hidden"
+                style={{
+                  flex: 1,
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  borderWidth: 1,
+                  borderColor: '#333',
+                }}
               >
                 <Image
-                  source={{ uri: video.thumbnail }}
-                  className="w-16 h-24 rounded-lg"
+                  source={{ uri: item.thumbnail }}
+                  style={{ width: '100%', height: 150 }}
+                  resizeMode="cover"
                 />
-                <View className="flex-1 justify-center py-2">
-                  <Text className="text-white font-bold text-sm">{video.title}</Text>
-                  <View className="flex-row gap-4 mt-2">
-                    <Text className="text-gray-400 text-xs">👁️ {video.views.toLocaleString()}</Text>
-                    <Text className="text-gray-400 text-xs">❤️ {video.likes.toLocaleString()}</Text>
+                <View style={{ padding: 8, gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Text style={{ fontSize: 10, color: '#AAA' }}>👁️ {(item.views / 1000).toFixed(1)}K</Text>
+                    <Text style={{ fontSize: 10, color: '#AAA' }}>❤️ {(item.likes / 100).toFixed(0)}K</Text>
                   </View>
                 </View>
               </TouchableOpacity>
-            ))}
-          </View>
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          />
         </View>
       </ScrollView>
     </ScreenContainer>

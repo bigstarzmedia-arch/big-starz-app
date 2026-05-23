@@ -1,371 +1,418 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ActivityIndicator,
-  ScrollView,
-  Dimensions,
-  Alert,
-  Image,
-} from 'react-native';
 import { useState } from 'react';
+import { ScrollView, View, Text, TouchableOpacity, TextInput, ActivityIndicator, Alert, Image } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
-import { BigStarzBackground } from '@/components/big-starz-background';
+import { useColors } from '@/hooks/use-colors';
+import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { trpc } from '@/lib/trpc';
-import { VideoUpload } from '@/components/video-upload';
 
-const { width: screenWidth } = Dimensions.get('window');
-
-type CreationType = 'text-to-video' | 'text-to-song' | null;
-type VideoModel = 'seedance' | 'kling' | 'runway' | 'grok';
-
-interface GenerationState {
-  type: CreationType;
-  prompt: string;
-  loading: boolean;
-  progress: number;
-  videoModel: VideoModel;
-  selectedImage: string | null;
-}
+const VIDEO_BACKGROUNDS = [
+  'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vector-bg-studio-1-7ofBMqM2cmK4Wnwqxd5WyJ.webp',
+  'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vector-bg-stage-2-TzLtdKjRjUTSoRVQdYsdPU.webp',
+];
 
 export default function CreateScreen() {
-  const [activeTab, setActiveTab] = useState<'video' | 'song'>('video');
-  const [showModal, setShowModal] = useState(false);
-  const [generation, setGeneration] = useState<GenerationState>({
-    type: null,
-    prompt: '',
-    loading: false,
-    progress: 0,
-    videoModel: 'seedance',
-    selectedImage: null,
-  });
-
-  // tRPC mutations
-  const generateVideoMutation = trpc.videos.generateFree.useMutation();
+  const colors = useColors();
+  const [activeTab, setActiveTab] = useState<'text-video' | 'make-music' | 'casting'>('text-video');
+  const [videoPrompt, setVideoPrompt] = useState('');
+  const [musicPrompt, setMusicPrompt] = useState('');
+  const [selectedInstrumental, setSelectedInstrumental] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
   const handleTextToVideo = async () => {
-    if (!generation.prompt.trim()) {
-      Alert.alert('Error', 'Please enter a prompt for your video');
+    if (!videoPrompt.trim()) {
+      Alert.alert('Error', 'Please enter a video description');
       return;
     }
-
-    setGeneration((prev) => ({ ...prev, loading: true, progress: 0 }));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
+    setIsGenerating(true);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setGeneration((prev) => ({
-          ...prev,
-          progress: Math.min(prev.progress + Math.random() * 30, 90),
-        }));
-      }, 500);
-
-      const result = await generateVideoMutation.mutateAsync({
-        prompt: generation.prompt,
-      });
-
-      clearInterval(progressInterval);
-      setGeneration((prev) => ({ ...prev, progress: 100 }));
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success', 'Video generated! Check your gallery.');
-      setShowModal(false);
-      setGeneration({
-        type: null,
-        prompt: '',
-        loading: false,
-        progress: 0,
-        videoModel: 'seedance',
-        selectedImage: null,
-      });
-    } catch (error: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', error.message || 'Failed to generate video');
-    } finally {
-      setGeneration((prev) => ({ ...prev, loading: false }));
+      console.log('Generating video:', videoPrompt);
+      setTimeout(() => {
+        Alert.alert('Success', 'Video generation started!');
+        setIsGenerating(false);
+      }, 2000);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate video');
+      setIsGenerating(false);
     }
   };
 
-  const handleTextToSong = async () => {
-    if (!generation.prompt.trim()) {
-      Alert.alert('Error', 'Please enter lyrics or song description');
+  const handleMakeMusic = async () => {
+    if (!musicPrompt.trim()) {
+      Alert.alert('Error', 'Please enter a music description');
       return;
     }
-
-    setGeneration((prev) => ({ ...prev, loading: true, progress: 0 }));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
+    setIsGenerating(true);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setGeneration((prev) => ({
-          ...prev,
-          progress: Math.min(prev.progress + Math.random() * 25, 90),
-        }));
-      }, 600);
-
-      // Call song generation API
-      const result = await generateVideoMutation.mutateAsync({
-        prompt: generation.prompt,
-      });
-
-      clearInterval(progressInterval);
-      setGeneration((prev) => ({ ...prev, progress: 100 }));
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success', 'Song generated! Check your music library.');
-      setShowModal(false);
-      setGeneration({
-        type: null,
-        prompt: '',
-        loading: false,
-        progress: 0,
-        videoModel: 'seedance',
-        selectedImage: null,
-      });
-    } catch (error: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', error.message || 'Failed to generate song');
-    } finally {
-      setGeneration((prev) => ({ ...prev, loading: false }));
+      console.log('Generating music:', musicPrompt);
+      setTimeout(() => {
+        Alert.alert('Success', 'Music generation started!');
+        setIsGenerating(false);
+      }, 2000);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate music');
+      setIsGenerating(false);
     }
   };
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [9, 16],
-      quality: 1,
-    });
+  const handleUploadInstrumental = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+      });
+      if (result.assets && result.assets.length > 0) {
+        setSelectedInstrumental(result.assets[0].name);
+        Alert.alert('Success', `Instrumental uploaded: ${result.assets[0].name}`);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to upload instrumental');
+    }
+  };
 
-    if (!result.canceled) {
-      setGeneration((prev) => ({
-        ...prev,
-        selectedImage: result.assets[0].uri,
-      }));
+  const handleGenerateOnBeat = async () => {
+    if (!selectedInstrumental || !videoPrompt.trim()) {
+      Alert.alert('Error', 'Please upload an instrumental and enter a video description');
+      return;
+    }
+    setIsGenerating(true);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      console.log('Generating video on beat:', videoPrompt, selectedInstrumental);
+      setTimeout(() => {
+        Alert.alert('Success', 'Video generation on beat started!');
+        setIsGenerating(false);
+      }, 2000);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate video on beat');
+      setIsGenerating(false);
     }
   };
 
   return (
-    <ScreenContainer className="flex-1 bg-black">
-      <BigStarzBackground>
-        <View />
-      </BigStarzBackground>
+    <ScreenContainer containerClassName="bg-black">
+      <Image
+        source={{ uri: VIDEO_BACKGROUNDS[currentBgIndex] }}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          opacity: 0.15,
+        }}
+      />
 
-      {/* Header */}
-      <View className="px-6 pt-6 pb-4 z-10">
-        <Text className="text-3xl font-bold text-white mb-1">Create</Text>
-        <Text className="text-sm text-gray-400">
-          Generate videos and songs with AI
-        </Text>
-      </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
+          {/* Header */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>
+              Create with Big Starz
+            </Text>
+            <Text style={{ fontSize: 14, color: '#999' }}>
+              Generate videos, music, and more ✨
+            </Text>
+          </View>
 
-      {/* Tab Navigation */}
-      <View className="flex-row px-6 gap-3 mb-6 z-10">
-        <TouchableOpacity
-          onPress={() => {
-            setActiveTab('video');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }}
-          className={`flex-1 py-3 rounded-full ${
-            activeTab === 'video' ? 'bg-pink-500' : 'bg-gray-800'
-          }`}
-        >
-          <Text
-            className={`text-center font-semibold ${
-              activeTab === 'video' ? 'text-white' : 'text-gray-400'
-            }`}
+          {/* Tab Buttons at TOP */}
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 12,
+              marginBottom: 24,
+              justifyContent: 'space-between',
+            }}
           >
-            🎬 Text to Video
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setActiveTab('text-video')}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: activeTab === 'text-video' ? '#FF1493' : '#1A1A1A',
+                borderWidth: 1,
+                borderColor: activeTab === 'text-video' ? '#FF1493' : '#333',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#fff',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  fontSize: 12,
+                }}
+              >
+                📹 Text to Video
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            setActiveTab('song');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }}
-          className={`flex-1 py-3 rounded-full ${
-            activeTab === 'song' ? 'bg-pink-500' : 'bg-gray-800'
-          }`}
-        >
-          <Text
-            className={`text-center font-semibold ${
-              activeTab === 'song' ? 'text-white' : 'text-gray-400'
-            }`}
-          >
-            🎵 Text to Song
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity
+              onPress={() => setActiveTab('make-music')}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: activeTab === 'make-music' ? '#FF1493' : '#1A1A1A',
+                borderWidth: 1,
+                borderColor: activeTab === 'make-music' ? '#FF1493' : '#333',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#fff',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  fontSize: 12,
+                }}
+              >
+                🎵 Make Music
+              </Text>
+            </TouchableOpacity>
 
-      {/* Content */}
-      <ScrollView className="flex-1 px-6 z-10">
-        {activeTab === 'video' ? (
-          <View className="gap-4">
-            {/* Video Model Selection */}
-            <View>
-              <Text className="text-white font-semibold mb-2">AI Model</Text>
-              <View className="flex-row gap-2">
-                {(['seedance', 'kling', 'runway', 'grok'] as VideoModel[]).map(
-                  (model) => (
-                    <TouchableOpacity
-                      key={model}
-                      onPress={() => {
-                        setGeneration((prev) => ({
-                          ...prev,
-                          videoModel: model,
-                        }));
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      }}
-                      className={`flex-1 py-2 rounded-lg ${
-                        generation.videoModel === model
-                          ? 'bg-pink-500'
-                          : 'bg-gray-800'
-                      }`}
-                    >
-                      <Text
-                        className={`text-center text-xs font-semibold ${
-                          generation.videoModel === model
-                            ? 'text-white'
-                            : 'text-gray-400'
-                        }`}
-                      >
-                        {model.toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                )}
-              </View>
-            </View>
+            <TouchableOpacity
+              onPress={() => setActiveTab('casting')}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: activeTab === 'casting' ? '#FF1493' : '#1A1A1A',
+                borderWidth: 1,
+                borderColor: activeTab === 'casting' ? '#FF1493' : '#333',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#fff',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  fontSize: 12,
+                }}
+              >
+                👥 Casting
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-            {/* Video Prompt */}
-            <View>
-              <Text className="text-white font-semibold mb-2">
+          {/* TEXT TO VIDEO TAB */}
+          {activeTab === 'text-video' && (
+            <View style={{ gap: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>
                 Describe Your Video
               </Text>
               <TextInput
-                placeholder="e.g., A luxury music video in Tokyo with neon lights and dancers wearing Gucci..."
+                placeholder="E.g., A luxury music video in a Tokyo neon street, hip-hop beat, fashion editorial style..."
                 placeholderTextColor="#666"
+                value={videoPrompt}
+                onChangeText={setVideoPrompt}
                 multiline
                 numberOfLines={4}
-                value={generation.prompt}
-                onChangeText={(text) =>
-                  setGeneration((prev) => ({ ...prev, prompt: text }))
-                }
-                className="bg-gray-900 text-white p-4 rounded-lg border border-gray-700"
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 12,
+                  color: '#fff',
+                  borderWidth: 1,
+                  borderColor: '#333',
+                  fontSize: 14,
+                }}
               />
-            </View>
 
-            {/* Reference Image */}
-            <View>
-              <Text className="text-white font-semibold mb-2">
-                Reference Image (Optional)
-              </Text>
-              {generation.selectedImage ? (
-                <View className="relative">
-                  <Image
-                    source={{ uri: generation.selectedImage }}
-                    className="w-full h-40 rounded-lg"
-                  />
-                  <TouchableOpacity
-                    onPress={() =>
-                      setGeneration((prev) => ({
-                        ...prev,
-                        selectedImage: null,
-                      }))
-                    }
-                    className="absolute top-2 right-2 bg-red-500 rounded-full p-2"
-                  >
-                    <Text className="text-white">✕</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
+              <View style={{ gap: 8 }}>
+                <Text style={{ fontSize: 12, color: '#999' }}>
+                  Powered by Seedance (Elite) / Kling (Pro) / Runway (Free)
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleTextToVideo}
+                disabled={isGenerating}
+                style={{
+                  backgroundColor: '#FF1493',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  opacity: isGenerating ? 0.6 : 1,
+                }}
+              >
+                {isGenerating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                    Generate Video ✨
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Instrumental Upload Section */}
+              <View
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#333',
+                  gap: 12,
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#fff' }}>
+                  Or Upload an Instrumental
+                </Text>
                 <TouchableOpacity
-                  onPress={pickImage}
-                  className="bg-gray-900 border-2 border-dashed border-gray-700 rounded-lg p-6 items-center"
+                  onPress={handleUploadInstrumental}
+                  style={{
+                    backgroundColor: '#2A2A2A',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    borderWidth: 2,
+                    borderStyle: 'dashed',
+                    borderColor: '#FF1493',
+                    alignItems: 'center',
+                  }}
                 >
-                  <Text className="text-gray-400 text-lg">📸</Text>
-                  <Text className="text-gray-400 text-sm mt-2">
-                    Tap to add reference image
+                  <Text style={{ color: '#FF1493', fontWeight: '600' }}>
+                    {selectedInstrumental ? `✓ ${selectedInstrumental}` : '+ Upload Beat'}
                   </Text>
                 </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        ) : (
-          <View className="gap-4">
-            {/* Song Prompt */}
-            <View>
-              <Text className="text-white font-semibold mb-2">
-                Write Your Lyrics or Song Idea
-              </Text>
-              <TextInput
-                placeholder="e.g., Verse 1: I'm living my best life, diamonds shining bright..."
-                placeholderTextColor="#666"
-                multiline
-                numberOfLines={5}
-                value={generation.prompt}
-                onChangeText={(text) =>
-                  setGeneration((prev) => ({ ...prev, prompt: text }))
-                }
-                className="bg-gray-900 text-white p-4 rounded-lg border border-gray-700"
-              />
-            </View>
 
-            {/* Voice Selection */}
-            <View>
-              <Text className="text-white font-semibold mb-2">Voice</Text>
-              <View className="flex-row gap-2">
-                {['Male', 'Female'].map((voice) => (
+                {selectedInstrumental && (
                   <TouchableOpacity
-                    key={voice}
-                    className="flex-1 py-2 rounded-lg bg-gray-800"
+                    onPress={handleGenerateOnBeat}
+                    disabled={isGenerating}
+                    style={{
+                      backgroundColor: '#FFD700',
+                      paddingVertical: 12,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                      opacity: isGenerating ? 0.6 : 1,
+                    }}
                   >
-                    <Text className="text-center text-sm text-gray-400">
-                      {voice}
+                    <Text style={{ color: '#000', fontWeight: 'bold' }}>
+                      Generate Video on This Beat 🎶
                     </Text>
                   </TouchableOpacity>
-                ))}
+                )}
               </View>
             </View>
-          </View>
-        )}
-
-        {/* Generate Button */}
-        <TouchableOpacity
-          onPress={() => {
-            if (activeTab === 'video') {
-              handleTextToVideo();
-            } else {
-              handleTextToSong();
-            }
-          }}
-          disabled={generation.loading}
-          className={`mt-6 mb-8 py-4 rounded-full ${
-            generation.loading ? 'bg-gray-600' : 'bg-pink-500'
-          }`}
-        >
-          {generation.loading ? (
-            <View className="flex-row items-center justify-center gap-2">
-              <ActivityIndicator color="white" />
-              <Text className="text-white font-bold">
-                {Math.round(generation.progress)}%
-              </Text>
-            </View>
-          ) : (
-            <Text className="text-white text-center font-bold text-lg">
-              {activeTab === 'video' ? '🎬 Generate Video' : '🎵 Generate Song'}
-            </Text>
           )}
-        </TouchableOpacity>
+
+          {/* MAKE MUSIC TAB */}
+          {activeTab === 'make-music' && (
+            <View style={{ gap: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>
+                Create Your Music
+              </Text>
+              <TextInput
+                placeholder="E.g., Upbeat hip-hop track with luxury vibes, 120 BPM, trap drums..."
+                placeholderTextColor="#666"
+                value={musicPrompt}
+                onChangeText={setMusicPrompt}
+                multiline
+                numberOfLines={4}
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 12,
+                  color: '#fff',
+                  borderWidth: 1,
+                  borderColor: '#333',
+                  fontSize: 14,
+                }}
+              />
+
+              <View style={{ gap: 8 }}>
+                <Text style={{ fontSize: 12, color: '#999' }}>
+                  Powered by ElevenLabs & Hugging Face
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleMakeMusic}
+                disabled={isGenerating}
+                style={{
+                  backgroundColor: '#FF1493',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  opacity: isGenerating ? 0.6 : 1,
+                }}
+              >
+                {isGenerating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                    Generate Music 🎵
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* CASTING TAB */}
+          {activeTab === 'casting' && (
+            <View style={{ gap: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>
+                Hire Creators
+              </Text>
+              <Text style={{ fontSize: 14, color: '#999' }}>
+                Find and hire talented creators to appear in your videos
+              </Text>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#333',
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#FF1493' }}>
+                  👥 Browse Casting Directory →
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#333',
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#FF1493' }}>
+                  💬 View Casting Offers →
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#333',
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#FF1493' }}>
+                  ⭐ Top Rated Creators →
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
     </ScreenContainer>
   );

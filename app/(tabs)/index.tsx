@@ -1,14 +1,17 @@
 import { ScrollView, View, Text, Pressable, Dimensions, FlatList } from 'react-native';
 import { useState, useEffect as useEffectHook } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { VideoPlayerModal, type VideoData } from '@/components/video-player-modal';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import { Platform, View, Text, Dimensions, FlatList, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '@/lib/language-provider';
 
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+
+
 
 interface Video {
   id: string;
@@ -45,7 +48,7 @@ const FALLBACK_VIDEOS: Video[] = [
   },
 ];
 
-function VideoItem({ video, index }: { video: Video; index: number }) {
+function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap: (index: number) => void }) {
   const [likes, setLikes] = useState(video.likes || 0);
   const [liked, setLiked] = useState(video.liked || false);
   const player = useVideoPlayer(video.url);
@@ -58,8 +61,12 @@ function VideoItem({ video, index }: { video: Video; index: number }) {
     }
   };
 
+  const handleTap = () => {
+    onTap(index);
+  };
+
   return (
-    <View style={{ height: screenHeight, width: screenWidth }}>
+    <Pressable onPress={handleTap} style={{ height: screenHeight, width: screenWidth }}>
       <VideoView
         player={player}
         style={{ width: '100%', height: '100%' }}
@@ -142,7 +149,7 @@ function VideoItem({ video, index }: { video: Video; index: number }) {
           <Text style={{ fontSize: 24 }}>🔗</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -150,6 +157,19 @@ export default function HomeScreen() {
   const translate = useTranslation();
   const [videos, setVideos] = useState<Video[]>(FALLBACK_VIDEOS);
   const [loading, setLoading] = useState(true);
+  const [playerVisible, setPlayerVisible] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
+
+  const handleVideoTap = (index: number) => {
+    setSelectedVideoIndex(index);
+    setPlayerVisible(true);
+  };
+
+  const handleLikeInPlayer = (videoId: string, liked: boolean) => {
+    setVideos(videos.map(v => 
+      v.id === videoId ? { ...v, liked } : v
+    ));
+  };
 
   // Fetch Sora videos from Google Drive
   useEffectHook(() => {
@@ -188,15 +208,35 @@ export default function HomeScreen() {
           <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
         </View>
       ) : (
-        <FlatList
-          data={videos}
-          renderItem={({ item, index }) => <VideoItem video={item} index={index} />}
-          keyExtractor={(item) => item.id}
-          pagingEnabled
-          scrollEventThrottle={16}
-          snapToInterval={screenHeight}
-          decelerationRate="fast"
-        />
+        <>
+          <FlatList
+            data={videos}
+            renderItem={({ item, index }) => <VideoItem video={item} index={index} onTap={handleVideoTap} />}
+            keyExtractor={(item) => item.id}
+            pagingEnabled
+            scrollEventThrottle={16}
+            snapToInterval={screenHeight}
+            decelerationRate="fast"
+          />
+          <VideoPlayerModal
+            visible={playerVisible}
+            videos={videos.map(v => ({
+              id: v.id,
+              url: v.url,
+              title: v.title || v.name,
+              creator: v.creator || 'Creator',
+              likes: v.likes || 0,
+              comments: v.comments || 0,
+              shares: 0,
+              liked: v.liked,
+            } as VideoData))}
+            initialIndex={selectedVideoIndex}
+            onClose={() => setPlayerVisible(false)}
+            onLike={handleLikeInPlayer}
+            onComment={(videoId) => console.log('Comment on', videoId)}
+            onShare={(videoId) => console.log('Share', videoId)}
+          />
+        </>
       )}
     </ScreenContainer>
   );

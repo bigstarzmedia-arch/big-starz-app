@@ -1,17 +1,20 @@
-import { ScrollView, View, Text, Pressable, Dimensions, FlatList } from 'react-native';
+import { ScrollView, View, Text, Pressable, Dimensions, FlatList, Image } from 'react-native';
 import { useState, useEffect as useEffectHook } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { VideoPlayerModal, type VideoData } from '@/components/video-player-modal';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
-import { Platform, View, Text, Dimensions, FlatList, Pressable } from 'react-native';
+import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '@/lib/language-provider';
 
-
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
-
+// Vector background images
+const VECTOR_BACKGROUNDS = [
+  'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vector-bg-studio-1-7ofBMqM2cmK4Wnwqxd5WyJ.webp',
+  'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/vector-bg-stage-2-TzLtdKjRjUTSoRVQdYsdPU.webp',
+];
 
 interface Video {
   id: string;
@@ -159,6 +162,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [playerVisible, setPlayerVisible] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
 
   const handleVideoTap = (index: number) => {
     setSelectedVideoIndex(index);
@@ -202,7 +206,20 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black">
+    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black" containerClassName="bg-black">
+      {/* Background vector image */}
+      <Image
+        source={{ uri: VECTOR_BACKGROUNDS[bgIndex % VECTOR_BACKGROUNDS.length] }}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          opacity: 0.1,
+          zIndex: 0,
+        }}
+        resizeMode="cover"
+      />
+
       {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
@@ -211,13 +228,37 @@ export default function HomeScreen() {
         <>
           <FlatList
             data={videos}
-            renderItem={({ item, index }) => <VideoItem video={item} index={index} onTap={handleVideoTap} />}
+            renderItem={({ item, index }) => (
+              <View style={{ position: 'relative', zIndex: 1 }}>
+                <VideoItem video={item} index={index} onTap={handleVideoTap} />
+              </View>
+            )}
             keyExtractor={(item) => item.id}
             pagingEnabled
             scrollEventThrottle={16}
             snapToInterval={screenHeight}
             decelerationRate="fast"
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              const index = Math.round(offsetY / screenHeight);
+              setBgIndex(index);
+            }}
           />
+          {/* Vector background for player */}
+          {playerVisible && (
+            <Image
+              source={{ uri: VECTOR_BACKGROUNDS[(selectedVideoIndex + 1) % VECTOR_BACKGROUNDS.length] }}
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                opacity: 0.05,
+                zIndex: 0,
+              }}
+              resizeMode="cover"
+            />
+          )}
+
           <VideoPlayerModal
             visible={playerVisible}
             videos={videos.map(v => ({

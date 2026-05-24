@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, videos, music, castings, castingApplications, subscriberTracking, earningsLedger, revenueCatEvents, type InsertVideo, type InsertMusic, type InsertCasting, type InsertCastingApplication, type InsertSubscriberTracking, type InsertEarningsLedger, type InsertRevenueCatEvent } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { UserInputSchema, validateInput } from "./_core/validation";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -19,7 +20,10 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
+  // Validate input before processing
+  const validatedUser = validateInput(UserInputSchema, user);
+  
+  if (!validatedUser.openId) {
     throw new Error("User openId is required for upsert");
   }
 
@@ -31,7 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   try {
     const values: InsertUser = {
-      openId: user.openId,
+      openId: validatedUser.openId,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -39,26 +43,25 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
-      const value = user[field];
+      const value = validatedUser[field as keyof typeof validatedUser];
       if (value === undefined) return;
       const normalized = value ?? null;
-      values[field] = normalized;
+      (values as any)[field] = normalized;
       updateSet[field] = normalized;
     };
 
     textFields.forEach(assignNullable);
 
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
+    if (validatedUser.lastSignedIn !== undefined) {
+      values.lastSignedIn = validatedUser.lastSignedIn;
+      updateSet.lastSignedIn = validatedUser.lastSignedIn;
     }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = "admin";
-      updateSet.role = "admin";
+    if (validatedUser.role !== undefined) {
+      (values as any).role = validatedUser.role;
+      updateSet.role = validatedUser.role;
     }
+    // NOTE: Admin roles must be assigned manually in the database or through a secure admin panel
+    // Never automatically assign admin roles based on environment variables
 
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
@@ -72,6 +75,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       set: updateSet,
     });
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Validation error')) {
+      console.error("[Database] User validation failed:", error.message);
+      throw new Error(`Invalid user data: ${error.message}`);
+    }
     console.error("[Database] Failed to upsert user:", error);
     throw error;
   }

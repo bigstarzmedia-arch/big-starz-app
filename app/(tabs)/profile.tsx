@@ -1,113 +1,244 @@
-import { ScrollView, Text, View, TouchableOpacity, Image } from 'react-native';
-import { ScreenContainer } from '@/components/screen-container';
-import { BigStarzBackground } from '@/components/big-starz-background';
-import { useColors } from '@/hooks/use-colors';
-import * as ImagePicker from 'expo-image-picker';
-import * as Haptics from 'expo-haptics';
+import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
+import { ScreenContainer } from '@/components/screen-container';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
+
+interface Video {
+  id: string;
+  thumbnail: string;
+  title: string;
+  views: number;
+  likes: number;
+}
+
+const PROFILE = {
+  name: '@YourCreator',
+  avatar: '👤',
+  bio: 'AI video creator | Music producer | Face clone enthusiast',
+  followers: 2450,
+  following: 342,
+  totalViews: 125400,
+  totalLikes: 8900,
+  tier: 'Pro',
+};
+
+const VIDEOS: Video[] = [
+  {
+    id: '1',
+    thumbnail: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=600&fit=crop',
+    title: 'AI Music Video #1',
+    views: 5200,
+    likes: 420,
+  },
+  {
+    id: '2',
+    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=600&fit=crop',
+    title: 'Face Clone Test',
+    views: 3100,
+    likes: 280,
+  },
+  {
+    id: '3',
+    thumbnail: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=400&h=600&fit=crop',
+    title: 'Beat Studio Creation',
+    views: 8900,
+    likes: 620,
+  },
+];
 
 export default function ProfileScreen() {
-  const colors = useColors();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const router = useRouter();
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  const pickProfileImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0]) {
-      setProfileImage(result.assets[0].uri);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const handleFollowToggle = () => {
+    setIsFollowing(!isFollowing);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
+  const handleMessage = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push({ pathname: '/(tabs)/chat', params: { creatorId: '1' } });
+  };
+
   return (
-    <BigStarzBackground>
-      <ScreenContainer className="flex-1 bg-black/80">
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="gap-8 p-6">
-            {/* Profile Header */}
-            <View className="items-center gap-4">
-              {/* Profile Picture */}
-              <TouchableOpacity
-                onPress={pickProfileImage}
-                className="relative"
-                activeOpacity={0.7}
-              >
-                <View className="w-40 h-40 rounded-full bg-surface border-4 border-primary items-center justify-center overflow-hidden">
-                  {profileImage ? (
-                    <Image
-                      source={{ uri: profileImage }}
-                      className="w-full h-full"
-                    />
-                  ) : (
-                    <Text className="text-8xl">📸</Text>
-                  )}
-                </View>
-                <View className="absolute bottom-0 right-0 bg-primary rounded-full p-3 border-4 border-black">
-                  <Text className="text-2xl">+</Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Profile Info */}
-              <View className="items-center gap-2">
-                <Text className="text-3xl font-bold text-foreground">Nova Star</Text>
-                <Text className="text-base text-muted">@novastar • Music Creator</Text>
-              </View>
-
-              {/* Stats */}
-              <View className="flex-row gap-12 w-full justify-center">
-                <View className="items-center">
-                  <Text className="text-3xl font-bold text-primary">24.8K</Text>
-                  <Text className="text-sm text-muted">Followers</Text>
-                </View>
-                <View className="items-center">
-                  <Text className="text-3xl font-bold text-primary">342</Text>
-                  <Text className="text-sm text-muted">Following</Text>
-                </View>
-                <View className="items-center">
-                  <Text className="text-3xl font-bold text-primary">67</Text>
-                  <Text className="text-sm text-muted">Videos</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* 3 MAIN BUTTONS ONLY */}
-            <View className="gap-4">
-              <TouchableOpacity
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                className="bg-primary rounded-full py-4 px-8 items-center active:opacity-80"
-              >
-                <Text className="text-background font-bold text-xl">🎬 My Cameos</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                className="bg-primary rounded-full py-4 px-8 items-center active:opacity-80"
-              >
-                <Text className="text-background font-bold text-xl">🤖 Create AI Clone</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                className="bg-primary rounded-full py-4 px-8 items-center active:opacity-80"
-              >
-                <Text className="text-background font-bold text-xl">💰 Earnings</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Earnings Preview */}
-            <View className="bg-primary/10 border-2 border-primary rounded-2xl p-6 gap-3">
-              <Text className="text-lg font-semibold text-primary">Total Earnings</Text>
-              <Text className="text-4xl font-bold text-foreground">$2,450.50</Text>
-              <Text className="text-sm text-muted">This month: +$580</Text>
-            </View>
+    <ScreenContainer containerClassName="bg-black" edges={['top', 'left', 'right']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Profile Header */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 20, alignItems: 'center', gap: 12 }}>
+          {/* Avatar */}
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#1A1A1A',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 3,
+              borderColor: '#FF0055',
+            }}
+          >
+            <Text style={{ fontSize: 40 }}>{PROFILE.avatar}</Text>
           </View>
-        </ScrollView>
-      </ScreenContainer>
-    </BigStarzBackground>
+
+          {/* Name & Bio */}
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>{PROFILE.name}</Text>
+            <Text style={{ fontSize: 12, color: '#AAA', textAlign: 'center' }}>{PROFILE.bio}</Text>
+          </View>
+
+          {/* Tier Badge */}
+          <View
+            style={{
+              backgroundColor: '#FF0055',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+            }}
+          >
+            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>{PROFILE.tier} Tier</Text>
+          </View>
+
+          {/* Follow & Message Buttons */}
+          <View style={{ width: '100%', gap: 12 }}>
+            <TouchableOpacity
+              onPress={handleFollowToggle}
+              style={{
+                width: '100%',
+                backgroundColor: isFollowing ? '#333' : '#FF0055',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleMessage}
+              style={{
+                width: '100%',
+                backgroundColor: '#00FFFF',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>💬 Message</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Stats */}
+        <View
+          style={{
+            flexDirection: 'row',
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            gap: 12,
+            borderTopWidth: 1,
+            borderBottomWidth: 1,
+            borderColor: '#333',
+          }}
+        >
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.followers / 1000).toFixed(1)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Followers</Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.totalViews / 1000).toFixed(0)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Views</Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF0055' }}>
+              {(PROFILE.totalLikes / 1000).toFixed(1)}K
+            </Text>
+            <Text style={{ fontSize: 12, color: '#AAA' }}>Likes</Text>
+          </View>
+        </View>
+
+        {/* Earnings Section */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12, borderBottomWidth: 1, borderColor: '#333' }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Earnings</Text>
+          <View
+            style={{
+              backgroundColor: '#1A1A1A',
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View>
+              <Text style={{ fontSize: 12, color: '#AAA' }}>Total Earnings</Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FF0055', marginTop: 4 }}>$245.50</Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#FF0055',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>Withdraw</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Portfolio */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Portfolio</Text>
+          <FlatList
+            data={VIDEOS}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={{ gap: 12 }}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: '#1A1A1A',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  borderWidth: 1,
+                  borderColor: '#333',
+                }}
+              >
+                <Image
+                  source={{ uri: item.thumbnail }}
+                  style={{ width: '100%', height: 150 }}
+                  resizeMode="cover"
+                />
+                <View style={{ padding: 8, gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFF' }} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Text style={{ fontSize: 10, color: '#AAA' }}>👁️ {(item.views / 1000).toFixed(1)}K</Text>
+                    <Text style={{ fontSize: 10, color: '#AAA' }}>❤️ {(item.likes / 100).toFixed(0)}K</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          />
+        </View>
+      </ScrollView>
+    </ScreenContainer>
   );
 }

@@ -7,6 +7,8 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { logger } from "./logger";
+import { getDb } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -77,9 +79,59 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
 
-  // Health check endpoint
-  app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, timestamp: Date.now() });
+  // Request logging middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    
+    res.on("finish", () => {
+      const duration = Date.now() - start;
+      if (duration > 1000) {
+        logger.warn({
+          method: req.method,
+          url: req.originalUrl,
+          status: res.statusCode,
+          duration,
+        }, "Slow request detected");
+      }
+    });
+    
+    next();
+  });
+
+  // Health check endpoint - verifies API is running
+  app.get("/api/health", async (_req, res) => {
+    const checks: Record<string, boolean> = {
+      api: true,
+      database: false,
+    };
+
+    try {
+      const db = await getDb();
+      checks.database = true;
+    } catch (error) {
+      logger.error({ err: error }, "[Health] Database check failed");
+    }
+
+    const allHealthy = Object.values(checks).every(Boolean);
+    const statusCode = allHealthy ? 200 : 503;
+
+    res.status(statusCode).json({
+      ok: allHealthy,
+      timestamp: Date.now(),
+      checks,
+      uptime: process.uptime(),
+    });
+  });
+
+  // Readiness endpoint - for Kubernetes readiness probes
+  app.get("/api/ready", async (_req, res) => {
+    try {
+      const db = await getDb();
+      res.status(200).json({ ready: true });
+    } catch (error) {
+      logger.error({ err: error }, "[Readiness] Database check failed");
+      res.status(503).json({ ready: false, reason: "database unavailable" });
+    }
   });
 
   app.use(
@@ -98,7 +150,7 @@ async function startServer() {
   }
 
   server.listen(port, () => {
-    console.log(`[api] server listening on port ${port}`);
+    logger.info({ port }, "[api] server listening on port");
   });
 }
 

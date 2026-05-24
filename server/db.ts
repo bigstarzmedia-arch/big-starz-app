@@ -1,20 +1,45 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 import { InsertUser, users, videos, music, castings, castingApplications, subscriberTracking, earningsLedger, revenueCatEvents, type InsertVideo, type InsertMusic, type InsertCasting, type InsertCastingApplication, type InsertSubscriberTracking, type InsertEarningsLedger, type InsertRevenueCatEvent } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { UserInputSchema, validateInput } from "./_core/validation";
+import { logger } from "./_core/logger";
 
+// Connection pool for production-grade database access
+let _pool: mysql.Pool | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+function getPool(): mysql.Pool {
+  if (!_pool) {
+    _pool = mysql.createPool({
+      uri: process.env.DATABASE_URL,
+      connectionLimit: 10,           // Max simultaneous connections
+      waitForConnections: true,      // Queue requests when pool is full
+      queueLimit: 0,                 // Unlimited queue (0 = unlimited)
+      enableKeepAlive: true,         // Keep idle connections alive
+      keepAliveInitialDelay: 10000,  // 10 seconds between keepalive probes
+      connectTimeout: 5000,          // Fail fast if DB is unreachable
+    });
+    logger.info("[Database] Connection pool created with 10 max connections");
+  }
+  return _pool;
+}
+
+// Get drizzle instance with connection pool
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const pool = getPool();
+      _db = drizzle(pool as any);
+      logger.info("[Database] Drizzle ORM initialized with connection pool");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
+      logger.error({ err: error }, "[Database] Failed to create connection pool");
+      throw error; // Don't return null — fail loudly
     }
+  }
+  if (!_db) {
+    throw new Error("[Database] DATABASE_URL is not set");
   }
   return _db;
 }

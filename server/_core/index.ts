@@ -9,6 +9,8 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { logger } from "./logger";
 import { getDb } from "../db";
+import { initSentry, Sentry } from "./sentry";
+import { createRateLimiter } from "./rateLimiter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -30,8 +32,19 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Initialize Sentry first
+  initSentry();
+
   const app = express();
   const server = createServer(app);
+
+  // Sentry request handler MUST be the first middleware
+  if (process.env.SENTRY_DSN) {
+    app.use((req, res, next) => {
+      Sentry.captureException(new Error("Sentry initialized"));
+      next();
+    });
+  }
 
   // CORS whitelist - only allow known, trusted origins
   const ALLOWED_ORIGINS = [
@@ -77,7 +90,23 @@ async function startServer() {
   });
 
   registerStorageProxy(app);
+
+  // Rate limiting for authentication endpoints: 10 attempts per 15 minutes per IP
+  const authLimiter = createRateLimiter(
+    15,
+    10,
+    "Too many authentication attempts. Please try again after 15 minutes."
+  );
+  app.use("/api/oauth", authLimiter);
   registerOAuthRoutes(app);
+
+  // General API rate limiter: 100 requests per minute per IP
+  const apiLimiter = createRateLimiter(
+    1,
+    100,
+    "Too many requests. Please slow down."
+  );
+  app.use("/api/trpc", apiLimiter);
 
   // Request logging middleware
   app.use((req, res, next) => {
@@ -97,6 +126,25 @@ async function startServer() {
     
     next();
   });
+
+  // Debug endpoint for Sentry testing (REMOVE before production)
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/debug-sentry", () => {
+      throw new Error("Sentry test error — verify in dashboard");
+    });
+  }
+
+  // Debug endpoint for environment check (REMOVE before production)
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/debug-env-check", (_req, res) => {
+      const vars = ["DATABASE_URL", "SENTRY_DSN", "NODE_ENV", "PORT"];
+      const status = vars.reduce((acc, key) => {
+        acc[key] = process.env[key] ? "✅ set" : "❌ missing";
+        return acc;
+      }, {} as Record<string, string>);
+      res.json(status);
+    });
+  }
 
   // Health check endpoint - verifies API is running
   app.get("/api/health", async (_req, res) => {
@@ -142,6 +190,20 @@ async function startServer() {
     }),
   );
 
+  // Sentry error handler MUST be the last middleware (before any custom error handlers)
+  if (process.env.SENTRY_DSN) {
+    app.use((err: Error, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+      Sentry.captureException(err);
+      next();
+    });
+  }
+
+  // Custom error handler goes after Sentry's
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    logger.error({ err }, "Unhandled error");
+    res.status(500).json({ error: "Internal server error" });
+  });
+
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
 
@@ -150,7 +212,7 @@ async function startServer() {
   }
 
   server.listen(port, () => {
-    logger.info({ port }, "[api] server listening on port");
+    console.log(`[api] server listening on port ${port}`);
   });
 }
 

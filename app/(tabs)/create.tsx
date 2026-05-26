@@ -186,6 +186,7 @@ export default function CreateScreen() {
                 gap: 12,
                 marginBottom: 24,
                 justifyContent: 'space-between',
+                width: '100%',
               }}
             >
               <TouchableOpacity

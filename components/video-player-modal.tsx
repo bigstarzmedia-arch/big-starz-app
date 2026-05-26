@@ -184,9 +184,9 @@ export function VideoPlayerModal({
           <View
             style={{
               position: "absolute",
-              bottom: 80,
+              bottom: 16,
               left: 16,
-              right: 60,
+              right: 80,
               zIndex: 5,
             }}
           >
@@ -231,11 +231,11 @@ export function VideoPlayerModal({
           <View
             style={{
               position: "absolute",
-              bottom: 100,
-              right: 16,
+              bottom: 120,
+              right: 12,
               zIndex: 5,
               alignItems: "center",
-              gap: 16,
+              gap: 12,
             }}
           >
             {/* Like Button */}

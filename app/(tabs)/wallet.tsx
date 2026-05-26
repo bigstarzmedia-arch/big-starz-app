@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { BigStarzBackground } from '@/components/big-starz-background';
 import { Paywall } from '@/components/paywall';
+import { PaymentProcessing } from '@/components/payment-processing';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -55,6 +56,7 @@ const TRANSACTIONS: Transaction[] = [
 export default function WalletScreen() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showPaymentProcessing, setShowPaymentProcessing] = useState(false);
   const [currentTier, setCurrentTier] = useState<'free' | 'pro' | 'elite'>('pro');
   const userId = '1'; // TODO: Get from auth context
 
@@ -93,17 +95,30 @@ export default function WalletScreen() {
           <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FF0055' }}>
             ${WALLET.balance.toFixed(2)}
           </Text>
-          <TouchableOpacity
-            onPress={handleWithdraw}
-            style={{
-              backgroundColor: '#FF0055',
-              paddingVertical: 12,
-              borderRadius: 8,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Withdraw</Text>
-          </TouchableOpacity>
+          <View style={{ gap: 8 }}>
+            <TouchableOpacity
+              onPress={handleWithdraw}
+              style={{
+                backgroundColor: '#FF0055',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Withdraw</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowPaymentProcessing(true)}
+              style={{
+                backgroundColor: '#FFD700',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#000', fontWeight: 'bold' }}>💳 Manage Payments</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats Grid */}
@@ -242,6 +257,12 @@ export default function WalletScreen() {
         onClose={() => setShowPaywall(false)}
         userId={userId}
         currentTier={currentTier}
+      />
+
+      {/* Payment Processing Modal */}
+      <PaymentProcessing
+        visible={showPaymentProcessing}
+        onClose={() => setShowPaymentProcessing(false)}
       />
       </ScreenContainer>
     </BigStarzBackground>

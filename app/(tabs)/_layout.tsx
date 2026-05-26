@@ -34,7 +34,7 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* VIBE FEED - Play icon */}
+      {/* VIBE FEED - Play icon (Bottom Left) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -43,7 +43,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* CREATE STUDIO - Plus icon (centered) */}
+      {/* CREATE STUDIO - Plus icon (Bottom Center) */}
       <Tabs.Screen
         name="create"
         options={{
@@ -52,25 +52,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* CHAT - Message bubble icon */}
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="bubble.right.fill" color={color} />,
-        }}
-      />
-
-      {/* PROFILE - Person icon */}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="person.fill" color={color} />,
-        }}
-      />
-
-      {/* WALLET - Wallet icon */}
+      {/* WALLET - Money icon (Bottom Right) */}
       <Tabs.Screen
         name="wallet"
         options={{
@@ -79,39 +61,58 @@ export default function TabLayout() {
         }}
       />
 
-      {/* MUSIC - Music note icon */}
+      {/* HIDDEN SCREENS - Accessible from top nav or modals */}
+      {/* CHAT - Accessible from top nav */}
+      <Tabs.Screen
+        name="chat"
+        options={{
+          href: null,
+          title: "Chat",
+        }}
+      />
+
+      {/* PROFILE - Accessible from top nav */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          href: null,
+          title: "Profile",
+        }}
+      />
+
+      {/* MUSIC - Accessible from Create tab */}
       <Tabs.Screen
         name="music"
         options={{
+          href: null,
           title: "Music",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="music.note" color={color} />,
         }}
       />
 
-      {/* CASTING - Casting icon */}
+      {/* CASTING - Accessible from Create tab */}
       <Tabs.Screen
         name="casting"
         options={{
+          href: null,
           title: "Casting",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="film" color={color} />,
         }}
       />
 
-      {/* ANALYTICS - Chart icon */}
+      {/* ANALYTICS - Accessible from Profile */}
       <Tabs.Screen
         name="analytics"
         options={{
+          href: null,
           title: "Analytics",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="chart.bar.fill" color={color} />,
         }}
       />
 
-      {/* SETTINGS - Gear icon */}
+      {/* SETTINGS - Accessible from Profile */}
       <Tabs.Screen
         name="settings"
         options={{
+          href: null,
           title: "Settings",
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="gearshape.fill" color={color} />,
         }}
       />
     </Tabs>

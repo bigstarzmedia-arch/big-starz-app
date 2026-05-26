@@ -1,7 +1,9 @@
 import { View, Text, ScrollView, TouchableOpacity, Image, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
+import { FollowButton } from '@/components/follow-button';
 import { useRouter } from 'expo-router';
+import { useMonetizationGuards } from '@/hooks/use-monetization-guards';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -50,13 +52,11 @@ const VIDEOS: Video[] = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [userTier] = useState<'free' | 'pro' | 'elite'>('pro');
+  const { canAccessFeature, checkFeatureAccess } = useMonetizationGuards();
 
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+  const handleUpgrade = () => {
+    Alert.alert('Upgrade', 'Upgrade your account to unlock this feature');
   };
 
   const handleMessage = () => {
@@ -107,32 +107,24 @@ export default function ProfileScreen() {
 
           {/* Follow & Message Buttons */}
           <View style={{ width: '100%', gap: 12 }}>
-            <TouchableOpacity
-              onPress={handleFollowToggle}
-              style={{
-                width: '100%',
-                backgroundColor: isFollowing ? '#333' : '#FF0055',
-                paddingVertical: 12,
-                borderRadius: 12,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
+            <FollowButton
+              userId="creator-profile"
+              creatorName={PROFILE.name}
+              size="large"
+              variant="solid"
+            />
 
             <TouchableOpacity
               onPress={handleMessage}
               style={{
                 width: '100%',
-                backgroundColor: '#00FFFF',
+                backgroundColor: '#FF1493',
                 paddingVertical: 12,
                 borderRadius: 12,
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>💬 Message</Text>
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>💬 Message</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -169,9 +161,61 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Earnings Section */}
+        {/* Monetization Features */}
         <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12, borderBottomWidth: 1, borderColor: '#333' }}>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Earnings</Text>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFF' }}>Monetization</Text>
+          
+          {/* AI Cameo */}
+          <TouchableOpacity
+            onPress={() => checkFeatureAccess('AI_CAMEO', userTier, handleUpgrade)}
+            disabled={!canAccessFeature('AI_CAMEO', userTier)}
+            style={{
+              backgroundColor: canAccessFeature('AI_CAMEO', userTier) ? '#1A1A1A' : '#2A1A1A',
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: canAccessFeature('AI_CAMEO', userTier) ? '#333' : '#663333',
+              opacity: canAccessFeature('AI_CAMEO', userTier) ? 1 : 0.6,
+            }}
+          >
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFF' }}>🎬 AI Cameo</Text>
+              <Text style={{ fontSize: 10, color: '#AAA', marginTop: 2 }}>
+                {canAccessFeature('AI_CAMEO', userTier) ? 'Unlocked' : 'Requires Pro'}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 16 }}>{canAccessFeature('AI_CAMEO', userTier) ? '✓' : '🔒'}</Text>
+          </TouchableOpacity>
+
+          {/* Affiliate Program */}
+          <TouchableOpacity
+            onPress={() => checkFeatureAccess('AFFILIATE_PROGRAM', userTier, handleUpgrade)}
+            disabled={!canAccessFeature('AFFILIATE_PROGRAM', userTier)}
+            style={{
+              backgroundColor: canAccessFeature('AFFILIATE_PROGRAM', userTier) ? '#1A1A1A' : '#2A1A1A',
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: canAccessFeature('AFFILIATE_PROGRAM', userTier) ? '#333' : '#663333',
+              opacity: canAccessFeature('AFFILIATE_PROGRAM', userTier) ? 1 : 0.6,
+            }}
+          >
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFF' }}>💰 Affiliate Program</Text>
+              <Text style={{ fontSize: 10, color: '#AAA', marginTop: 2 }}>
+                {canAccessFeature('AFFILIATE_PROGRAM', userTier) ? 'Unlocked' : 'Requires Elite'}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 16 }}>{canAccessFeature('AFFILIATE_PROGRAM', userTier) ? '✓' : '🔒'}</Text>
+          </TouchableOpacity>
+
+          {/* Earnings */}
           <View
             style={{
               backgroundColor: '#1A1A1A',
@@ -180,15 +224,17 @@ export default function ProfileScreen() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
+              borderWidth: 1,
+              borderColor: '#333',
             }}
           >
             <View>
               <Text style={{ fontSize: 12, color: '#AAA' }}>Total Earnings</Text>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FF0055', marginTop: 4 }}>$245.50</Text>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF1493', marginTop: 4 }}>$245.50</Text>
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: '#FF0055',
+                backgroundColor: '#FF1493',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 8,

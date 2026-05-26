@@ -227,116 +227,82 @@ export function VideoPlayerModal({
             )}
           </View>
 
-          {/* Action Buttons (Right Side) */}
+          {/* Action Buttons (Right Side) - OnSpace Spec */}
           <View
             style={{
               position: "absolute",
-              bottom: 80,
-              right: 12,
+              bottom: 100,
+              right: 16,
               zIndex: 5,
               alignItems: "center",
-              gap: 20,
+              gap: 16,
             }}
           >
             {/* Like Button */}
             <TouchableOpacity
               onPress={handleLike}
               style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: liked ? "#FF1493" : "rgba(255,255,255,0.1)",
+                justifyContent: "center",
                 alignItems: "center",
-                gap: 4,
               }}
+              activeOpacity={0.7}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name={liked ? "heart" : "heart-outline"}
-                  size={24}
-                  color={liked ? "#ff1744" : "white"}
-                />
-              </View>
-              <Text style={{ color: "white", fontSize: 12 }}>
-                {currentVideo.likes}
-              </Text>
+              <Ionicons
+                name={liked ? "heart" : "heart-outline"}
+                size={24}
+                color={liked ? "white" : "white"}
+              />
             </TouchableOpacity>
 
             {/* Comment Button */}
             <TouchableOpacity
               onPress={() => onComment?.(currentVideo.id)}
               style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                justifyContent: "center",
                 alignItems: "center",
-                gap: 4,
               }}
+              activeOpacity={0.7}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons name="chatbubble-outline" size={24} color="white" />
-              </View>
-              <Text style={{ color: "white", fontSize: 12 }}>
-                {currentVideo.comments}
-              </Text>
+              <Ionicons name="chatbubble-outline" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Share Button */}
             <TouchableOpacity
               onPress={() => onShare?.(currentVideo.id)}
               style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                justifyContent: "center",
                 alignItems: "center",
-                gap: 4,
               }}
+              activeOpacity={0.7}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons name="share-social-outline" size={24} color="white" />
-              </View>
-              <Text style={{ color: "white", fontSize: 12 }}>
-                {currentVideo.shares}
-              </Text>
+              <Ionicons name="share-social-outline" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Sound Icon */}
             <TouchableOpacity
               style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                justifyContent: "center",
                 alignItems: "center",
-                gap: 4,
-                marginTop: 8,
               }}
+              activeOpacity={0.7}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons name="musical-notes" size={24} color="white" />
-              </View>
+              <Ionicons name="musical-notes" size={24} color="white" />
             </TouchableOpacity>
           </View>
 

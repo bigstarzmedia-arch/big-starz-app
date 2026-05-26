@@ -3,6 +3,7 @@ import { ScrollView, View, Text, TouchableOpacity, TextInput, ActivityIndicator,
 import { ScreenContainer } from '@/components/screen-container';
 import { AIGenerationOverlay } from '@/components/ai-generation-overlay';
 import { SoundLibraryModal, type Sound } from '@/components/sound-library-modal';
+import { CameraRecorder } from '@/components/camera-recorder';
 import { useColors } from '@/hooks/use-colors';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
@@ -33,6 +34,14 @@ export default function CreateScreen() {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [soundLibraryVisible, setSoundLibraryVisible] = useState(false);
   const [selectedSound, setSelectedSound] = useState<Sound | undefined>(undefined);
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [recordedVideoUri, setRecordedVideoUri] = useState<string | null>(null);
+
+  const handleCameraRecordingComplete = (videoUri: string) => {
+    setRecordedVideoUri(videoUri);
+    setCameraVisible(false);
+    Alert.alert('Success', 'Video recorded! Ready to generate AI Cameo.');
+  };
 
   const handleTextToVideo = async () => {
     if (!videoPrompt.trim()) {
@@ -313,6 +322,30 @@ export default function CreateScreen() {
                   </Text>
                 </View>
 
+                {/* AI Cameo Button */}
+                <TouchableOpacity
+                  onPress={() => setCameraVisible(true)}
+                  style={{
+                    backgroundColor: '#FFD700',
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#FF1493',
+                  }}
+                >
+                  <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>
+                    🎬 Record AI Cameo (15 sec)
+                  </Text>
+                </TouchableOpacity>
+
+                {recordedVideoUri && (
+                  <View style={{ backgroundColor: '#1A1A1A', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#FF1493' }}>
+                    <Text style={{ color: '#FF1493', fontWeight: '600', fontSize: 12, marginBottom: 4 }}>✓ Video Recorded</Text>
+                    <Text style={{ color: '#aaa', fontSize: 11 }}>Ready to generate AI Cameo</Text>
+                  </View>
+                )}
+
                 <TouchableOpacity
                   onPress={handleTextToVideo}
                   disabled={isGenerating}
@@ -467,6 +500,13 @@ export default function CreateScreen() {
           selectedSound={selectedSound}
           onSelect={handleSelectSound}
           onClose={() => setSoundLibraryVisible(false)}
+        />
+
+        {/* Camera Recorder Modal */}
+        <CameraRecorder
+          visible={cameraVisible}
+          onClose={() => setCameraVisible(false)}
+          onRecordingComplete={handleCameraRecordingComplete}
         />
       </ScreenContainer>
     </>

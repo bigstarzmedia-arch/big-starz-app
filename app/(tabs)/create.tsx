@@ -4,6 +4,8 @@ import { ScreenContainer } from '@/components/screen-container';
 import { AIGenerationOverlay } from '@/components/ai-generation-overlay';
 import { SoundLibraryModal, type Sound } from '@/components/sound-library-modal';
 import { CameraRecorder } from '@/components/camera-recorder';
+import { FaceCloneWithCountdown } from '@/components/face-clone-with-countdown';
+import { VoiceCloneRecorder } from '@/components/voice-clone-recorder';
 import { useColors } from '@/hooks/use-colors';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
@@ -36,6 +38,10 @@ export default function CreateScreen() {
   const [selectedSound, setSelectedSound] = useState<Sound | undefined>(undefined);
   const [cameraVisible, setCameraVisible] = useState(false);
   const [recordedVideoUri, setRecordedVideoUri] = useState<string | null>(null);
+  const [faceCloneVisible, setFaceCloneVisible] = useState(false);
+  const [voiceCloneVisible, setVoiceCloneVisible] = useState(false);
+  const [faceCloneComplete, setFaceCloneComplete] = useState(false);
+  const [voiceCloneComplete, setVoiceCloneComplete] = useState(false);
 
   const handleCameraRecordingComplete = (videoUri: string) => {
     setRecordedVideoUri(videoUri);

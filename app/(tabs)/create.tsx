@@ -515,6 +515,23 @@ export default function CreateScreen() {
           onClose={() => setCameraVisible(false)}
           onRecordingComplete={handleCameraRecordingComplete}
         />
+        {/* Face Clone Modal */}
+        <FaceCloneWithCountdown
+          visible={faceCloneVisible}
+          onClose={() => setFaceCloneVisible(false)}
+          onVoiceCloneUnlocked={() => {
+            setFaceCloneComplete(true);
+          }}
+        />
+        {/* Voice Clone Modal */}
+        <VoiceCloneRecorder
+          visible={voiceCloneVisible}
+          onClose={() => setVoiceCloneVisible(false)}
+          onRecordingComplete={() => {
+            setVoiceCloneComplete(true);
+            setVoiceCloneVisible(false);
+          }}
+        />
       </ScreenContainer>
     </>
   );

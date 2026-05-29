@@ -71,7 +71,7 @@ export default function GenderOnboarding() {
                   {/* Character Image */}
                   <View className="h-48 w-40 rounded-xl overflow-hidden bg-background border border-border">
                     <Image
-                      source={require('@/../webdev-static-assets/char-en-boy-flag.png')}
+                      source={require('@/assets/images/char-en-boy-flag.png')}
                       className="w-full h-full"
                       resizeMode="contain"
                     />
@@ -119,7 +119,7 @@ export default function GenderOnboarding() {
                   {/* Character Image */}
                   <View className="h-48 w-40 rounded-xl overflow-hidden bg-background border border-border">
                     <Image
-                      source={require('@/../webdev-static-assets/char-en-girl-flag.png')}
+                      source={require('@/assets/images/char-en-girl-flag.png')}
                       className="w-full h-full"
                       resizeMode="contain"
                     />

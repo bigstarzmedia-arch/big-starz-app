@@ -20,7 +20,7 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
-import { PaywallModal } from "@/components/paywall-modal";
+
 import { OnboardingTutorial } from "@/components/onboarding-tutorial";
 import { LanguageProvider } from "@/lib/language-provider";
 import { NotificationProvider } from "@/lib/notification-provider";
@@ -103,7 +103,6 @@ export default function RootLayout() {
           </QueryClientProvider>
         </trpc.Provider>
       </NotificationsProvider>
-      <PaywallModal />
       <OnboardingTutorial />
       </SubscriptionProvider>
       </LanguageProvider>

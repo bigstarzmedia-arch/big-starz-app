@@ -1,14 +1,15 @@
-import { ScrollView, View, Text, Pressable, Dimensions, FlatList, Image } from 'react-native';
-import { useState, useEffect as useEffectHook } from 'react';
+import { View, Text, Pressable, FlatList, Image, Dimensions, Alert, Platform } from 'react-native';
+import { useState, useEffect as useEffectHook, useRef } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { VideoPlayerModal, type VideoData } from '@/components/video-player-modal';
 import { LanguageSelector } from '@/components/language-selector';
 import { TopNavigation } from '@/components/top-navigation';
+import { SocialShareModal } from '@/components/social-share-modal';
+import { GenderProvider } from '@/lib/gender-context';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation } from '@/lib/language-provider';
+import { useLanguage } from '@/lib/language-provider';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ interface Video {
   likes?: number;
   comments?: number;
   liked?: boolean;
+  creatorHandle?: string;
 }
 
 // Mock fallback videos while Google Drive videos load
@@ -35,7 +37,8 @@ const FALLBACK_VIDEOS: Video[] = [
     id: '1',
     name: 'AI Music Video - Cyberpunk',
     url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/uVFjRxyGEvVYafOu.mp4',
-    creator: '@NeonVex',
+    creator: 'NeonVex',
+    creatorHandle: '@NeonVex',
     title: 'AI Music Video - Cyberpunk',
     likes: 8400,
     comments: 342,
@@ -45,7 +48,8 @@ const FALLBACK_VIDEOS: Video[] = [
     id: '2',
     name: 'Face Clone Collab',
     url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663582603941/ZIHqcEAjIsUDSuBR.mp4',
-    creator: '@CosmicVibe',
+    creator: 'CosmicVibe',
+    creatorHandle: '@CosmicVibe',
     title: 'Face Clone Collab',
     likes: 5200,
     comments: 218,
@@ -53,52 +57,122 @@ const FALLBACK_VIDEOS: Video[] = [
   },
 ];
 
-function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap: (index: number) => void }) {
+interface VideoItemProps {
+  video: Video;
+  index: number;
+  isActive: boolean;
+  onTap: (index: number) => void;
+  onLike: (videoId: string, liked: boolean) => void;
+  onComment: (video: Video) => void;
+  onShare: (video: Video) => void;
+}
+
+function VideoItem({
+  video,
+  index,
+  isActive,
+  onTap,
+  onLike,
+  onComment,
+  onShare,
+}: VideoItemProps) {
   const [likes, setLikes] = useState(video.likes || 0);
   const [liked, setLiked] = useState(video.liked || false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const player = useVideoPlayer(video.url);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikes(liked ? likes - 1 : likes + 1);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Auto-play when active
+  useEffectHook(() => {
+    if (isActive) {
+      player.play();
+      setIsPlaying(true);
+    } else {
+      player.pause();
+      setIsPlaying(false);
+    }
+  }, [isActive, player]);
+
+  const handleLike = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikes(newLiked ? likes + 1 : likes - 1);
+    onLike(video.id, newLiked);
+  };
+
+  const handlePlayPause = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (isPlaying) {
+      player.pause();
+      setIsPlaying(false);
+    } else {
+      player.play();
+      setIsPlaying(true);
     }
   };
 
-  const handleTap = () => {
-    onTap(index);
+  const handleComment = () => {
+    onComment(video);
+  };
+
+  const handleShare = () => {
+    onShare(video);
   };
 
   return (
-    <Pressable onPress={handleTap} style={{ height: screenHeight, width: screenWidth }}>
+    <Pressable onPress={() => onTap(index)} style={{ height: screenHeight, width: screenWidth }}>
+      {/* Video Player */}
       <VideoView
         player={player}
         style={{ width: '100%', height: '100%' }}
         allowsFullscreen
         allowsPictureInPicture
+        nativeControls={false}
       />
 
       {/* Gradient overlay at bottom */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
+        colors={['transparent', 'rgba(0,0,0,0.9)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={{ position: 'absolute', bottom: 0, width: '100%', height: '40%' }}
+        style={{ position: 'absolute', bottom: 0, width: '100%', height: '45%' }}
       />
 
+      {/* Play/Pause button center */}
+      {!isPlaying && (
+        <Pressable
+          onPress={handlePlayPause}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: [{ translateX: -30 }, { translateY: -30 }],
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            backgroundColor: 'rgba(255,255,255,0.3)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10,
+          }}
+        >
+          <Text style={{ fontSize: 32 }}>▶️</Text>
+        </Pressable>
+      )}
+
       {/* Creator info */}
-      <View style={{ position: 'absolute', bottom: 80, left: 16 }}>
-        <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
+      <View style={{ position: 'absolute', bottom: 90, left: 16, right: 70, zIndex: 5 }}>
+        <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }} numberOfLines={2}>
           {video.title || video.name}
         </Text>
-        <Text style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>
+        <Text style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>
           {video.creator || 'Big Starz Creator'}
         </Text>
       </View>
 
       {/* Action buttons on right */}
-      <View style={{ position: 'absolute', right: 12, bottom: 100, gap: 12 }}>
+      <View style={{ position: 'absolute', right: 12, bottom: 100, gap: 16, zIndex: 5 }}>
+        {/* Like Button */}
         <Pressable
           onPress={handleLike}
           style={({ pressed }) => [
@@ -106,7 +180,7 @@ function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: '#ff1493',
+              backgroundColor: liked ? '#ff1493' : 'rgba(255,255,255,0.2)',
               justifyContent: 'center',
               alignItems: 'center',
               opacity: pressed ? 0.7 : 1,
@@ -114,18 +188,20 @@ function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap
           ]}
         >
           <Text style={{ fontSize: 24 }}>{liked ? '❤️' : '🤍'}</Text>
-          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
+          <Text style={{ color: '#fff', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
             {likes > 999 ? `${(likes / 1000).toFixed(1)}K` : likes}
           </Text>
         </Pressable>
 
+        {/* Comment Button */}
         <Pressable
+          onPress={handleComment}
           style={({ pressed }) => [
             {
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: '#00d4ff',
+              backgroundColor: 'rgba(255,255,255,0.2)',
               justifyContent: 'center',
               alignItems: 'center',
               opacity: pressed ? 0.7 : 1,
@@ -133,18 +209,20 @@ function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap
           ]}
         >
           <Text style={{ fontSize: 24 }}>💬</Text>
-          <Text style={{ color: '#fff', fontSize: 10, marginTop: 2 }}>
+          <Text style={{ color: '#fff', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
             {(video.comments || 0) > 999 ? `${((video.comments || 0) / 1000).toFixed(1)}K` : video.comments || 0}
           </Text>
         </Pressable>
 
+        {/* Share Button */}
         <Pressable
+          onPress={handleShare}
           style={({ pressed }) => [
             {
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: '#ffd700',
+              backgroundColor: 'rgba(255,255,255,0.2)',
               justifyContent: 'center',
               alignItems: 'center',
               opacity: pressed ? 0.7 : 1,
@@ -152,36 +230,66 @@ function VideoItem({ video, index, onTap }: { video: Video; index: number; onTap
           ]}
         >
           <Text style={{ fontSize: 24 }}>🔗</Text>
+          <Text style={{ color: '#fff', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>Share</Text>
         </Pressable>
       </View>
     </Pressable>
   );
 }
 
-export default function HomeScreen() {
-  const translate = useTranslation();
+export default function VibeScreen() {
+  const { language } = useLanguage();
   const [videos, setVideos] = useState<Video[]>(FALLBACK_VIDEOS);
-  const [loading, setLoading] = useState(true);
-  const [playerVisible, setPlayerVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
   const [languageSelectorVisible, setLanguageSelectorVisible] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedShareVideo, setSelectedShareVideo] = useState<Video | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   const handleVideoTap = (index: number) => {
     setSelectedVideoIndex(index);
-    setPlayerVisible(true);
   };
 
-  const handleLikeInPlayer = (videoId: string, liked: boolean) => {
-    setVideos(videos.map(v => 
+  const handleLike = (videoId: string, liked: boolean) => {
+    setVideos(videos.map(v =>
       v.id === videoId ? { ...v, liked } : v
     ));
   };
 
-  // Fetch Sora videos from Google Drive
+  const handleComment = (video: Video) => {
+    Alert.alert(
+      'Comments',
+      `Comments for "${video.title}"`,
+      [
+        {
+          text: 'View All',
+          onPress: () => console.log('View all comments'),
+        },
+        {
+          text: 'Add Comment',
+          onPress: () => console.log('Add comment'),
+        },
+        {
+          text: 'Close',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const handleShare = (video: Video) => {
+    setSelectedShareVideo(video);
+    setShareModalVisible(true);
+  };
+
+  // Fetch videos from API
   useEffectHook(() => {
     const fetchVideos = async () => {
       try {
+        setLoading(true);
+        // Try to fetch from API, fallback to mock data
         const response = await fetch('/api/trpc/googleDrive.getSoraVideos');
         if (response.ok) {
           const data = await response.json();
@@ -190,7 +298,8 @@ export default function HomeScreen() {
               id: v.id,
               name: v.name,
               url: v.url,
-              creator: `@Creator${idx + 1}`,
+              creator: `Creator${idx + 1}`,
+              creatorHandle: `@creator${idx + 1}`,
               title: v.name.replace('.mp4', ''),
               likes: Math.floor(Math.random() * 10000),
               comments: Math.floor(Math.random() * 1000),
@@ -212,32 +321,49 @@ export default function HomeScreen() {
     <>
       <TopNavigation onLanguagePress={() => setLanguageSelectorVisible(true)} />
       <LanguageSelector visible={languageSelectorVisible} onClose={() => setLanguageSelectorVisible(false)} />
-      <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black" containerClassName="bg-black">
-      {/* Background vector image */}
-      <Image
-        source={{ uri: VECTOR_BACKGROUNDS[bgIndex % VECTOR_BACKGROUNDS.length] }}
-        style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          opacity: 0.1,
-          zIndex: 0,
-        }}
-        resizeMode="cover"
-      />
+      <GenderProvider>
+        <SocialShareModal
+          visible={shareModalVisible}
+          onClose={() => setShareModalVisible(false)}
+          videoUrl={selectedShareVideo?.url}
+          videoTitle={selectedShareVideo?.title}
+          creatorName={selectedShareVideo?.creator}
+          creatorHandle={selectedShareVideo?.creatorHandle}
+        />
+      </GenderProvider>
 
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
-        </View>
-      ) : (
-        <>
+      <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black" containerClassName="bg-black">
+        {/* Background vector image */}
+        <Image
+          source={{ uri: VECTOR_BACKGROUNDS[bgIndex % VECTOR_BACKGROUNDS.length] }}
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            opacity: 0.08,
+            zIndex: 0,
+          }}
+          resizeMode="cover"
+        />
+
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: 16 }}>Loading videos...</Text>
+          </View>
+        ) : (
           <FlatList
+            ref={flatListRef}
             data={videos}
             renderItem={({ item, index }) => (
-              <View style={{ position: 'relative', zIndex: 1 }}>
-                <VideoItem video={item} index={index} onTap={handleVideoTap} />
-              </View>
+              <VideoItem
+                video={item}
+                index={index}
+                isActive={index === selectedVideoIndex}
+                onTap={handleVideoTap}
+                onLike={handleLike}
+                onComment={handleComment}
+                onShare={handleShare}
+              />
             )}
             keyExtractor={(item) => item.id}
             pagingEnabled
@@ -248,43 +374,12 @@ export default function HomeScreen() {
               const offsetY = event.nativeEvent.contentOffset.y;
               const index = Math.round(offsetY / screenHeight);
               setBgIndex(index);
+              setSelectedVideoIndex(index);
             }}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={videos.length > 0}
           />
-          {/* Vector background for player */}
-          {playerVisible && (
-            <Image
-              source={{ uri: VECTOR_BACKGROUNDS[(selectedVideoIndex + 1) % VECTOR_BACKGROUNDS.length] }}
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                opacity: 0.05,
-                zIndex: 0,
-              }}
-              resizeMode="cover"
-            />
-          )}
-
-          <VideoPlayerModal
-            visible={playerVisible}
-            videos={videos.map(v => ({
-              id: v.id,
-              url: v.url,
-              title: v.title || v.name,
-              creator: v.creator || 'Creator',
-              likes: v.likes || 0,
-              comments: v.comments || 0,
-              shares: 0,
-              liked: v.liked,
-            } as VideoData))}
-            initialIndex={selectedVideoIndex}
-            onClose={() => setPlayerVisible(false)}
-            onLike={handleLikeInPlayer}
-            onComment={(videoId) => console.log('Comment on', videoId)}
-            onShare={(videoId) => console.log('Share', videoId)}
-          />
-        </>
-      )}
+        )}
       </ScreenContainer>
     </>
   );

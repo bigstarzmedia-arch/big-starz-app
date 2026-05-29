@@ -79,7 +79,7 @@ export function GenderToggle() {
           >
             <View className="h-20 w-16 rounded-lg overflow-hidden bg-background border border-border">
               <Image
-                source={require('@/../webdev-static-assets/char-en-boy-flag.png')}
+                source={require('@/assets/images/char-en-boy-flag.png')}
                 className="w-full h-full"
                 resizeMode="contain"
               />
@@ -118,7 +118,7 @@ export function GenderToggle() {
           >
             <View className="h-20 w-16 rounded-lg overflow-hidden bg-background border border-border">
               <Image
-                source={require('@/../webdev-static-assets/char-en-girl-flag.png')}
+                source={require('@/assets/images/char-en-girl-flag.png')}
                 className="w-full h-full"
                 resizeMode="contain"
               />

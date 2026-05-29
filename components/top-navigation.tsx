@@ -6,10 +6,10 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
 interface TopNavigationProps {
-  currentPage?: 'discover' | 'messages' | 'profile' | 'notifications' | 'rewards' | 'moderation';
+  currentPage?: 'discover' | 'messages' | 'profile' | 'notifications' | 'rewards' | 'language';
   onNotificationsPress?: () => void;
   onRewardsPress?: () => void;
-  onModerationPress?: () => void;
+  onLanguagePress?: () => void;
   unreadCount?: number;
 }
 
@@ -17,7 +17,7 @@ export function TopNavigation({
   currentPage = 'discover',
   onNotificationsPress,
   onRewardsPress,
-  onModerationPress,
+  onLanguagePress,
   unreadCount = 0,
 }: TopNavigationProps) {
   const router = useRouter();
@@ -43,8 +43,8 @@ export function TopNavigation({
       case 'rewards':
         onRewardsPress?.();
         break;
-      case 'moderation':
-        onModerationPress?.();
+      case 'language':
+        onLanguagePress?.();
         break;
     }
   };
@@ -121,7 +121,7 @@ export function TopNavigation({
       {renderButton('person', 'Profile', 'profile', currentPage === 'profile')}
       {renderButton('notifications', 'Alerts', 'notifications', currentPage === 'notifications', unreadCount)}
       {renderButton('gift', 'Rewards', 'rewards', currentPage === 'rewards')}
-      {renderButton('shield-checkmark', 'Moderate', 'moderation', currentPage === 'moderation')}
+      {renderButton('globe', 'Language', 'language', currentPage === 'language')}
     </View>
   );
 }

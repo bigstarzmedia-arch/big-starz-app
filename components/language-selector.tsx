@@ -1,30 +1,79 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useLanguage } from '@/lib/language-context';
-import { Language } from '@/lib/translations';
+import { useLanguage } from '@/lib/language-provider';
+import type { Language } from '@/lib/i18n';
 
 interface LanguageSelectorProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const LANGUAGES: { code: Language; name: string; flag: string; character: string }[] = [
-  { code: 'en', name: 'English', flag: '🇬🇧', character: '🧑‍💼' },
-  { code: 'es', name: 'Español', flag: '🇪🇸', character: '🧑‍🎤' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷', character: '🧑‍🎨' },
-  { code: 'hi', name: 'हिंदी', flag: '🇮🇳', character: '🧑‍🎓' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦', character: '🧑‍🏫' },
-  { code: 'pt', name: 'Português', flag: '🇧🇷', character: '🧑‍💻' },
+type Gender = 'boy' | 'girl';
+
+const LANGUAGES: {
+  code: Language;
+  name: string;
+  flag: string;
+  region: string;
+  boyImage: string;
+  girlImage: string;
+}[] = [
+  {
+    code: 'en',
+    name: 'English',
+    flag: '🇬🇧',
+    region: 'Global',
+    boyImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-en-boy-dThZKQuESrVN73qweHxZui.webp',
+    girlImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-en-girl-7wXPnX29a25wJMEdsEVj2Q.webp',
+  },
+  {
+    code: 'ar',
+    name: 'العربية',
+    flag: '🇸🇦',
+    region: 'Middle East & Gulf',
+    boyImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-ar-boy-4wx7t7o4a8WBKhzwrrjyNs.webp',
+    girlImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-ar-girl-hnExoAoetnzMDVeGvwdNk4.webp',
+  },
+  {
+    code: 'hi',
+    name: 'हिंदी',
+    flag: '🇮🇳',
+    region: 'India & South Asia',
+    boyImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-hi-boy-cUmCxhbe5w6fghJYQeJQkL.webp',
+    girlImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-hi-girl-TGgfBGihZF2u38pHYGKr8x.webp',
+  },
+  {
+    code: 'ur',
+    name: 'اردو',
+    flag: '🇵🇰',
+    region: 'Pakistan',
+    boyImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-ar-boy-4wx7t7o4a8WBKhzwrrjyNs.webp',
+    girlImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-ar-girl-hnExoAoetnzMDVeGvwdNk4.webp',
+  },
+  {
+    code: 'sw',
+    name: 'Kiswahili',
+    flag: '🇰🇪',
+    region: 'East Africa',
+    boyImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-es-boy-KpFWwm8kgUKY7bSrpGi9y4.webp',
+    girlImage: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663582603941/kdagQAS7AgDbyomZNfYzdv/char-es-girl-Gheiqo7eML4tgBSD9U94rx.webp',
+  },
 ];
 
 export function LanguageSelector({ visible, onClose }: LanguageSelectorProps) {
   const { language, setLanguage } = useLanguage();
+  const [selectedGender, setSelectedGender] = useState<Gender>('boy');
 
-  const handleLanguageSelect = (lang: Language) => {
-    setLanguage(lang);
+  const handleLanguageSelect = async (lang: Language) => {
+    await setLanguage(lang);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onClose();
+  };
+
+  const toggleGender = () => {
+    setSelectedGender(selectedGender === 'boy' ? 'girl' : 'boy');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
@@ -34,66 +83,112 @@ export function LanguageSelector({ visible, onClose }: LanguageSelectorProps) {
           {/* Header */}
           <View className="border-b border-border p-6 items-center">
             <Text className="text-2xl font-bold text-foreground">
-              Select Language
+              Choose Your Language
             </Text>
             <Text className="text-muted text-sm mt-2">
-              Choose your preferred language
+              Select language & character style
             </Text>
+
+            {/* Gender Toggle */}
+            <View className="flex-row gap-3 mt-4">
+              <TouchableOpacity
+                onPress={toggleGender}
+                className={`px-6 py-2 rounded-full border-2 ${
+                  selectedGender === 'boy'
+                    ? 'bg-primary border-primary'
+                    : 'bg-surface border-border'
+                }`}
+              >
+                <Text
+                  className={`font-bold text-sm ${
+                    selectedGender === 'boy' ? 'text-background' : 'text-foreground'
+                  }`}
+                >
+                  👦 Boy
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={toggleGender}
+                className={`px-6 py-2 rounded-full border-2 ${
+                  selectedGender === 'girl'
+                    ? 'bg-primary border-primary'
+                    : 'bg-surface border-border'
+                }`}
+              >
+                <Text
+                  className={`font-bold text-sm ${
+                    selectedGender === 'girl' ? 'text-background' : 'text-foreground'
+                  }`}
+                >
+                  👧 Girl
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Language List */}
-          <ScrollView className="flex-1 p-6">
-            <View className="gap-3">
-              {LANGUAGES.map((lang) => (
-                <TouchableOpacity
-                  key={lang.code}
-                  onPress={() => handleLanguageSelect(lang.code)}
-                  className={`flex-row items-center p-4 rounded-2xl border-2 ${
-                    language === lang.code
-                      ? 'bg-primary/20 border-primary'
-                      : 'bg-surface border-border'
-                  }`}
-                  activeOpacity={0.7}
-                >
-                  {/* Character Guide */}
-                  <Text className="text-5xl mr-4">{lang.character}</Text>
+          <ScrollView className="flex-1 p-6" showsVerticalScrollIndicator={false}>
+            <View className="gap-4">
+              {LANGUAGES.map((lang) => {
+                const characterImage =
+                  selectedGender === 'boy' ? lang.boyImage : lang.girlImage;
+                const isSelected = language === lang.code;
 
-                  {/* Language Info */}
-                  <View className="flex-1">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-2xl">{lang.flag}</Text>
-                      <Text className="text-lg font-bold text-foreground">
-                        {lang.name}
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    onPress={() => handleLanguageSelect(lang.code)}
+                    className={`flex-row items-center p-4 rounded-2xl border-2 overflow-hidden ${
+                      isSelected
+                        ? 'bg-primary/20 border-primary'
+                        : 'bg-surface border-border'
+                    }`}
+                    activeOpacity={0.7}
+                  >
+                    {/* Character Image */}
+                    <Image
+                      source={{ uri: characterImage }}
+                      className="w-20 h-24 rounded-lg mr-4"
+                      resizeMode="contain"
+                    />
+
+                    {/* Language Info */}
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-2xl">{lang.flag}</Text>
+                        <Text className="text-lg font-bold text-foreground">
+                          {lang.name}
+                        </Text>
+                      </View>
+                      <Text className="text-sm text-muted mt-1">{lang.region}</Text>
+                      <Text className="text-xs text-muted/70 mt-1">
+                        {selectedGender === 'boy' ? 'Boy Character' : 'Girl Character'}
                       </Text>
                     </View>
-                    <Text className="text-sm text-muted mt-1">
-                      {lang.code === 'en' && 'English - Global'}
-                      {lang.code === 'es' && 'Spanish - Spain & Latin America'}
-                      {lang.code === 'fr' && 'French - France & Africa'}
-                      {lang.code === 'hi' && 'Hindi - India'}
-                      {lang.code === 'ar' && 'Arabic - Middle East'}
-                      {lang.code === 'pt' && 'Portuguese - Brazil & Portugal'}
-                    </Text>
-                  </View>
 
-                  {/* Checkmark */}
-                  {language === lang.code && (
-                    <Text className="text-2xl text-primary">✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
+                    {/* Checkmark */}
+                    {isSelected && (
+                      <View className="bg-primary rounded-full w-8 h-8 items-center justify-center ml-2">
+                        <Text className="text-background font-bold text-lg">✓</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+
+            {/* Spacing for scroll */}
+            <View className="h-6" />
           </ScrollView>
 
           {/* Close Button */}
           <View className="p-6 border-t border-border">
             <TouchableOpacity
               onPress={onClose}
-              className="bg-primary py-4 rounded-full items-center"
+              className="bg-primary py-4 rounded-full items-center active:opacity-80"
             >
-              <Text className="text-background font-bold text-lg">
-                Done
-              </Text>
+              <Text className="text-background font-bold text-lg">Done</Text>
             </TouchableOpacity>
           </View>
         </View>

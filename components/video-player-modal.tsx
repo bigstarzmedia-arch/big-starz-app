@@ -292,6 +292,7 @@ export function VideoPlayerModal({
 
             {/* Sound Icon */}
             <TouchableOpacity
+              onPress={() => onShare?.(currentVideo.id)}
               style={{
                 width: 48,
                 height: 48,

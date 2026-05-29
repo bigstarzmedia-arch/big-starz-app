@@ -2,6 +2,8 @@ import { ScrollView, View, Text, Pressable, Dimensions, FlatList, Image } from '
 import { useState, useEffect as useEffectHook } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { VideoPlayerModal, type VideoData } from '@/components/video-player-modal';
+import { LanguageSelector } from '@/components/language-selector';
+import { TopNavigation } from '@/components/top-navigation';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -163,6 +165,7 @@ export default function HomeScreen() {
   const [playerVisible, setPlayerVisible] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
+  const [languageSelectorVisible, setLanguageSelectorVisible] = useState(false);
 
   const handleVideoTap = (index: number) => {
     setSelectedVideoIndex(index);
@@ -206,7 +209,10 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black" containerClassName="bg-black">
+    <>
+      <TopNavigation onLanguagePress={() => setLanguageSelectorVisible(true)} />
+      <LanguageSelector visible={languageSelectorVisible} onClose={() => setLanguageSelectorVisible(false)} />
+      <ScreenContainer edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-black" containerClassName="bg-black">
       {/* Background vector image */}
       <Image
         source={{ uri: VECTOR_BACKGROUNDS[bgIndex % VECTOR_BACKGROUNDS.length] }}
@@ -279,6 +285,7 @@ export default function HomeScreen() {
           />
         </>
       )}
-    </ScreenContainer>
+      </ScreenContainer>
+    </>
   );
 }

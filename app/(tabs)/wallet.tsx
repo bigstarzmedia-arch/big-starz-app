@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { useState } from 'react';
 import { ScreenContainer } from '@/components/screen-container';
 import { BigStarzBackground } from '@/components/big-starz-background';
@@ -250,6 +250,41 @@ export default function WalletScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <Modal
+          visible={showWithdrawModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowWithdrawModal(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}>
+            <View style={{ backgroundColor: '#1A1A1A', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF', marginBottom: 16 }}>Withdraw Funds</Text>
+              <Text style={{ color: '#AAA', marginBottom: 16 }}>Enter amount to withdraw:</Text>
+              <TextInput
+                placeholder="Enter amount"
+                placeholderTextColor="#666"
+                style={{ backgroundColor: '#2A2A2A', color: '#FFF', padding: 12, borderRadius: 8, marginBottom: 16, borderWidth: 1, borderColor: '#444' }}
+                keyboardType="decimal-pad"
+              />
+              <TouchableOpacity
+                onPress={() => setShowWithdrawModal(false)}
+                style={{ backgroundColor: '#FF0055', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 8 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Confirm Withdraw</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowWithdrawModal(false)}
+                style={{ backgroundColor: '#333', padding: 12, borderRadius: 8, alignItems: 'center' }}
+              >
+                <Text style={{ color: '#FFF' }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* Paywall Modal */}
       <Paywall

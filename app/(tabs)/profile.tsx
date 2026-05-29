@@ -233,6 +233,7 @@ export default function ProfileScreen() {
               <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FF1493', marginTop: 4 }}>$245.50</Text>
             </View>
             <TouchableOpacity
+              onPress={() => Alert.alert('Withdraw', 'Withdraw funds to your bank account')}
               style={{
                 backgroundColor: '#FF1493',
                 paddingHorizontal: 12,
@@ -256,6 +257,7 @@ export default function ProfileScreen() {
             scrollEnabled={false}
             renderItem={({ item }) => (
               <TouchableOpacity
+                onPress={() => Alert.alert('Portfolio', `Viewing: ${item.title}`)}
                 style={{
                   flex: 1,
                   backgroundColor: '#1A1A1A',

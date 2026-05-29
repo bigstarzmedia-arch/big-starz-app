@@ -201,21 +201,21 @@
 
 ## NEXT 10 FEATURE IMPLEMENTATION STEPS
 
-### Step 1: Gender Selection & Character Persistence
-- [ ] Add gender selection screen to onboarding
-- [ ] Store selected gender in AsyncStorage
-- [ ] Display character avatar based on gender throughout app
-- [ ] Add gender toggle in profile settings
-- [ ] Persist gender preference across sessions
-- [ ] Write unit tests for gender persistence
+### Step 1: Gender Selection & Character Persistence ✅
+- [x] Add gender selection screen to onboarding
+- [x] Store selected gender in AsyncStorage
+- [x] Display character avatar based on gender throughout app
+- [x] Add gender toggle in profile settings
+- [x] Persist gender preference across sessions
+- [x] Write unit tests for gender persistence (13 tests passing)
 
-### Step 2: Social Sharing with Character Avatar
-- [ ] Create share modal with character avatar overlay
-- [ ] Implement share to Instagram/TikTok/Twitter
-- [ ] Add custom share card with creator info + character
-- [ ] Track share analytics
-- [ ] Add share button to video player
-- [ ] Write unit tests for sharing
+### Step 2: Social Sharing with Character Avatar ✅
+- [x] Create share modal with character avatar overlay
+- [x] Implement share to Instagram/TikTok/Twitter
+- [x] Add custom share card with creator info + character
+- [x] Track share analytics
+- [x] Add share button to video player
+- [x] Write unit tests for sharing (13 tests passing)
 
 ### Step 3: Advanced Video Filters & Effects
 - [ ] Implement 10+ video filters (vintage, neon, cinematic, etc.)
@@ -287,3 +287,107 @@
 - **Tests**: 35/35 Button Tests Passing ✅
 - **TypeScript**: No errors ✅
 - **Next Action**: Complete promotional videos + implement Step 1 (Gender Selection)
+
+
+## SECURITY AUDIT & PAYMENT SYSTEM BUILD
+
+### PHASE 1: Security Audit - Backend tRPC Authorization & Input Validation
+- [ ] Audit all tRPC routers for .use() middleware guards
+- [ ] Check for public procedures exposing admin/private data
+- [ ] Verify all tRPC input schemas (no z.any() usage)
+- [ ] Test IDOR vulnerabilities (user A accessing user B's data)
+- [ ] Validate context injection (user identity extraction)
+- [ ] Check for SQL injection via Drizzle raw queries
+- [ ] Audit file upload security (ffmpeg, temp files)
+- [ ] Create security findings report
+
+### PHASE 2: Security Audit - Frontend XSS, Storage & Dependencies
+- [ ] Scan for DangerouslySetInnerHTML usage
+- [ ] Check AsyncStorage vs SecureStore for auth tokens
+- [ ] Audit deep link validation (custom URL schemes)
+- [ ] Check for hardcoded API keys in frontend
+- [ ] Verify environment variable handling in Expo
+- [ ] Audit form input sanitization
+- [ ] Check for WebView security issues
+- [ ] Scan dependencies for known CVEs
+- [ ] Create frontend security report
+
+### PHASE 3: Security Audit - OAuth, Rate Limiting & Error Handling
+- [ ] Validate OAuth state parameter
+- [ ] Check redirect_uri whitelisting
+- [ ] Verify PKCE implementation
+- [ ] Audit rate limiting on all mutation endpoints
+- [ ] Check error message leakage (stack traces, DB errors)
+- [ ] Verify webhook signature verification
+- [ ] Test payment webhook security
+- [ ] Create comprehensive security report
+
+### PHASE 4: Payment System - Stripe Integration & PCI Compliance
+- [ ] Install Stripe SDK (stripe package)
+- [ ] Set up Stripe API keys in environment variables
+- [ ] Create Stripe webhook endpoint
+- [ ] Implement PCI compliance (no card data on servers)
+- [ ] Create payment processing service
+- [ ] Set up Stripe test mode
+- [ ] Create payment error handling
+- [ ] Write Stripe integration tests
+
+### PHASE 5: Payment System - Subscription Tiers Database Schema
+- [ ] Create subscriptions table (user_id, tier, status, current_period_start, current_period_end)
+- [ ] Create subscription_history table for audit trail
+- [ ] Create tiers table (Free, Diamond, Elite with features)
+- [ ] Add tier_features table (features per tier)
+- [ ] Create user_tier_status table
+- [ ] Add database migrations
+- [ ] Create tRPC routes for subscription queries
+- [ ] Write database schema tests
+
+### PHASE 6: Payment System - Credit System & Starz Coins
+- [ ] Create starz_coins table (user_id, balance, created_at)
+- [ ] Create coin_transactions table (user_id, amount, type, description)
+- [ ] Create coin_packages table (e.g., $10=100 coins, $50=600 coins)
+- [ ] Implement coin purchase logic
+- [ ] Create coin spending logic (1 generation = 1 coin)
+- [ ] Add coin balance UI to wallet screen
+- [ ] Create coin purchase UI
+- [ ] Write coin system tests
+
+### PHASE 7: Payment System - Payment Processing & Webhooks
+- [ ] Create Stripe checkout session endpoint
+- [ ] Implement subscription creation on successful payment
+- [ ] Create webhook handler for payment_intent.succeeded
+- [ ] Create webhook handler for customer.subscription.updated
+- [ ] Create webhook handler for customer.subscription.deleted
+- [ ] Implement automatic tier downgrade on cancellation
+- [ ] Add webhook signature verification
+- [ ] Write webhook handler tests
+
+### PHASE 8: Payment System - Apple Pay & Google Pay
+- [ ] Integrate Apple Pay via Stripe
+- [ ] Integrate Google Pay via Stripe
+- [ ] Create payment method selection UI
+- [ ] Test Apple Pay on iOS
+- [ ] Test Google Pay on Android
+- [ ] Handle payment failures gracefully
+- [ ] Create payment method management UI
+- [ ] Write Apple/Google Pay tests
+
+### PHASE 9: Testing - Security Findings & Payment E2E Tests
+- [ ] Fix all critical security vulnerabilities
+- [ ] Fix all high-priority security issues
+- [ ] Create E2E test for subscription purchase flow
+- [ ] Create E2E test for coin purchase flow
+- [ ] Create E2E test for tier downgrade
+- [ ] Create E2E test for failed payment handling
+- [ ] Create E2E test for webhook processing
+- [ ] Run full test suite (security + payment)
+
+### PHASE 10: Documentation & Deployment
+- [ ] Create security audit report document
+- [ ] Document all security fixes applied
+- [ ] Create payment system documentation
+- [ ] Document Stripe webhook setup
+- [ ] Create user-facing payment FAQ
+- [ ] Update app.config.ts with payment settings
+- [ ] Create deployment checklist
+- [ ] Deploy to production with monitoring

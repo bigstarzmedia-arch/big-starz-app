@@ -1,13 +1,18 @@
 // Multi-language support for Big Starz App
 // Supported languages: English, Arabic, Hindi, Urdu, Swahili
 
-export type Language = 'en' | 'ar' | 'hi' | 'ur' | 'sw';
+export type Language = 'en' | 'es' | 'fr' | 'pt' | 'hi' | 'ar' | 'it' | 'de' | 'us' | 'sw';
 
 export const LANGUAGES: Record<Language, string> = {
-  en: 'English',
-  ar: 'العربية',
+  en: 'English (UK)',
+  es: 'Español',
+  fr: 'Français',
+  pt: 'Português',
   hi: 'हिन्दी',
-  ur: 'اردو',
+  ar: 'العربية',
+  it: 'Italiano',
+  de: 'Deutsch',
+  us: 'English (USA)',
   sw: 'Kiswahili',
 };
 
@@ -276,94 +281,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.edit': 'संपादित करें',
     'common.back': 'वापस',
   },
-  ur: {
-    // Tab Navigation
-    'tab.vibe': 'وائبز',
-    'tab.create': 'بنائیں',
-    'tab.chat': 'چیٹ',
-    'tab.profile': 'پروفائل',
-    'tab.wallet': 'والٹ',
-    'tab.music': 'موسیقی',
 
-    // Vibe Screen
-    'vibe.title': 'وائبز فیڈ',
-    'vibe.likes': 'پسند',
-    'vibe.comments': 'تبصرے',
-    'vibe.share': 'شیئر کریں',
-
-    // Create Screen
-    'create.title': 'AI اسٹوڈیو',
-    'create.musicVideo': 'موسیقی ویڈیو',
-    'create.aiCameo': 'AI کیمیو',
-    'create.aiImage': 'AI تصویر',
-    'create.prompt': 'ہدایت درج کریں...',
-    'create.style': 'انداز',
-    'create.generate': 'بنائیں',
-    'create.generating': 'بنا رہے ہیں...',
-    'create.quotaExceeded': 'روزانہ کی حد سے تجاوز',
-    'create.upgradeNow': 'ابھی اپ گریڈ کریں',
-
-    // Chat Screen
-    'chat.title': 'چیٹ',
-    'chat.messages': 'پیغامات',
-    'chat.friends': 'دوست',
-    'chat.searchFriends': 'دوستوں کو تلاش کریں...',
-    'chat.addFriend': 'دوست شامل کریں',
-    'chat.typeMessage': 'پیغام لکھیں...',
-    'chat.send': 'بھیجیں',
-    'chat.online': 'آن لائن',
-    'chat.offline': 'آف لائن',
-
-    // Profile Screen
-    'profile.title': 'پروفائل',
-    'profile.followers': 'فالورز',
-    'profile.views': 'دیکھنے والے',
-    'profile.likes': 'پسند',
-    'profile.follow': 'فالو کریں',
-    'profile.following': 'فالو کر رہے ہیں',
-    'profile.message': 'پیغام',
-    'profile.earnings': 'کمائی',
-    'profile.withdraw': 'نکالیں',
-
-    // Wallet Screen
-    'wallet.title': 'والٹ',
-    'wallet.balance': 'بیلنس',
-    'wallet.transactions': 'ٹرانزیکشنز',
-    'wallet.currentTier': 'موجودہ سطح',
-    'wallet.upgrade': 'اپ گریڈ کریں',
-    'wallet.free': 'مفت',
-    'wallet.pro': 'پروفیشنل',
-    'wallet.elite': 'اعلیٰ',
-    'wallet.perDay': 'فی دن',
-    'wallet.perMonth': 'فی ماہ',
-    'wallet.mostPopular': 'سب سے مشہور',
-    'wallet.unlimited': 'لامحدود',
-
-    // Music Screen
-    'music.title': 'موسیقی لائبریری',
-    'music.beats': 'بیٹس',
-    'music.useBeat': 'بیٹ استعمال کریں',
-    'music.downloads': 'ڈاؤن لوڈز',
-    'music.bpm': 'BPM',
-
-    // Settings
-    'settings.title': 'ترتیبات',
-    'settings.language': 'زبان',
-    'settings.theme': 'تھیم',
-    'settings.notifications': 'اطلاعات',
-    'settings.privacy': 'رازداری',
-    'settings.about': 'بارے میں',
-
-    // Common
-    'common.loading': 'لوڈ ہو رہا ہے...',
-    'common.error': 'خرابی',
-    'common.success': 'کامیاب',
-    'common.cancel': 'منسوخ کریں',
-    'common.save': 'محفوظ کریں',
-    'common.delete': 'حذف کریں',
-    'common.edit': 'ترمیم کریں',
-    'common.back': 'واپس',
-  },
   sw: {
     // Tab Navigation
     'tab.vibe': 'Vibe',
@@ -451,9 +369,538 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.delete': 'Futa',
     'common.edit': 'Hariri',
     'common.back': 'Rudi',
+},
+  es: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
+  },
+
+  fr: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
+  },
+
+  pt: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
+  },
+
+  it: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
+  },
+
+  de: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
+  },
+
+  us: {
+    // Tab Navigation
+    'tab.vibe': 'Vibe',
+    'tab.create': 'Create',
+    'tab.chat': 'Chat',
+    'tab.profile': 'Profile',
+    'tab.wallet': 'Wallet',
+    'tab.music': 'Music',
+
+    // Vibe Screen
+    'vibe.title': 'Vibe Feed',
+    'vibe.likes': 'Likes',
+    'vibe.comments': 'Comments',
+    'vibe.share': 'Share',
+
+    // Create Screen
+    'create.title': 'AI Studio',
+    'create.musicVideo': 'Music Video',
+    'create.aiCameo': 'AI Cameo',
+    'create.aiImage': 'AI Image',
+    'create.prompt': 'Enter prompt...',
+    'create.style': 'Style',
+    'create.generate': 'Generate',
+    'create.generating': 'Generating...',
+    'create.quotaExceeded': 'Daily quota exceeded',
+    'create.upgradeNow': 'Upgrade Now',
+
+    // Chat Screen
+    'chat.title': 'Chat',
+    'chat.messages': 'Messages',
+    'chat.friends': 'Friends',
+    'chat.searchFriends': 'Search friends...',
+    'chat.addFriend': 'Add Friend',
+    'chat.typeMessage': 'Type message...',
+    'chat.send': 'Send',
+    'chat.online': 'Online',
+    'chat.offline': 'Offline',
+
+    // Profile Screen
+    'profile.title': 'Profile',
+    'profile.followers': 'Followers',
+    'profile.views': 'Views',
+    'profile.likes': 'Likes',
+    'profile.follow': 'Follow',
+    'profile.following': 'Following',
+    'profile.message': 'Message',
+    'profile.earnings': 'Earnings',
+    'profile.withdraw': 'Withdraw',
+
+    // Wallet Screen
+    'wallet.title': 'Wallet',
+    'wallet.balance': 'Balance',
+    'wallet.transactions': 'Transactions',
+    'wallet.currentTier': 'Current Tier',
+    'wallet.upgrade': 'Upgrade',
+    'wallet.free': 'Free',
+    'wallet.pro': 'Pro',
+    'wallet.elite': 'Elite',
+    'wallet.perDay': 'per day',
+    'wallet.perMonth': 'per month',
+    'wallet.mostPopular': 'Most Popular',
+    'wallet.unlimited': 'Unlimited',
+
+    // Music Screen
+    'music.title': 'Music Library',
+    'music.beats': 'Beats',
+    'music.useBeat': 'Use Beat',
+    'music.downloads': 'Downloads',
+    'music.bpm': 'BPM',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.about': 'About',
+
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.back': 'Back',
   },
 };
-
-export function getTranslation(language: Language, key: string): string {
-  return translations[language]?.[key] || translations.en[key] || key;
-}

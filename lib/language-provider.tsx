@@ -37,8 +37,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
         if (deviceLocale === 'ar') detectedLanguage = 'ar';
         else if (deviceLocale === 'hi') detectedLanguage = 'hi';
-        else if (deviceLocale === 'ur') detectedLanguage = 'ur';
         else if (deviceLocale === 'sw') detectedLanguage = 'sw';
+        else if (deviceLocale === 'es') detectedLanguage = 'es';
+        else if (deviceLocale === 'fr') detectedLanguage = 'fr';
+        else if (deviceLocale === 'pt') detectedLanguage = 'pt';
+        else if (deviceLocale === 'it') detectedLanguage = 'it';
+        else if (deviceLocale === 'de') detectedLanguage = 'de';
 
         setLanguageState(detectedLanguage);
         await AsyncStorage.setItem('app_language', detectedLanguage);
@@ -59,7 +63,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isRTL = language === 'ar' || language === 'ur';
+  const isRTL = language === 'ar';
 
   if (isLoading) {
     return null; // Or a loading screen

@@ -71,7 +71,7 @@ export default function GenderOnboarding() {
                   {/* Character Image */}
                   <View className="h-48 w-40 rounded-xl overflow-hidden bg-background border border-border">
                     <Image
-                      source={require('@/assets/images/char-en-boy-flag.png')}
+                      source={{ uri: 'https://manus-assets.s3.amazonaws.com/char-en-boy-flag.png' }}
                       className="w-full h-full"
                       resizeMode="contain"
                     />
@@ -118,11 +118,11 @@ export default function GenderOnboarding() {
                 <View className="items-center gap-4">
                   {/* Character Image */}
                   <View className="h-48 w-40 rounded-xl overflow-hidden bg-background border border-border">
-                    <Image
-                      source={require('@/assets/images/char-en-girl-flag.png')}
-                      className="w-full h-full"
-                      resizeMode="contain"
-                    />
+                  <Image
+                    source={{ uri: 'https://manus-assets.s3.amazonaws.com/char-en-girl-flag.png' }}
+                    className="w-full h-full"
+                    resizeMode="contain"
+                  />
                   </View>
 
                   {/* Label */}

@@ -139,7 +139,7 @@ export function SocialShareModal({
               <View className="relative h-40 bg-gradient-to-b from-primary/20 to-primary/5 items-center justify-center">
                 <View className="absolute inset-0 items-center justify-center">
                   <Image
-                    source={require('@/assets/images/char-en-boy-flag.png')}
+                    source={{ uri: 'https://manus-assets.s3.amazonaws.com/char-en-boy-flag.png' }}
                     className="w-24 h-32 opacity-80"
                     resizeMode="contain"
                   />

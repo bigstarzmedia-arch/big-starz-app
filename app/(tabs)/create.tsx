@@ -6,6 +6,8 @@ import { SoundLibraryModal, type Sound } from '@/components/sound-library-modal'
 import { CameraRecorder } from '@/components/camera-recorder';
 import { FaceCloneWithCountdown } from '@/components/face-clone-with-countdown';
 import { VoiceCloneRecorder } from '@/components/voice-clone-recorder';
+import { AICameoStudio } from '@/components/ai-cameo-studio';
+import { AICastingSystem } from '@/components/ai-casting-system';
 import { useColors } from '@/hooks/use-colors';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
@@ -42,6 +44,8 @@ export default function CreateScreen() {
   const [voiceCloneVisible, setVoiceCloneVisible] = useState(false);
   const [faceCloneComplete, setFaceCloneComplete] = useState(false);
   const [voiceCloneComplete, setVoiceCloneComplete] = useState(false);
+  const [cameoStudioVisible, setCameoStudioVisible] = useState(false);
+  const [castingSystemVisible, setCastingSystemVisible] = useState(false);
 
   const handleCameraRecordingComplete = (videoUri: string) => {
     setRecordedVideoUri(videoUri);
@@ -530,6 +534,26 @@ export default function CreateScreen() {
           onRecordingComplete={() => {
             setVoiceCloneComplete(true);
             setVoiceCloneVisible(false);
+          }}
+        />
+
+        {/* AI Cameo Studio Modal */}
+        <AICameoStudio
+          visible={cameoStudioVisible}
+          onClose={() => setCameoStudioVisible(false)}
+          onGenerate={(request) => {
+            console.log('Generating cameo:', request);
+            Alert.alert('Cameo Generated', `Character: ${request.character.name}`);
+          }}
+        />
+
+        {/* AI Casting System Modal */}
+        <AICastingSystem
+          visible={castingSystemVisible}
+          onClose={() => setCastingSystemVisible(false)}
+          onSubmit={(submission) => {
+            console.log('Casting submitted:', submission);
+            Alert.alert('Casting Submitted', `Challenge: ${submission.challengeId}`);
           }}
         />
       </ScreenContainer>

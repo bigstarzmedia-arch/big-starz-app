@@ -10,6 +10,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '@/lib/language-provider';
+import { GroupCartoonOverlay } from '@/components/group-cartoon-background';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
